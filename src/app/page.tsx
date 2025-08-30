@@ -306,9 +306,7 @@ export default function Home() {
               Professional Journey
             </h2>
             <div className="ornamental-divider mb-12" />
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              A curated chronicle of impactful roles and transformative projects
-            </p>
+            
           </div>
 
           <div className="experience-timeline pl-8">
@@ -390,12 +388,10 @@ export default function Home() {
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="mb-20 text-center">
             <h2 className="font-display text-5xl md:text-6xl font-light mb-8 gradient-text">
-              Selected Works
+              Projects
             </h2>
             <div className="ornamental-divider mb-12" />
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              A curated collection of projects that define excellence in digital craftsmanship
-            </p>
+            
           </div>
           
           <div className="grid lg:grid-cols-1 gap-12">
@@ -562,17 +558,7 @@ export default function Home() {
               </p>
             </Card>
             
-            <Card className="p-8 sophisticated-card text-center">
-              <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <div className="w-6 h-6 bg-primary rounded-full" />
-              </div>
-              <h3 className="font-display text-lg font-medium mb-2 text-primary">
-                Consultation
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Strategic guidance for digital transformation and design excellence
-              </p>
-            </Card>
+            
           </div>
           
           <div className="space-y-8">
@@ -659,12 +645,9 @@ export default function Home() {
               <p className="font-display text-primary text-lg">
                 Abdullah Ahmed
               </p>
-              <p className="text-muted-foreground text-sm">
-                Crafting digital experiences with timeless elegance
-              </p>
             </div>
             <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-              <span>© 2024</span>
+              <span>© 2025</span>
               <div className="w-1 h-1 bg-primary rounded-full" />
               <span>All rights reserved</span>
               <div className="w-1 h-1 bg-primary rounded-full" />
