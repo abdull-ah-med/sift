@@ -487,7 +487,6 @@ export default function Home() {
                               rel="noopener noreferrer"
                             >
                               Live Demo
-                              <span className="ml-1">↗</span>
                             </a>
                           </Button>
                         )}
@@ -504,7 +503,6 @@ export default function Home() {
                               rel="noopener noreferrer"
                             >
                               GitHub
-                              <span className="ml-1">↗</span>
                             </a>
                           </Button>
                         )}
@@ -533,7 +531,7 @@ export default function Home() {
             </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
+          <div className="grid md:grid-cols-2 gap-8 mb-16 max-w-2xl mx-auto">
             <Card className="p-8 sophisticated-card text-center">
               <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <div className="w-6 h-6 bg-primary rounded-full" />
@@ -557,8 +555,6 @@ export default function Home() {
                 Open to partnerships with like-minded creatives and forward-thinking brands
               </p>
             </Card>
-            
-            
           </div>
           
           <div className="space-y-8">
@@ -650,7 +646,6 @@ export default function Home() {
               <span>© 2025</span>
               <div className="w-1 h-1 bg-primary rounded-full" />
               <span>All rights reserved</span>
-              <div className="w-1 h-1 bg-primary rounded-full" />
               <span>Designed & Developed with precision</span>
             </div>
           </div>
