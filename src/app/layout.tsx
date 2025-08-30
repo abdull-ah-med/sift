@@ -1,19 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap",
-});
-
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  variable: "--font-serif",
-  weight: ["300", "400", "500", "600", "700"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Abdullah Ahmed - Digital Craftsman & Design Architect",
@@ -44,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${cormorant.variable} font-sans antialiased bg-background text-foreground selection:bg-primary/20 selection:text-primary`}
+        className="font-sans antialiased bg-background text-foreground selection:bg-primary/20 selection:text-primary"
       >
         <div className="relative min-h-screen">
           {children}

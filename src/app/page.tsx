@@ -157,7 +157,7 @@ export default function Home() {
             </div>
             {/* Removed ornamental divider */}
             <p className="text-xl md:text-2xl text-foreground font-light leading-relaxed max-w-3xl mx-auto text-balance mb-8">
-              Crafting sophisticated digital experiences with timeless elegance, where classical aesthetics meet modern innovation, and every detail serves a greater purpose.
+              Computer Science student building innovative software solutions with modern technologies, where clean code meets intelligent design and every project solves real-world problems.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
@@ -165,7 +165,7 @@ export default function Home() {
               onClick={() => scrollToSection("work")}
               variant="primary"
               size="lg"
-              className="w-48 font-display"
+              className="w-48"
             >
               Explore My Work
             </Button>
@@ -173,7 +173,7 @@ export default function Home() {
               asChild
               variant="luxury"
               size="lg"
-              className="w-48 font-display"
+              className="w-48"
             >
               <a href="mailto:contactabdullahahmed@gmail.com">
                 Begin Conversation
@@ -196,11 +196,9 @@ export default function Home() {
           
           <div className="max-w-4xl mx-auto mb-16">
             <Card className="p-10 sophisticated-card">
-              <h3 className="font-display text-3xl font-medium mb-8 gradient-text">
-                About My Journey
-              </h3>
+              
               <div className="space-y-6 text-muted-foreground leading-relaxed">
-                <p className="text-lg">
+                <p>
                   As a Computer Science undergraduate, I&apos;m passionate about exploring the intersection 
                   of technology and creative problem-solving. My journey in software development has 
                   been driven by curiosity and a desire to build meaningful digital solutions.
@@ -236,59 +234,88 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="pl-0 md:pl-8">
-            <Card className="ml-0 md:ml-8 p-4 md:p-8 sophisticated-card rounded-2xl">
-              <div className="relative overflow-hidden rounded-xl">
-                <div className="flex gap-8 md:gap-16 animate-scroll-logos whitespace-nowrap items-center">
-                  {[
-                    { name: "React", logo: "/react-svgrepo-com.svg" },
-                    { name: "Next.js", logo: "/nextjs-icon-svgrepo-com.svg" },
-                    { name: "TypeScript", logo: "/typescript-svgrepo-com.svg" },
-                    { name: "JavaScript", logo: "/js01-svgrepo-com.svg" },
-                    { name: "C#", logo: "/icons8-c-sharp-logo.svg" },
-                    { name: "C++", logo: "/icons8-c++.svg" },
-                    { name: "ASP .NET", logo: "/dotnet-svgrepo-com (3).svg" },
-                    { name: "PostgreSQL", logo: "/postgresql-svgrepo-com.svg" },
-                    { name: "MongoDB", logo: "/mongodb-svgrepo-com.svg" },
-                    { name: "Tailwind", logo: "/tailwind-svgrepo-com.svg" },
-                    { name: "Vite", logo: "/vite-svgrepo-com.svg" },
-                    { name: "Vercel", logo: "/vercel-svgrepo-com.svg" },
-                    { name: "React", logo: "/react-svgrepo-com.svg" },
-                    { name: "Next.js", logo: "/nextjs-icon-svgrepo-com.svg" },
-                    { name: "TypeScript", logo: "/typescript-svgrepo-com.svg" },
-                    { name: "JavaScript", logo: "/js01-svgrepo-com.svg" },
-                    { name: "C#", logo: "/icons8-c-sharp-logo.svg" },
-                    { name: "C++", logo: "/icons8-c++.svg" },
-                    { name: "ASP .NET", logo: "/dotnet-svgrepo-com (3).svg" },
-                    { name: "PostgreSQL", logo: "/postgresql-svgrepo-com.svg" },
-                    { name: "MongoDB", logo: "/mongodb-svgrepo-com.svg" },
-                    { name: "Tailwind", logo: "/tailwind-svgrepo-com.svg" },
-                    { name: "Vite", logo: "/vite-svgrepo-com.svg" },
-                    { name: "Vercel", logo: "/vercel-svgrepo-com.svg" },
-                    { name: "React", logo: "/react-svgrepo-com.svg" },
-                    { name: "Next.js", logo: "/nextjs-icon-svgrepo-com.svg" },
-                    { name: "TypeScript", logo: "/typescript-svgrepo-com.svg" },
-                    { name: "JavaScript", logo: "/js01-svgrepo-com.svg" },
-                    { name: "C#", logo: "/icons8-c-sharp-logo.svg" },
-                    { name: "C++", logo: "/icons8-c++.svg" },
-                    { name: "ASP .NET", logo: "/dotnet-svgrepo-com (3).svg" },
-                    { name: "PostgreSQL", logo: "/postgresql-svgrepo-com.svg" },
-                    { name: "MongoDB", logo: "/mongodb-svgrepo-com.svg" },
-                    { name: "Tailwind", logo: "/tailwind-svgrepo-com.svg" },
-                    { name: "Vite", logo: "/vite-svgrepo-com.svg" },
-                    { name: "Vercel", logo: "/vercel-svgrepo-com.svg" }
-                  ].map((tech, index) => (
-                    <div key={index} className="flex-shrink-0">
-                      <Image
-                        src={tech.logo}
-                        alt={tech.name}
-                        width={32}
-                        height={32}
-                        className="w-8 h-8 object-contain opacity-70 hover:opacity-100 transition-opacity duration-200"
-                      />
-                    </div>
-                  ))}
-                </div>
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Languages */}
+            <Card className="p-6 sophisticated-card rounded-2xl">
+              <h3 className="font-display text-xl font-medium text-center mb-6 text-primary">
+                Languages
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { name: "TypeScript", logo: "/typescript-svgrepo-com.svg" },
+                  { name: "JavaScript", logo: "/js01-svgrepo-com.svg" },
+                  { name: "C#", logo: "/icons8-c-sharp-logo.svg" },
+                  { name: "C++", logo: "/icons8-c++.svg" }
+                ].map((tech, index) => (
+                  <div key={index} className="flex flex-col items-center p-3 rounded-lg hover:bg-primary/5 transition-colors duration-200">
+                    <Image
+                      src={tech.logo}
+                      alt={tech.name}
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 object-contain mb-2"
+                    />
+                    <span className="text-xs text-center text-muted-foreground font-medium">
+                      {tech.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* Frameworks */}
+            <Card className="p-6 sophisticated-card rounded-2xl">
+              <h3 className="font-display text-xl font-medium text-center mb-6 text-primary">
+                Frameworks
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { name: "React", logo: "/react-svgrepo-com.svg" },
+                  { name: "Next.js", logo: "/nextjs-icon-svgrepo-com.svg" },
+                  { name: "ASP .NET", logo: "/dotnet-svgrepo-com (3).svg" },
+                  { name: "Tailwind", logo: "/tailwind-svgrepo-com.svg" }
+                ].map((tech, index) => (
+                  <div key={index} className="flex flex-col items-center p-3 rounded-lg hover:bg-primary/5 transition-colors duration-200">
+                    <Image
+                      src={tech.logo}
+                      alt={tech.name}
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 object-contain mb-2"
+                    />
+                    <span className="text-xs text-center text-muted-foreground font-medium">
+                      {tech.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* Tools & Platforms */}
+            <Card className="p-6 sophisticated-card rounded-2xl">
+              <h3 className="font-display text-xl font-medium text-center mb-6 text-primary">
+                Tools & Platforms
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { name: "PostgreSQL", logo: "/postgresql-svgrepo-com.svg" },
+                  { name: "MongoDB", logo: "/mongodb-svgrepo-com.svg" },
+                  { name: "Vite", logo: "/vite-svgrepo-com.svg" },
+                  { name: "Vercel", logo: "/vercel-svgrepo-com.svg" }
+                ].map((tech, index) => (
+                  <div key={index} className="flex flex-col items-center p-3 rounded-lg hover:bg-primary/5 transition-colors duration-200">
+                    <Image
+                      src={tech.logo}
+                      alt={tech.name}
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 object-contain mb-2"
+                    />
+                    <span className="text-xs text-center text-muted-foreground font-medium">
+                      {tech.name}
+                    </span>
+                  </div>
+                ))}
               </div>
             </Card>
           </div>
@@ -476,7 +503,7 @@ export default function Home() {
                             asChild
                             variant="primary"
                             size="sm"
-                            className="font-display text-sm"
+                            className="text-sm"
                           >
                             <a
                               href={project.links.live}
@@ -492,7 +519,7 @@ export default function Home() {
                             asChild
                             variant="primary"
                             size="sm"
-                            className="font-display text-sm"
+                            className="text-sm"
                           >
                             <a
                               href={project.links.github}
@@ -560,7 +587,7 @@ export default function Home() {
                 asChild
                 variant="primary"
                 size="lg" 
-                className="font-display w-48"
+                className="w-48"
               >
                 <a href="mailto:contactabdullahahmed@gmail.com">
                   Begin Our Conversation
@@ -570,7 +597,7 @@ export default function Home() {
                 asChild
                 variant="luxury"
                 size="lg" 
-                className="font-display w-48"
+                className="w-48"
               >
                 <a href="/CV.pdf" download="Abdullah_Ahmed_CV.pdf">
                   Download CV
@@ -588,7 +615,7 @@ export default function Home() {
               <Button
                 asChild
                 variant="link"
-                className="font-display tracking-wider text-base hover:scale-105 transition-transform duration-200"
+                className="tracking-wider text-base hover:scale-105 transition-transform duration-200"
               >
                 <a
                   href="https://www.linkedin.com/feed/"
@@ -601,7 +628,7 @@ export default function Home() {
               <Button
                 asChild
                 variant="link"
-                className="font-display tracking-wider text-base hover:scale-105 transition-transform duration-200"
+                className="tracking-wider text-base hover:scale-105 transition-transform duration-200"
               >
                 <a
                   href="https://github.com/abdull-ah-med"
@@ -614,7 +641,7 @@ export default function Home() {
               <Button
                 asChild
                 variant="link"
-                className="font-display tracking-wider text-base hover:scale-105 transition-transform duration-200"
+                className="tracking-wider text-base hover:scale-105 transition-transform duration-200"
               >
                 <a
                   href="https://leetcode.com/u/abdull-ah-med/"
