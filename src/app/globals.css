@@ -157,19 +157,53 @@
   .mobile-menu {
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(-20px) scale(0.95);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     box-shadow: 0 4px 12px -2px oklch(0.06 0.002 270 / 0.2);
+    max-height: 0;
+    overflow: hidden;
+    pointer-events: none;
   }
   
   .mobile-menu.open {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    max-height: 400px;
+    pointer-events: auto;
+  }
+
+  .mobile-menu-item {
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition-delay: 0s;
+    pointer-events: none;
+  }
+
+  .mobile-menu.open .mobile-menu-item {
+    opacity: 1;
+    transform: translateX(0);
+    transition-delay: calc(0.1s + var(--delay, 0s));
+    pointer-events: auto;
+  }
+
+  .mobile-backdrop {
+    opacity: 0;
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
   
   .hamburger {

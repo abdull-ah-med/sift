@@ -4,12 +4,16 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { initSmoothScroll, scrollTo, destroySmoothScroll } from "@/lib/smooth-scroll";
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    // Initialize smooth scroll
+    initSmoothScroll();
+
     const handleScroll = () => {
       const sections = ["hero", "about", "skills", "experience", "work", "contact"];
       const scrollPosition = window.scrollY + 100;
@@ -39,16 +43,18 @@ export default function Home() {
     return () => {
       window.removeEventListener("scroll", handleScroll);
       document.removeEventListener("mousedown", handleClickOutside);
+      destroySmoothScroll();
     };
   }, [mobileMenuOpen]);
 
   const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-      setMobileMenuOpen(false); // Close mobile menu after navigation
-      document.body.style.overflow = 'unset'; // Restore body scroll
-    }
+    setMobileMenuOpen(false); // Close mobile menu after navigation
+    document.body.style.overflow = 'unset'; // Restore body scroll
+    
+    // Small delay to ensure smooth menu closure
+    setTimeout(() => {
+      scrollTo(`#${sectionId}`);
+    }, 50);
   };
 
   const toggleMobileMenu = () => {
@@ -70,9 +76,17 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background parallax-bg">
+      {/* Mobile Menu Backdrop */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/20 z-40 md:hidden mobile-backdrop"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 border-b border-border elegant-glow">
-        <div className="max-w-6xl mx-auto px-6 py-4">
+        <div className="max-w-6xl mx-auto px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <div className="font-display text-xl font-medium gradient-text">
               Abdullah Ahmed
@@ -91,7 +105,7 @@ export default function Home() {
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className={`text-sm transition-all duration-300 hover:text-primary relative ${
+                  className={`font-display text-sm transition-all duration-300 hover:text-primary relative cursor-pointer ${
                     activeSection === item.id ? "text-primary" : "text-muted-foreground"
                   }`}
                 >
@@ -106,7 +120,7 @@ export default function Home() {
             {/* Mobile Hamburger */}
             <button
               onClick={toggleMobileMenu}
-              className={`md:hidden hamburger text-foreground ${mobileMenuOpen ? 'open' : ''}`}
+              className={`md:hidden hamburger text-foreground cursor-pointer ${mobileMenuOpen ? 'open' : ''}`}
               aria-label="Toggle mobile menu"
             >
               <span></span>
@@ -117,30 +131,32 @@ export default function Home() {
           </div>
 
           {/* Mobile Navigation Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden mobile-menu open mt-4 pb-4 border-t border-border/50 bg-background rounded-lg mx-2">
-              <div className="flex flex-col space-y-1 pt-4 px-2">
-                {[
-                  { id: "hero", label: "Home" },
-                  { id: "about", label: "About" },
-                  { id: "skills", label: "Skills" },
-                  { id: "experience", label: "Experience" },
-                  { id: "work", label: "Work" },
-                  { id: "contact", label: "Contact" },
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => scrollToSection(item.id)}
-                    className={`text-left px-4 py-3 text-base font-medium transition-all duration-300 hover:text-primary rounded-lg ${
-                      activeSection === item.id ? "text-primary bg-primary/10" : "text-foreground hover:bg-muted/10"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
+          <div className={`md:hidden mobile-menu ${mobileMenuOpen ? 'open' : ''} mt-2 pb-2 border-t border-border/50 bg-background rounded-lg mx-2`}>
+            <div className="flex flex-col items-center space-y-1 pt-2 px-2">
+              {[
+                { id: "hero", label: "Home" },
+                { id: "about", label: "About" },
+                { id: "skills", label: "Skills" },
+                { id: "experience", label: "Experience" },
+                { id: "work", label: "Work" },
+                { id: "contact", label: "Contact" },
+              ].map((item, index) => (
+                <button
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  className={`mobile-menu-item font-display text-center px-4 py-3 text-base font-medium transition-all duration-300 hover:text-primary relative cursor-pointer ${
+                    activeSection === item.id ? "text-primary" : "text-muted-foreground"
+                  }`}
+                  style={{ '--delay': `${index * 0.1}s` } as React.CSSProperties}
+                >
+                  {item.label}
+                  {activeSection === item.id && (
+                    <div className="absolute -bottom-1 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
+                  )}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
         </div>
       </nav>
 
@@ -509,8 +525,12 @@ export default function Home() {
                               href={project.links.live}
                               target="_blank"
                               rel="noopener noreferrer"
+                              className="flex items-center gap-2"
                             >
-                              Live Demo
+                              <span>Live Demo</span>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M7 17L17 7M17 7H7M17 7V17"/>
+                              </svg>
                             </a>
                           </Button>
                         )}
@@ -525,8 +545,12 @@ export default function Home() {
                               href={project.links.github}
                               target="_blank"
                               rel="noopener noreferrer"
+                              className="flex items-center gap-2"
                             >
-                              GitHub
+                              <span>GitHub</span>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M7 17L17 7M17 7H7M17 7V17"/>
+                              </svg>
                             </a>
                           </Button>
                         )}
