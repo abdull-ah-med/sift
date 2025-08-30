@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Abdullah Ahmed - Digital Craftsman & Design Architect",
-  description: "Crafting sophisticated digital experiences with timeless elegance. A portfolio showcasing the intersection of classical aesthetics and modern innovation.",
+  title: "Abdullah Ahmed - Computer Science Student & Software Developer",
+  description: "Computer Science student building innovative software solutions with modern technologies, where clean code meets intelligent design and every project solves real-world problems.",
   keywords: ["Abdullah Ahmed", "frontend developer", "UI/UX designer", "digital craftsman", "sophisticated design", "elegant websites", "luxury digital experiences"],
   authors: [{ name: "Abdullah Ahmed" }],
   creator: "Abdullah Ahmed",
@@ -11,14 +11,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    title: "Abdullah Ahmed - Digital Craftsman & Design Architect",
-    description: "Crafting sophisticated digital experiences with timeless elegance. A portfolio showcasing the intersection of classical aesthetics and modern innovation.",
+    title: "Abdullah Ahmed - Computer Science Student & Software Developer",
+    description: "Computer Science student building innovative software solutions with modern technologies, where clean code meets intelligent design and every project solves real-world problems.",
     siteName: "Abdullah Ahmed Portfolio",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Abdullah Ahmed - Digital Craftsman & Design Architect",
-    description: "Crafting sophisticated digital experiences with timeless elegance.",
+    title: "Abdullah Ahmed - Computer Science Student & Software Developer",
+    description: "Computer Science student building innovative software solutions with modern technologies.",
   },
 };
 
