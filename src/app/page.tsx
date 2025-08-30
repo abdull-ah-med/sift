@@ -226,7 +226,7 @@ export default function Home() {
       </section>
 
       {/* Skills Section */}
-      <section id="skills" className="py-32 px-6 relative">
+      <section id="skills" className="pt-24 pb-32 px-6 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="mb-20 text-center">
@@ -240,8 +240,8 @@ export default function Home() {
           </div>
 
           <div className="pl-0 md:pl-8">
-            <Card className="ml-0 md:ml-8 p-4 md:p-8 sophisticated-card">
-              <div className="relative overflow-hidden">
+            <Card className="ml-0 md:ml-8 p-4 md:p-8 sophisticated-card rounded-2xl">
+              <div className="relative overflow-hidden rounded-xl">
                 <div className="flex gap-8 md:gap-16 animate-scroll-logos whitespace-nowrap items-center">
                   {[
                     { name: "React", logo: "/react-svgrepo-com.svg" },
@@ -646,7 +646,6 @@ export default function Home() {
               <span>© 2025</span>
               <div className="w-1 h-1 bg-primary rounded-full" />
               <span>All rights reserved</span>
-              <span>Designed & Developed with precision</span>
             </div>
           </div>
         </div>

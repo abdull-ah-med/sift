@@ -314,17 +314,19 @@
   
   @keyframes scroll-logos {
     0% { transform: translateX(0%); }
-    100% { transform: translateX(-33.333%); }
+    100% { transform: translateX(-33.3333333%); }
   }
   
   .animate-scroll-logos {
     animation: scroll-logos 15s linear infinite;
+    will-change: transform;
   }
   
   /* Faster animation on mobile */
   @media (max-width: 768px) {
     .animate-scroll-logos {
       animation: scroll-logos 8s linear infinite;
+      will-change: transform;
     }
   }
   
