@@ -189,12 +189,9 @@ export default function Home() {
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="mb-20 text-center">
             <h2 className="font-display text-5xl md:text-6xl font-light mb-8 gradient-text">
-              About Abdullah
+              About me
             </h2>
-            <div className="ornamental-divider mb-12" />
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              A passionate computer science student exploring the endless possibilities of software development
-            </p>
+            
           </div>
           
           <div className="max-w-4xl mx-auto mb-16">
