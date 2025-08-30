@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -10,7 +11,7 @@ export default function Home() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ["hero", "about", "experience", "work", "contact"];
+      const sections = ["hero", "about", "skills", "experience", "work", "contact"];
       const scrollPosition = window.scrollY + 100;
 
       for (const section of sections) {
@@ -82,6 +83,7 @@ export default function Home() {
               {[
                 { id: "hero", label: "Home" },
                 { id: "about", label: "About" },
+                { id: "skills", label: "Skills" },
                 { id: "experience", label: "Experience" },
                 { id: "work", label: "Work" },
                 { id: "contact", label: "Contact" },
@@ -121,6 +123,7 @@ export default function Home() {
                 {[
                   { id: "hero", label: "Home" },
                   { id: "about", label: "About" },
+                  { id: "skills", label: "Skills" },
                   { id: "experience", label: "Experience" },
                   { id: "work", label: "Work" },
                   { id: "contact", label: "Contact" },
@@ -167,12 +170,14 @@ export default function Home() {
               Explore My Work
             </Button>
             <Button
-              onClick={() => scrollToSection("contact")}
+              asChild
               variant="luxury"
               size="lg"
               className="w-48 font-display"
             >
-              Begin Conversation
+              <a href="mailto:contactabdullahahmed@gmail.com">
+                Begin Conversation
+              </a>
             </Button>
           </div>
         </div>
@@ -188,59 +193,107 @@ export default function Home() {
             </h2>
             <div className="ornamental-divider mb-12" />
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              A craftsman dedicated to the intersection of timeless design and cutting-edge technology
+              A passionate computer science student exploring the endless possibilities of software development
             </p>
           </div>
           
-          <div className="grid lg:grid-cols-3 gap-12 mb-16">
-            <div className="lg:col-span-2">
-              <Card className="p-10 sophisticated-card">
-                <h3 className="font-display text-3xl font-medium mb-8 gradient-text">
-                  Philosophy & Vision
-                </h3>
-                <div className="space-y-6 text-muted-foreground leading-relaxed">
-                  <p className="text-lg">
-                    I believe in the power of understated elegance—where every element serves a purpose, 
-                    and beauty emerges from restraint rather than excess. My work reflects a commitment 
-                    to timeless design principles while embracing the possibilities of modern innovation.
-                  </p>
-                  <p>
-                    Drawing inspiration from classical aesthetics, architectural principles, and the refined 
-                    sensibilities of old-world craftsmanship, I create digital experiences that transcend 
-                    trends and stand the test of time.
-                  </p>
-                  <p>
-                    Each project is approached with meticulous attention to detail, from the macro vision 
-                    down to the smallest interactive element, ensuring that form and function exist in 
-                    perfect harmony.
-                  </p>
-                </div>
-              </Card>
-            </div>
-            
-            <div className="space-y-8">
-              <Card className="p-8 sophisticated-card">
-                <h4 className="font-display text-xl font-medium mb-6 text-primary">Core Expertise</h4>
-                <div className="space-y-4">
+          <div className="max-w-4xl mx-auto mb-16">
+            <Card className="p-10 sophisticated-card">
+              <h3 className="font-display text-3xl font-medium mb-8 gradient-text">
+                About My Journey
+              </h3>
+              <div className="space-y-6 text-muted-foreground leading-relaxed">
+                <p className="text-lg">
+                  As a Computer Science undergraduate, I&apos;m passionate about exploring the intersection 
+                  of technology and creative problem-solving. My journey in software development has 
+                  been driven by curiosity and a desire to build meaningful digital solutions.
+                </p>
+                <p>
+                  Through academic projects and internships, I&apos;ve developed a strong foundation in 
+                  full-stack development, working with modern technologies like React, TypeScript, 
+                  and .NET. I enjoy tackling complex challenges and learning new frameworks that 
+                  push the boundaries of what&apos;s possible.
+                </p>
+                <p>
+                  I believe in writing clean, maintainable code and creating user experiences that 
+                  are both functional and intuitive. Every project is an opportunity to grow, learn, 
+                  and contribute to the evolving landscape of software development.
+                </p>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Skills Section */}
+      <section id="skills" className="py-32 px-6 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
+        <div className="max-w-6xl mx-auto relative z-10">
+          <div className="mb-20 text-center">
+            <h2 className="font-display text-5xl md:text-6xl font-light mb-8 gradient-text">
+              Technical Expertise
+            </h2>
+            <div className="ornamental-divider mb-12" />
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              A comprehensive toolkit for crafting exceptional digital experiences
+            </p>
+          </div>
+
+          <div className="pl-8">
+            <Card className="ml-8 p-8 sophisticated-card">
+              <div className="relative overflow-hidden">
+                <div className="flex gap-16 animate-scroll-logos whitespace-nowrap items-center">
                   {[
-                    { skill: "Frontend Architecture", years: "5+" },
-                    { skill: "UI/UX Design", years: "4+" },
-                    { skill: "Brand Identity", years: "3+" },
-                    { skill: "Digital Strategy", years: "3+" },
-                    { skill: "Creative Direction", years: "2+" },
-                  ].map((item) => (
-                    <div key={item.skill} className="expertise-item rounded-lg">
-                      <div className="flex justify-between items-center relative z-10">
-                        <span className="text-foreground font-medium">{item.skill}</span>
-                        <span className="text-primary text-sm font-display">{item.years}</span>
-                      </div>
+                    { name: "React", logo: "/react-svgrepo-com.svg" },
+                    { name: "Next.js", logo: "/nextjs-icon-svgrepo-com.svg" },
+                    { name: "TypeScript", logo: "/typescript-svgrepo-com.svg" },
+                    { name: "JavaScript", logo: "/js01-svgrepo-com.svg" },
+                    { name: "C#", logo: "/icons8-c-sharp-logo.svg" },
+                    { name: "C++", logo: "/icons8-c++.svg" },
+                    { name: "ASP .NET", logo: "/dotnet-svgrepo-com (3).svg" },
+                    { name: "PostgreSQL", logo: "/postgresql-svgrepo-com.svg" },
+                    { name: "MongoDB", logo: "/mongodb-svgrepo-com.svg" },
+                    { name: "Tailwind", logo: "/tailwind-svgrepo-com.svg" },
+                    { name: "Vite", logo: "/vite-svgrepo-com.svg" },
+                    { name: "Vercel", logo: "/vercel-svgrepo-com.svg" },
+                    { name: "React", logo: "/react-svgrepo-com.svg" },
+                    { name: "Next.js", logo: "/nextjs-icon-svgrepo-com.svg" },
+                    { name: "TypeScript", logo: "/typescript-svgrepo-com.svg" },
+                    { name: "JavaScript", logo: "/js01-svgrepo-com.svg" },
+                    { name: "C#", logo: "/icons8-c-sharp-logo.svg" },
+                    { name: "C++", logo: "/icons8-c++.svg" },
+                    { name: "ASP .NET", logo: "/dotnet-svgrepo-com (3).svg" },
+                    { name: "PostgreSQL", logo: "/postgresql-svgrepo-com.svg" },
+                    { name: "MongoDB", logo: "/mongodb-svgrepo-com.svg" },
+                    { name: "Tailwind", logo: "/tailwind-svgrepo-com.svg" },
+                    { name: "Vite", logo: "/vite-svgrepo-com.svg" },
+                    { name: "Vercel", logo: "/vercel-svgrepo-com.svg" },
+                    { name: "React", logo: "/react-svgrepo-com.svg" },
+                    { name: "Next.js", logo: "/nextjs-icon-svgrepo-com.svg" },
+                    { name: "TypeScript", logo: "/typescript-svgrepo-com.svg" },
+                    { name: "JavaScript", logo: "/js01-svgrepo-com.svg" },
+                    { name: "C#", logo: "/icons8-c-sharp-logo.svg" },
+                    { name: "C++", logo: "/icons8-c++.svg" },
+                    { name: "ASP .NET", logo: "/dotnet-svgrepo-com (3).svg" },
+                    { name: "PostgreSQL", logo: "/postgresql-svgrepo-com.svg" },
+                    { name: "MongoDB", logo: "/mongodb-svgrepo-com.svg" },
+                    { name: "Tailwind", logo: "/tailwind-svgrepo-com.svg" },
+                    { name: "Vite", logo: "/vite-svgrepo-com.svg" },
+                    { name: "Vercel", logo: "/vercel-svgrepo-com.svg" }
+                  ].map((tech, index) => (
+                    <div key={index} className="flex-shrink-0">
+                      <Image
+                        src={tech.logo}
+                        alt={tech.name}
+                        width={32}
+                        height={32}
+                        className="w-8 h-8 object-contain opacity-70 hover:opacity-100 transition-opacity duration-200"
+                      />
                     </div>
                   ))}
                 </div>
-              </Card>
-              
-             
-            </div>
+              </div>
+            </Card>
           </div>
         </div>
       </section>
@@ -362,12 +415,22 @@ export default function Home() {
             ] as const).map((project, index) => (
               <Card key={index} className="group sophisticated-card p-8">
                 <div className="mb-8">
-                  <div className="w-full h-64 bg-gradient-to-br from-primary/10 via-primary/5 to-background rounded-xl mb-6 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="absolute bottom-4 right-4 text-xs text-primary font-display tracking-widest">
+                  <a 
+                    href={project.links.live}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full h-64 rounded-xl mb-6 relative overflow-hidden cursor-pointer"
+                  >
+                    <Image 
+                      src="/formai-screenshot.png" 
+                      alt="Formai AI-Powered Form Generator Screenshot"
+                      fill
+                      className="object-contain"
+                    />
+                    <div className="absolute bottom-4 right-4 text-xs text-primary font-display tracking-widest bg-black/50 px-2 py-1 rounded">
                       {project.year}
                     </div>
-                  </div>
+                  </a>
                 </div>
 
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-6">
@@ -515,32 +578,38 @@ export default function Home() {
           <div className="space-y-8">
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Button 
+                asChild
                 variant="primary"
                 size="lg" 
                 className="font-display w-48"
               >
-                Begin Our Conversation
+                <a href="mailto:contactabdullahahmed@gmail.com">
+                  Begin Our Conversation
+                </a>
               </Button>
               <Button 
+                asChild
                 variant="luxury"
                 size="lg" 
                 className="font-display w-48"
               >
-                Download CV
+                <a href="/CV.pdf" download="Abdullah_Ahmed_CV.pdf">
+                  Download CV
+                </a>
               </Button>
             </div>
             
-            <div className="flex items-center justify-center gap-10">
-              <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-32" />
-              <span className="font-display text-primary text-base tracking-widest bg-primary/5 px-4 py-2 rounded-lg border border-primary/20">CONNECT</span>
-              <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-32" />
+            <div className="flex items-center justify-center gap-8 mb-6">
+              <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-28" />
+              <span className="font-display text-primary text-base tracking-widest">CONNECT</span>
+              <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-28" />
             </div>
             
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex items-center justify-center gap-8">
               <Button
                 asChild
                 variant="link"
-                className="font-display tracking-wider"
+                className="font-display tracking-wider text-base hover:scale-105 transition-transform duration-200"
               >
                 <a
                   href="https://www.linkedin.com/feed/"
@@ -553,7 +622,7 @@ export default function Home() {
               <Button
                 asChild
                 variant="link"
-                className="font-display tracking-wider"
+                className="font-display tracking-wider text-base hover:scale-105 transition-transform duration-200"
               >
                 <a
                   href="https://github.com/abdull-ah-med"
@@ -566,7 +635,7 @@ export default function Home() {
               <Button
                 asChild
                 variant="link"
-                className="font-display tracking-wider"
+                className="font-display tracking-wider text-base hover:scale-105 transition-transform duration-200"
               >
                 <a
                   href="https://leetcode.com/u/abdull-ah-med/"

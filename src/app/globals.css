@@ -120,7 +120,6 @@
     -webkit-backdrop-filter: none !important;
   }
   body {
-    background: url('/deep-space.jpg') center/cover no-repeat fixed;
     @apply text-foreground font-sans antialiased;
   }
   html {
@@ -311,6 +310,15 @@
   @keyframes float {
     0%, 100% { transform: translateY(0px); }
     50% { transform: translateY(-10px); }
+  }
+  
+  @keyframes scroll-logos {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-33.333%); }
+  }
+  
+  .animate-scroll-logos {
+    animation: scroll-logos 15s linear infinite;
   }
   
   .expertise-item {
