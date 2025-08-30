@@ -239,10 +239,10 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="pl-8">
-            <Card className="ml-8 p-8 sophisticated-card">
+          <div className="pl-0 md:pl-8">
+            <Card className="ml-0 md:ml-8 p-4 md:p-8 sophisticated-card">
               <div className="relative overflow-hidden">
-                <div className="flex gap-16 animate-scroll-logos whitespace-nowrap items-center">
+                <div className="flex gap-8 md:gap-16 animate-scroll-logos whitespace-nowrap items-center">
                   {[
                     { name: "React", logo: "/react-svgrepo-com.svg" },
                     { name: "Next.js", logo: "/nextjs-icon-svgrepo-com.svg" },
@@ -479,7 +479,7 @@ export default function Home() {
                             asChild
                             variant="primary"
                             size="sm"
-                            className="font-display text-xs"
+                            className="font-display text-sm"
                           >
                             <a
                               href={project.links.live}
@@ -495,7 +495,7 @@ export default function Home() {
                             asChild
                             variant="primary"
                             size="sm"
-                            className="font-display text-xs"
+                            className="font-display text-sm"
                           >
                             <a
                               href={project.links.github}

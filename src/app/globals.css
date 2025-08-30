@@ -321,6 +321,13 @@
     animation: scroll-logos 15s linear infinite;
   }
   
+  /* Faster animation on mobile */
+  @media (max-width: 768px) {
+    .animate-scroll-logos {
+      animation: scroll-logos 8s linear infinite;
+    }
+  }
+  
   .expertise-item {
     position: relative;
     padding: 1rem;
