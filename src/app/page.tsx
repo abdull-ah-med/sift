@@ -994,7 +994,7 @@ export default function Home() {
                 className="tracking-wider text-base hover:scale-105 transition-transform duration-200"
               >
                 <a
-                  href="https://www.linkedin.com/feed/"
+                  href="https://www.linkedin.com/in/abdull-ah-med/"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
