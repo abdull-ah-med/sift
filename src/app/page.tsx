@@ -11,6 +11,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 export default function Home() {
   const [activeSection, setActiveSection] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const animationsInitialized = useRef(false);
   
   // GSAP refs
   const heroRef = useRef<HTMLDivElement>(null);
@@ -20,7 +21,7 @@ export default function Home() {
   const buttonsRef = useRef<HTMLDivElement>(null);
   const scrollIndicatorRef = useRef<HTMLDivElement>(null);
   const aboutRef = useRef<HTMLElement>(null);
-  const skillsRef = useRef<HTMLElement>(null);
+  const skillsRef = useRef<HTMLDivElement>(null);
   const experienceRef = useRef<HTMLElement>(null);
   const workRef = useRef<HTMLElement>(null);
   const contactRef = useRef<HTMLElement>(null);
@@ -28,6 +29,10 @@ export default function Home() {
   const contactDescriptionRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
+    // Prevent reinitializing animations
+    if (animationsInitialized.current) return;
+    animationsInitialized.current = true;
+    
     // Initialize GSAP ScrollTrigger
     gsap.registerPlugin(ScrollTrigger);
     
@@ -315,12 +320,10 @@ export default function Home() {
 
     window.addEventListener("scroll", handleScroll);
     window.addEventListener("resize", handleResize);
-    document.addEventListener("mousedown", handleClickOutside);
     
     return () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleResize);
-      document.removeEventListener("mousedown", handleClickOutside);
       destroySmoothScroll();
       
       // Clean up GSAP ScrollTrigger and animations
@@ -345,6 +348,22 @@ export default function Home() {
         link.removeEventListener('mouseenter', () => {});
         link.removeEventListener('mouseleave', () => {});
       });
+    };
+  }, []); // Remove mobileMenuOpen dependency
+
+  // Separate useEffect for mobile menu functionality
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const nav = document.querySelector('nav');
+      if (nav && !nav.contains(event.target as Node) && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [mobileMenuOpen]);
 
