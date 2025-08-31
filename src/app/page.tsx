@@ -1,18 +1,261 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { initSmoothScroll, scrollTo, destroySmoothScroll } from "@/lib/smooth-scroll";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // GSAP refs
+  const heroRef = useRef<HTMLDivElement>(null);
+  const nameRef = useRef<HTMLHeadingElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const descriptionRef = useRef<HTMLParagraphElement>(null);
+  const buttonsRef = useRef<HTMLDivElement>(null);
+  const scrollIndicatorRef = useRef<HTMLDivElement>(null);
+  const aboutRef = useRef<HTMLElement>(null);
+  const skillsRef = useRef<HTMLElement>(null);
+  const experienceRef = useRef<HTMLElement>(null);
+  const workRef = useRef<HTMLElement>(null);
+  const contactRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    // Initialize GSAP ScrollTrigger
+    gsap.registerPlugin(ScrollTrigger);
+    
     // Initialize smooth scroll
     initSmoothScroll();
+
+    // Hero section animations
+    const heroTl = gsap.timeline();
+    const isMobile = window.innerWidth < 768;
+    const mobileOffset = isMobile ? 0.6 : 1; // Reduce animation intensity on mobile
+    
+    heroTl
+      .fromTo(nameRef.current, 
+        { y: isMobile ? 60 : 100, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1.2 * mobileOffset, ease: "power3.out" }
+      )
+      .fromTo(subtitleRef.current,
+        { y: isMobile ? 30 : 50, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8 * mobileOffset, ease: "power2.out" },
+        "-=0.6"
+      )
+      .fromTo(descriptionRef.current,
+        { y: isMobile ? 30 : 50, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8 * mobileOffset, ease: "power2.out" },
+        "-=0.4"
+      )
+      .fromTo(buttonsRef.current,
+        { y: isMobile ? 20 : 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.8 * mobileOffset, ease: "power2.out" },
+        "-=0.2"
+      )
+      .fromTo(scrollIndicatorRef.current,
+        { y: isMobile ? 15 : 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6 * mobileOffset, ease: "power2.out" },
+        "-=0.4"
+      );
+
+    // Section reveal animations
+    const sections = [aboutRef, skillsRef, experienceRef, workRef, contactRef];
+    sections.forEach((sectionRef, index) => {
+      if (sectionRef.current) {
+        gsap.fromTo(sectionRef.current,
+          { y: 60, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 1,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top 85%",
+              end: "bottom 15%",
+              toggleActions: "play none none reverse"
+            }
+          }
+        );
+      }
+    });
+
+    // Section heading animations
+    const sectionHeadings = document.querySelectorAll('h2.gradient-text');
+    sectionHeadings.forEach((heading, index) => {
+      gsap.fromTo(heading,
+        { y: 30, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: heading,
+            start: "top 85%",
+            toggleActions: "play none none reverse"
+          },
+          delay: index * 0.1
+        }
+      );
+    });
+
+    // Skills grid animations with stagger
+    const skillCards = document.querySelectorAll('#skills .sophisticated-card');
+    gsap.fromTo(skillCards,
+      { y: 40, opacity: 0, scale: 0.95 },
+      {
+        y: 0,
+        opacity: 1,
+        scale: 1,
+        duration: 0.8,
+        ease: "power2.out",
+        stagger: 0.15,
+        scrollTrigger: {
+          trigger: '#skills',
+          start: "top 80%",
+          toggleActions: "play none none reverse"
+        }
+      }
+    );
+
+    // Experience timeline animations
+    const timelineItems = document.querySelectorAll('.experience-timeline .sophisticated-card');
+    timelineItems.forEach((item, index) => {
+      gsap.fromTo(item,
+        { x: -60, opacity: 0 },
+        {
+          x: 0,
+          opacity: 1,
+          duration: 0.8,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: item,
+            start: "top 80%",
+            toggleActions: "play none none reverse"
+          },
+          delay: index * 0.2
+        }
+      );
+    });
+
+    // Work project animations
+    const projectCards = document.querySelectorAll('#work .sophisticated-card');
+    projectCards.forEach((card, index) => {
+      gsap.fromTo(card,
+        { y: 60, opacity: 0, scale: 0.95 },
+        {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          duration: 1,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: card,
+            start: "top 80%",
+            toggleActions: "play none none reverse"
+          },
+          delay: index * 0.3
+        }
+      );
+    });
+
+    // Contact section animations
+    const contactCards = document.querySelectorAll('#contact .sophisticated-card');
+    contactCards.forEach((card, index) => {
+      gsap.fromTo(card,
+        { y: 40, opacity: 0, scale: 0.95 },
+        {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          duration: 0.8,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: card,
+            start: "top 80%",
+            toggleActions: "play none none reverse"
+          },
+          delay: index * 0.1
+        }
+      );
+    });
+
+    // Floating animation for scroll indicator
+    gsap.to(scrollIndicatorRef.current, {
+      y: isMobile ? -6 : -10,
+      duration: isMobile ? 2.5 : 2,
+      ease: "power2.inOut",
+      repeat: -1,
+      yoyo: true
+    });
+
+    // Button hover animations
+    const buttons = document.querySelectorAll('button, .elegant-button');
+    buttons.forEach(button => {
+      button.addEventListener('mouseenter', () => {
+        gsap.to(button, {
+          scale: 1.05,
+          duration: 0.3,
+          ease: "power2.out"
+        });
+      });
+      
+      button.addEventListener('mouseleave', () => {
+        gsap.to(button, {
+          scale: 1,
+          duration: 0.3,
+          ease: "power2.out"
+        });
+      });
+    });
+
+    // Card hover animations
+    const cards = document.querySelectorAll('.sophisticated-card');
+    cards.forEach(card => {
+      card.addEventListener('mouseenter', () => {
+        gsap.to(card, {
+          y: -5,
+          scale: 1.02,
+          duration: 0.4,
+          ease: "power2.out"
+        });
+      });
+      
+      card.addEventListener('mouseleave', () => {
+        gsap.to(card, {
+          y: 0,
+          scale: 1,
+          duration: 0.4,
+          ease: "power2.out"
+        });
+      });
+    });
+
+    // Navigation link hover animations
+    const navLinks = document.querySelectorAll('nav button');
+    navLinks.forEach(link => {
+      link.addEventListener('mouseenter', () => {
+        gsap.to(link, {
+          y: -2,
+          duration: 0.2,
+          ease: "power2.out"
+        });
+      });
+      
+      link.addEventListener('mouseleave', () => {
+        gsap.to(link, {
+          y: 0,
+          duration: 0.2,
+          ease: "power2.out"
+        });
+      });
+    });
 
     const handleScroll = () => {
       const sections = ["hero", "about", "skills", "experience", "work", "contact"];
@@ -37,13 +280,47 @@ export default function Home() {
       }
     };
 
+    // Handle window resize for mobile optimization
+    const handleResize = () => {
+      const newIsMobile = window.innerWidth < 768;
+      if (newIsMobile !== isMobile) {
+        // Refresh ScrollTrigger on orientation change
+        ScrollTrigger.refresh();
+      }
+    };
+
     window.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleResize);
     document.addEventListener("mousedown", handleClickOutside);
     
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleResize);
       document.removeEventListener("mousedown", handleClickOutside);
       destroySmoothScroll();
+      
+      // Clean up GSAP ScrollTrigger and animations
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+      
+      // Remove event listeners
+      const buttons = document.querySelectorAll('button, .elegant-button');
+      const cards = document.querySelectorAll('.sophisticated-card');
+      const navLinks = document.querySelectorAll('nav button');
+      
+      buttons.forEach(button => {
+        button.removeEventListener('mouseenter', () => {});
+        button.removeEventListener('mouseleave', () => {});
+      });
+      
+      cards.forEach(card => {
+        card.removeEventListener('mouseenter', () => {});
+        card.removeEventListener('mouseleave', () => {});
+      });
+      
+      navLinks.forEach(link => {
+        link.removeEventListener('mouseenter', () => {});
+        link.removeEventListener('mouseleave', () => {});
+      });
     };
   }, [mobileMenuOpen]);
 
@@ -161,50 +438,50 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section id="hero" className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
+      <section ref={heroRef} id="hero" className="min-h-screen flex items-center justify-center px-4 sm:px-6 relative overflow-hidden">
         {/* Subtle Background Elements */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3 pointer-events-none" />
         <div className="absolute inset-0 parallax-bg pointer-events-none" />
         
         {/* Enhanced Content */}
-        <div className="max-w-6xl mx-auto text-center relative z-10">
-          <div className="mb-20">
+        <div className="max-w-6xl mx-auto text-center relative z-10 px-4 sm:px-0">
+          <div className="mb-12 sm:mb-16 md:mb-20">
             {/* Elegant Name with Subtle Animation */}
-            <div className="mb-8">
-              <h1 className="font-display text-5xl md:text-7xl font-light leading-tight mb-6 text-balance gradient-text text-shadow-elegant elegant-reveal">
+            <div className="mb-6 sm:mb-8">
+              <h1 ref={nameRef} className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light leading-tight mb-4 sm:mb-6 text-balance gradient-text text-shadow-elegant elegant-reveal px-2">
                 Abdullah Ahmed
               </h1>
             </div>
             
             {/* Sophisticated Subtitle */}
-            <div className="mb-8 elegant-fade-in">
-              <p className="text-lg md:text-xl text-muted-foreground font-light tracking-wide">
+            <div className="mb-6 sm:mb-8 elegant-fade-in">
+              <p ref={subtitleRef} className="text-base sm:text-lg md:text-xl text-muted-foreground font-light tracking-wide px-2">
                 Computer Science Student & Software Developer
               </p>
             </div>
             
             {/* Enhanced Description */}
             <div className="elegant-fade-in-delayed">
-              <p className="text-base md:text-lg text-muted-foreground font-light leading-relaxed max-w-5xl mx-auto text-balance mb-8">
+              <p ref={descriptionRef} className="text-sm sm:text-base md:text-lg text-muted-foreground font-light leading-relaxed max-w-4xl sm:max-w-5xl mx-auto text-balance mb-6 sm:mb-8 px-2">
                 Building innovative software solutions with modern technologies, where clean code meets intelligent design and every project solves real-world problems.
               </p>
             </div>
             
             {/* Elegant Divider */}
-            <div className="flex items-center justify-center my-16 elegant-fade-in-delayed">
-              <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-64"></div>
-              <div className="mx-8 w-1.5 h-1.5 bg-primary/70 rounded-full subtle-pulse"></div>
-              <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-64"></div>
+            <div className="flex items-center justify-center my-8 sm:my-12 md:my-16 elegant-fade-in-delayed px-4">
+              <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-32 sm:w-48 md:w-64"></div>
+              <div className="mx-4 sm:mx-6 md:mx-8 w-1.5 h-1.5 bg-primary/70 rounded-full subtle-pulse"></div>
+              <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-32 sm:w-48 md:w-64"></div>
             </div>
           </div>
           
           {/* Refined Buttons */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center elegant-slide-up">
+          <div ref={buttonsRef} className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center elegant-slide-up px-4">
             <Button
               asChild
               variant="primary"
               size="lg"
-              className="w-48"
+              className="w-full sm:w-48"
             >
               <a href="#work" onClick={(e) => { e.preventDefault(); scrollToSection("work"); }}>
                 Explore My Work
@@ -214,7 +491,7 @@ export default function Home() {
               asChild
               variant="luxury"
               size="lg"
-              className="w-48"
+              className="w-full sm:w-48"
             >
               <a href="mailto:contactabdullahahmed@gmail.com">
                 Begin Conversation
@@ -223,12 +500,12 @@ export default function Home() {
           </div>
           
           {/* Elegant Scroll Indicator */}
-          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 elegant-fade-in-final">
+          <div ref={scrollIndicatorRef} className="absolute bottom-8 sm:bottom-12 md:bottom-16 left-1/2 transform -translate-x-1/2 elegant-fade-in-final">
             <div className="flex flex-col items-center text-muted-foreground hover:text-primary transition-all duration-500 cursor-pointer group"
                  onClick={() => scrollToSection("about")}>
-              <span className="text-xs mb-4 tracking-[0.2em] font-light uppercase">Discover More</span>
-              <div className="w-px h-16 bg-gradient-to-b from-muted-foreground/50 to-transparent group-hover:from-primary/70 transition-all duration-500"></div>
-              <svg className="w-3 h-3 mt-3 animate-bounce opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span className="text-xs mb-2 sm:mb-4 tracking-[0.2em] font-light uppercase">Discover More</span>
+              <div className="w-px h-12 sm:h-16 bg-gradient-to-b from-muted-foreground/50 to-transparent group-hover:from-primary/70 transition-all duration-500"></div>
+              <svg className="w-3 h-3 mt-2 sm:mt-3 animate-bounce opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7" />
               </svg>
             </div>
@@ -237,7 +514,7 @@ export default function Home() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-32 px-6 relative">
+      <section ref={aboutRef} id="about" className="py-32 px-6 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-card/20 to-transparent" />
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="mb-20 text-center">
@@ -274,7 +551,7 @@ export default function Home() {
       </section>
 
       {/* Skills Section */}
-      <section id="skills" className="pt-24 pb-32 px-6 relative">
+      <section ref={skillsRef} id="skills" className="pt-24 pb-32 px-6 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent" />
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="mb-20 text-center">
@@ -376,7 +653,7 @@ export default function Home() {
       </section>
 
       {/* Experience Section */}
-      <section id="experience" className="py-32 px-6 bg-gradient-to-b from-background via-card/10 to-background">
+      <section ref={experienceRef} id="experience" className="py-32 px-6 bg-gradient-to-b from-background via-card/10 to-background">
         <div className="max-w-6xl mx-auto">
           <div className="mb-20 text-center">
             <h2 className="font-display text-5xl md:text-6xl font-light mb-8 gradient-text">
@@ -460,7 +737,7 @@ export default function Home() {
       </section>
 
       {/* Work Section */}
-      <section id="work" className="py-32 px-6 relative">
+      <section ref={workRef} id="work" className="py-32 px-6 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-card/30 to-background" />
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="mb-20 text-center">
@@ -602,7 +879,7 @@ export default function Home() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-32 px-6 relative overflow-hidden">
+      <section ref={contactRef} id="contact" className="py-32 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3" />
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <div className="mb-20">
