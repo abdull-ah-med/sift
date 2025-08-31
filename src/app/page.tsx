@@ -690,7 +690,7 @@ export default function Home() {
           <div className="experience-timeline pl-8">
             {[
               {
-                period: "2025",
+                period: "Jun 2025 - Aug 2025",
                 role: "Software Engineer Intern",
                 company: "DirectFN",
                 description: "Contributed to full-stack development of financial technology solutions, working with modern web technologies to build scalable and efficient applications for financial services.",
