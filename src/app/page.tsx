@@ -162,28 +162,53 @@ export default function Home() {
 
       {/* Hero Section */}
       <section id="hero" className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
+        {/* Subtle Background Elements */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3 pointer-events-none" />
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <div className="mb-12">
-            <div className="mb-6">
-            
-              <h1 className="font-display text-6xl md:text-8xl font-light leading-tight mb-8 text-balance gradient-text text-shadow-elegant">
+        <div className="absolute inset-0 parallax-bg pointer-events-none" />
+        
+        {/* Enhanced Content */}
+        <div className="max-w-6xl mx-auto text-center relative z-10">
+          <div className="mb-20">
+            {/* Elegant Name with Subtle Animation */}
+            <div className="mb-8">
+              <h1 className="font-display text-5xl md:text-7xl font-light leading-tight mb-6 text-balance gradient-text text-shadow-elegant elegant-reveal">
                 Abdullah Ahmed
               </h1>
             </div>
-            {/* Removed ornamental divider */}
-            <p className="text-xl md:text-2xl text-foreground font-light leading-relaxed max-w-3xl mx-auto text-balance mb-8">
-              Computer Science student building innovative software solutions with modern technologies, where clean code meets intelligent design and every project solves real-world problems.
-            </p>
+            
+            {/* Sophisticated Subtitle */}
+            <div className="mb-8 elegant-fade-in">
+              <p className="text-lg md:text-xl text-muted-foreground font-light tracking-wide">
+                Computer Science Student & Software Developer
+              </p>
+            </div>
+            
+            {/* Enhanced Description */}
+            <div className="elegant-fade-in-delayed">
+              <p className="text-base md:text-lg text-muted-foreground font-light leading-relaxed max-w-5xl mx-auto text-balance mb-8">
+                Building innovative software solutions with modern technologies, where clean code meets intelligent design and every project solves real-world problems.
+              </p>
+            </div>
+            
+            {/* Elegant Divider */}
+            <div className="flex items-center justify-center my-16 elegant-fade-in-delayed">
+              <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-64"></div>
+              <div className="mx-8 w-1.5 h-1.5 bg-primary/70 rounded-full subtle-pulse"></div>
+              <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-64"></div>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+          
+          {/* Refined Buttons */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center elegant-slide-up">
             <Button
-              onClick={() => scrollToSection("work")}
+              asChild
               variant="primary"
               size="lg"
               className="w-48"
             >
-              Explore My Work
+              <a href="#work" onClick={(e) => { e.preventDefault(); scrollToSection("work"); }}>
+                Explore My Work
+              </a>
             </Button>
             <Button
               asChild
@@ -195,6 +220,18 @@ export default function Home() {
                 Begin Conversation
               </a>
             </Button>
+          </div>
+          
+          {/* Elegant Scroll Indicator */}
+          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 elegant-fade-in-final">
+            <div className="flex flex-col items-center text-muted-foreground hover:text-primary transition-all duration-500 cursor-pointer group"
+                 onClick={() => scrollToSection("about")}>
+              <span className="text-xs mb-4 tracking-[0.2em] font-light uppercase">Discover More</span>
+              <div className="w-px h-16 bg-gradient-to-b from-muted-foreground/50 to-transparent group-hover:from-primary/70 transition-all duration-500"></div>
+              <svg className="w-3 h-3 mt-3 animate-bounce opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7" />
+              </svg>
+            </div>
           </div>
         </div>
       </section>
