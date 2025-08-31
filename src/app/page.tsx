@@ -24,6 +24,8 @@ export default function Home() {
   const experienceRef = useRef<HTMLElement>(null);
   const workRef = useRef<HTMLElement>(null);
   const contactRef = useRef<HTMLElement>(null);
+  const contactHeadingRef = useRef<HTMLHeadingElement>(null);
+  const contactDescriptionRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     // Initialize GSAP ScrollTrigger
@@ -64,7 +66,7 @@ export default function Home() {
       );
 
     // Section reveal animations
-    const sections = [aboutRef, skillsRef, experienceRef, workRef, contactRef];
+    const sections = [aboutRef, skillsRef, experienceRef, workRef];
     sections.forEach((sectionRef, index) => {
       if (sectionRef.current) {
         gsap.fromTo(sectionRef.current,
@@ -84,6 +86,28 @@ export default function Home() {
         );
       }
     });
+
+    // Contact section staggered animations
+    if (contactRef.current && contactHeadingRef.current && contactDescriptionRef.current) {
+      const contactTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: contactRef.current,
+          start: "top 85%",
+          toggleActions: "play none none reverse"
+        }
+      });
+      
+      contactTl
+        .fromTo(contactHeadingRef.current,
+          { y: 40, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" }
+        )
+        .fromTo(contactDescriptionRef.current,
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" },
+          "-=0.3"
+        );
+    }
 
     // Section heading animations
     const sectionHeadings = document.querySelectorAll('h2.gradient-text');
@@ -883,11 +907,11 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3" />
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <div className="mb-20">
-            <h2 className="font-display text-5xl md:text-6xl font-light mb-8 gradient-text">
+            <h2 ref={contactHeadingRef} className="font-display text-5xl md:text-6xl font-light mb-8 gradient-text">
               Let&apos;s Create Together
             </h2>
             <div className="ornamental-divider mb-12" />
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed max-w-3xl mx-auto text-balance">
+            <p ref={contactDescriptionRef} className="text-xl text-muted-foreground mb-8 leading-relaxed max-w-3xl mx-auto text-balance">
                 I&apos;m always interested in discussing new opportunities, meaningful collaborations, 
               and innovative projects that push the boundaries of digital excellence.
             </p>
@@ -920,12 +944,12 @@ export default function Home() {
           </div>
           
           <div className="space-y-8">
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-6 justify-center items-center">
               <Button 
                 asChild
                 variant="primary"
                 size="lg" 
-                className="w-48"
+                className="w-full sm:w-48"
               >
                 <a href="mailto:contactabdullahahmed@gmail.com">
                   Begin Our Conversation
@@ -935,7 +959,7 @@ export default function Home() {
                 asChild
                 variant="luxury"
                 size="lg" 
-                className="w-48"
+                className="w-full sm:w-48"
               >
                 <a href="/CV.pdf" download="Abdullah_Ahmed_CV.pdf">
                   Download CV
