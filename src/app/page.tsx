@@ -445,16 +445,16 @@ export default function Home() {
         
         {/* Enhanced Content */}
         <div className="max-w-6xl mx-auto text-center relative z-10 px-4 sm:px-0">
-          <div className="mb-12 sm:mb-16 md:mb-20">
+          <div className="mb-8 sm:mb-12 md:mb-16">
             {/* Elegant Name with Subtle Animation */}
-            <div className="mb-6 sm:mb-8">
-              <h1 ref={nameRef} className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light leading-tight mb-4 sm:mb-6 text-balance gradient-text text-shadow-elegant elegant-reveal px-2">
+            <div className="mb-4 sm:mb-6 md:mb-8">
+              <h1 ref={nameRef} className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light leading-tight mb-3 sm:mb-4 md:mb-6 text-balance gradient-text text-shadow-elegant elegant-reveal px-2">
                 Abdullah Ahmed
               </h1>
             </div>
             
             {/* Sophisticated Subtitle */}
-            <div className="mb-6 sm:mb-8 elegant-fade-in">
+            <div className="mb-4 sm:mb-6 md:mb-8 elegant-fade-in">
               <p ref={subtitleRef} className="text-base sm:text-lg md:text-xl text-muted-foreground font-light tracking-wide px-2">
                 Computer Science Student & Software Developer
               </p>
@@ -462,21 +462,21 @@ export default function Home() {
             
             {/* Enhanced Description */}
             <div className="elegant-fade-in-delayed">
-              <p ref={descriptionRef} className="text-sm sm:text-base md:text-lg text-muted-foreground font-light leading-relaxed max-w-4xl sm:max-w-5xl mx-auto text-balance mb-6 sm:mb-8 px-2">
+              <p ref={descriptionRef} className="text-sm sm:text-base md:text-lg text-muted-foreground font-light leading-relaxed max-w-4xl sm:max-w-5xl mx-auto text-balance mb-4 sm:mb-6 md:mb-8 px-2">
                 Building innovative software solutions with modern technologies, where clean code meets intelligent design and every project solves real-world problems.
               </p>
             </div>
             
             {/* Elegant Divider */}
-            <div className="flex items-center justify-center my-8 sm:my-12 md:my-16 elegant-fade-in-delayed px-4">
-              <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-32 sm:w-48 md:w-64"></div>
-              <div className="mx-4 sm:mx-6 md:mx-8 w-1.5 h-1.5 bg-primary/70 rounded-full subtle-pulse"></div>
-              <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-32 sm:w-48 md:w-64"></div>
+            <div className="flex items-center justify-center my-6 sm:my-8 md:my-12 elegant-fade-in-delayed px-4">
+              <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-24 sm:w-32 md:w-48 lg:w-64"></div>
+              <div className="mx-3 sm:mx-4 md:mx-6 lg:mx-8 w-1.5 h-1.5 bg-primary/70 rounded-full subtle-pulse"></div>
+              <div className="h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent w-24 sm:w-32 md:w-48 lg:w-64"></div>
             </div>
           </div>
           
           {/* Refined Buttons */}
-          <div ref={buttonsRef} className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center elegant-slide-up px-4">
+          <div ref={buttonsRef} className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-6 justify-center items-center elegant-slide-up px-4 mb-16 sm:mb-20 md:mb-24">
             <Button
               asChild
               variant="primary"
@@ -500,12 +500,12 @@ export default function Home() {
           </div>
           
           {/* Elegant Scroll Indicator */}
-          <div ref={scrollIndicatorRef} className="absolute bottom-8 sm:bottom-12 md:bottom-16 left-1/2 transform -translate-x-1/2 elegant-fade-in-final">
+          <div ref={scrollIndicatorRef} className="relative mt-8 sm:mt-12 elegant-fade-in-final">
             <div className="flex flex-col items-center text-muted-foreground hover:text-primary transition-all duration-500 cursor-pointer group"
                  onClick={() => scrollToSection("about")}>
-              <span className="text-xs mb-2 sm:mb-4 tracking-[0.2em] font-light uppercase">Discover More</span>
-              <div className="w-px h-12 sm:h-16 bg-gradient-to-b from-muted-foreground/50 to-transparent group-hover:from-primary/70 transition-all duration-500"></div>
-              <svg className="w-3 h-3 mt-2 sm:mt-3 animate-bounce opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span className="text-xs mb-2 sm:mb-3 tracking-[0.2em] font-light uppercase">Discover More</span>
+              <div className="w-px h-10 sm:h-12 md:h-16 bg-gradient-to-b from-muted-foreground/50 to-transparent group-hover:from-primary/70 transition-all duration-500"></div>
+              <svg className="w-3 h-3 mt-2 animate-bounce opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7" />
               </svg>
             </div>
