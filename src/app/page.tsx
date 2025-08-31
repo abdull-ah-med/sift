@@ -730,7 +730,16 @@ export default function Home() {
                       <h3 className="font-display text-2xl font-medium mb-2 text-primary">
                         {job.role}
                       </h3>
-                      <p className="text-lg text-muted-foreground mb-1">{job.company}</p>
+                      <p className="text-lg text-muted-foreground mb-1">
+                        <a 
+                          href="https://www.directfn.com/en/" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="hover:text-primary transition-colors duration-200 underline decoration-primary/30 hover:decoration-primary"
+                        >
+                          {job.company}
+                        </a>
+                      </p>
                       <p className="text-sm text-primary font-display tracking-wider">{job.period}</p>
                     </div>
                   </div>
