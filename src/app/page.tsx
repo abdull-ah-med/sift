@@ -111,6 +111,11 @@ export default function Home() {
           { y: 30, opacity: 0 },
           { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" },
           "-=0.3"
+        )
+        .fromTo('#contact .sophisticated-card',
+          { y: 40, opacity: 0, scale: 0.95 },
+          { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: "power2.out" },
+          "-=0.2"
         );
     }
 
@@ -194,26 +199,7 @@ export default function Home() {
       );
     });
 
-    // Contact section animations
-    const contactCards = document.querySelectorAll('#contact .sophisticated-card');
-    contactCards.forEach((card, index) => {
-      gsap.fromTo(card,
-        { y: 40, opacity: 0, scale: 0.95 },
-        {
-          y: 0,
-          opacity: 1,
-          scale: 1,
-          duration: 0.8,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: card,
-            start: "top 80%",
-            toggleActions: "play none none reverse"
-          },
-          delay: index * 0.1
-        }
-      );
-    });
+
 
     // Floating animation for scroll indicator
     gsap.to(scrollIndicatorRef.current, {
