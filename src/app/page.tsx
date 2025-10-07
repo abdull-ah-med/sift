@@ -1007,6 +1007,19 @@ export default function Home() {
                 className="tracking-wider text-base hover:scale-105 transition-transform duration-200"
               >
                 <a
+                  href="https://x.com/abdullahs_X"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  X
+                </a>
+              </Button>
+              <Button
+                asChild
+                variant="link"
+                className="tracking-wider text-base hover:scale-105 transition-transform duration-200"
+              >
+                <a
                   href="https://github.com/abdull-ah-med"
                   target="_blank"
                   rel="noopener noreferrer"
