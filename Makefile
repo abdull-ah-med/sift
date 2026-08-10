@@ -26,12 +26,12 @@ test:
 	pnpm -r test
 
 lint:
-	uv run ruff check .
-	uv run ruff format --check .
+	uv run ruff check libs services apps tests tools
+	uv run ruff format --check libs services apps tests tools
 	pnpm -r lint
 
 typecheck:
-	uv run mypy libs/sift-core/src services/api/src
+	uv run mypy libs/sift-core/src libs/sift-parse/src services/api/src
 	pnpm -r typecheck
 
 integration:

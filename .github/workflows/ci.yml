@@ -25,12 +25,12 @@ jobs:
         run: uv sync --group dev
       - name: Ruff
         run: |
-          uv run ruff check .
-          uv run ruff format --check .
+          uv run ruff check libs services apps tests tools
+          uv run ruff format --check libs services apps tests tools
       - name: Mypy
-        run: uv run mypy libs/sift-core/src
+        run: uv run mypy libs/sift-core/src libs/sift-parse/src services/api/src
       - name: Pytest
-        run: uv run pytest -q
+        run: uv run pytest -q --ignore=vendor
 
   node:
     name: Node

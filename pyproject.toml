@@ -8,6 +8,7 @@ license = { text = "Apache-2.0" }
 authors = [{ name = "Abdullah Ahmed", email = "contactabdullahahmed@gmail.com" }]
 dependencies = [
     "sift-core",
+    "sift-parse",
 ]
 
 [dependency-groups]
@@ -22,6 +23,7 @@ dev = [
 [tool.uv.workspace]
 members = [
     "libs/sift-core",
+    "libs/sift-parse",
     "services/api",
     "services/worker",
     "apps/cli",
@@ -32,13 +34,22 @@ package = false
 
 [tool.uv.sources]
 sift-core = { workspace = true }
+sift-parse = { workspace = true }
 
 [tool.ruff]
 line-length = 100
 target-version = "py313"
+extend-exclude = ["vendor"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "PL", "C4", "PT", "RUF"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["sift_core", "sift_parse", "sift_api", "sift_worker", "sift_cli"]
+
+[tool.ruff.lint.per-file-ignores]
+"services/api/src/sift_api/routes/*.py" = ["B008"]
+"libs/sift-parse/src/sift_parse/smoke.py" = ["PLC0415"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -49,9 +60,10 @@ strict = true
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+exclude = ["vendor/"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["libs", "services", "apps", "tests"]
 pythonpath = ["."]
-addopts = "-q"
+addopts = "-q --ignore=vendor"

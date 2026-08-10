@@ -1,20 +1,11 @@
 [project]
-name = "sift-api"
+name = "sift-parse"
 version = "0.0.0"
-description = "sift HTTP API (FastAPI). Phase 0 scaffold only."
+description = "Thin adapter over vendored sift-parse (Docling lineage)."
 requires-python = ">=3.13,<3.14"
 license = { text = "Apache-2.0" }
 dependencies = [
     "sift-core",
-    "sift-parse",
-    "fastapi>=0.115",
-    "uvicorn[standard]>=0.34",
-    "python-multipart>=0.0.20",
-]
-
-[project.optional-dependencies]
-dev = [
-    "httpx>=0.28",
 ]
 
 [build-system]
@@ -22,12 +13,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/sift_api"]
+packages = ["src/sift_parse"]
 
 [tool.uv.sources]
 sift-core = { workspace = true }
-sift-parse = { workspace = true }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-
