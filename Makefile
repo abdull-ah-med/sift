@@ -4,7 +4,7 @@ setup:
 	./tools/dev/setup.sh
 
 up:
-	docker compose -f deploy/compose/dev.yml up -d
+	docker compose -f deploy/compose/dev.yml up -d --build
 
 seed:
 	@echo "seed lands in Phase 1"
@@ -13,10 +13,10 @@ web:
 	pnpm --filter @sift/web dev
 
 api:
-	@echo "api reload lands with the FastAPI stub PR"
+	uv run uvicorn sift_api.main:app --reload --app-dir services/api/src
 
 worker:
-	@echo "worker lands with the Taskiq stub PR"
+	uv run python -m sift_worker
 
 mcp-proxy:
 	pnpm --filter @sift/mcp-proxy dev
@@ -31,7 +31,7 @@ lint:
 	pnpm -r lint
 
 typecheck:
-	uv run mypy libs/sift-core/src
+	uv run mypy libs/sift-core/src services/api/src
 	pnpm -r typecheck
 
 integration:

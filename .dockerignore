@@ -1,0 +1,14 @@
+.git
+.venv
+node_modules
+.turbo
+**/__pycache__
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+.sift-local
+rules
+**/.DS_Store
+evals/corpus
+evals/reports
+*.pdf
