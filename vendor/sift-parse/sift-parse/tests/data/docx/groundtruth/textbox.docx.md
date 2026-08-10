@@ -1,0 +1,77 @@
+**Chiayi County Shuishang Township Nanjing Elementary School Affiliated Kindergarten**
+
+**Infectious Disease Reporting Procedure for the 113th Academic Year Kindergarten**
+
+**Student falls ill**
+
+- Suggested Reportable Symptoms:
+＊ Fever
+＊ Cough
+＊ Diarrhea
+＊ Vomiting
+＊ Rash
+＊ Blisters
+＊ Headache
+＊ Sore throat
+
+<!-- image -->
+
+<!-- image -->
+
+If a caregiver suspects that within one week, a fifth of the class (for classes with more than 15 students) or more than three students (for classes with 15 or fewer students)
+show the same suggested reportable symptoms
+
+<!-- image -->
+
+Yes
+
+<!-- image -->
+
+<!-- image -->
+
+**Health Bureau:**
+
+Upon receiving a report from the kindergarten, conduct a preliminary assessment of the case, and depending on the situation and type of illness, carry out an epidemiological investigation and report to the Centers for Disease Control.
+
+1. If necessary, provide health education and important reminders at the kindergarten, or notify the individual to undergo specimen collection.
+2. Implement appropriate epidemic prevention measures in accordance with the Communicable Disease Control Act.
+
+<!-- image -->
+
+<!-- image -->
+
+<!-- image -->
+
+<!-- image -->
+
+<!-- image -->
+
+**Whether the epidemic has eased.**
+
+<!-- image -->
+
+**Whether the test results are positive for a legally designated infectious disease.**
+
+No
+
+<!-- image -->
+
+<!-- image -->
+
+Yes
+
+<!-- image -->
+
+Yes
+
+<!-- image -->
+
+**Case closed.**
+
+The Health Bureau will carry out subsequent related epidemic prevention measures and follow-up, and will request assistance from the Centers for Disease Control if necessary.
+
+<!-- image -->
+
+<!-- image -->
+
+<!-- image -->

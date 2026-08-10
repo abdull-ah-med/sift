@@ -1,3 +1,3 @@
-# sift-parse
+# sift-parse (vendored)
 
-Vendored Docling stack (sift-parse, core, models, parse backend).
+Vendored Docling stack (sift-owned). See [VENDOR.md](./VENDOR.md).

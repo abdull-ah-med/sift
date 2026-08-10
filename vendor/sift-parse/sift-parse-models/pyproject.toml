@@ -1,5 +1,5 @@
 [project]
-name = "docling-ibm-models"
+name = "sift-parse-models"
 version = "3.13.3" # DO NOT EDIT, updated automatically
 description = "This package contains the AI models used by the Docling PDF conversion package"
 license = "MIT"
