@@ -1,0 +1,35 @@
+on:
+  workflow_call:
+
+concurrency:
+  group: rhel-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# jobs:
+#   run-checks:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - name: Install uv and python
+#         uses: astral-sh/setup-uv@v5
+#       - name: Install podman
+#         run: sudo apt-get update && sudo apt-get install -y podman
+#       - name: Run build in docker
+#         run: ./.github/scripts/build_rhel.sh
+#         shell: bash
+
+jobs:
+  run-checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup uv with python 3.11
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: false
+          python-version: 3.11
+      - name: Install podman
+        run: sudo apt-get update && sudo apt-get install -y podman
+#      - name: Run build in docker
+#        run: ./.github/scripts/build_rhel.sh
+#        shell: bash

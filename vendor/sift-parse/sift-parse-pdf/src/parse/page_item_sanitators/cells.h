@@ -1,0 +1,681 @@
+//-*-C++-*-
+
+#ifndef PAGE_ITEM_CELLS_SANITATOR_H
+#define PAGE_ITEM_CELLS_SANITATOR_H
+
+namespace pdflib
+{
+
+  template<>
+  class page_item_sanitator<PAGE_CELLS>
+  {
+  public:
+    
+    page_item_sanitator();
+    ~page_item_sanitator();
+
+    nlohmann::json to_records(page_item<PAGE_CELLS>& cells);
+
+    page_item<PAGE_CELLS> create_word_cells(page_item<PAGE_CELLS>& cells,
+					       const decode_config& config);
+
+    page_item<PAGE_CELLS> create_line_cells(page_item<PAGE_CELLS>& cells,
+					       const decode_config& config);
+
+    
+    //void remove_duplicate_chars(page_item<PAGE_CELLS>& cells, double eps=1.0e-1);
+    void remove_adjacent_cells(page_item<PAGE_CELLS>& cells, double eps); //=1.0e-1);
+    void remove_duplicate_cells(page_item<PAGE_CELLS>& cells, double eps, bool same_line);
+    
+    void sanitize_bbox(page_item<PAGE_CELLS>& cells,
+		       double horizontal_cell_tolerance, //=1.0,
+		       bool enforce_same_font, //=true,
+		       double space_width_factor_for_merge, //=1.5,
+		       double space_width_factor_for_merge_with_space, //=0.33,
+		       bool block_spaces); // when true, space cells act as hard merge barriers
+
+    void sanitize_text(page_item<PAGE_CELLS>& cells);
+
+
+    
+  private:
+
+    bool applicable_for_merge(page_item<PAGE_CELL>& cell_i,
+			      page_item<PAGE_CELL>& cell_j,
+			      bool enforce_same_font,
+			      bool block_spaces);
+
+    void contract_cells_into_lines_right_to_left(page_item<PAGE_CELLS>& cells,
+						 double horizontal_cell_tolerance,
+						 bool enforce_same_font,
+						 double space_width_factor_for_merge,
+						 double space_width_factor_for_merge_with_space,
+						 bool block_spaces);
+
+    void contract_cells_into_lines_left_to_right(page_item<PAGE_CELLS>& cells,
+						 double horizontal_cell_tolerance,
+						 bool enforce_same_font,
+						 double space_width_factor_for_merge,
+						 double space_width_factor_for_merge_with_space,
+						 bool block_spaces,
+						 bool allow_reverse);
+
+    // linear
+    void contract_cells_into_lines_v1(page_item<PAGE_CELLS>& cells,
+				      double horizontal_cell_tolerance=1.0,
+				      bool enforce_same_font=true,
+				      double space_width_factor_for_merge=1.5,
+				      double space_width_factor_for_merge_with_space=0.33,
+				      bool block_spaces=false);
+
+    // quadratic
+    void contract_cells_into_lines_v2(page_item<PAGE_CELLS>& cells,
+				      double horizontal_cell_tolerance=1.0,
+				      bool enforce_same_font=true,
+				      double space_width_factor_for_merge=1.5,
+				      double space_width_factor_for_merge_with_space=0.33);
+    
+  private:
+
+  };
+
+  page_item_sanitator<PAGE_CELLS>::page_item_sanitator()
+  {}
+  
+  page_item_sanitator<PAGE_CELLS>::~page_item_sanitator()
+  {}
+
+  nlohmann::json page_item_sanitator<PAGE_CELLS>::to_records(page_item<PAGE_CELLS>& cells)
+  {
+    LOG_S(INFO) << __FUNCTION__;
+
+    nlohmann::json result = nlohmann::json::array({});
+    
+    int order = 0;
+    for(auto itr=cells.begin(); itr!=cells.end(); itr++)
+      {
+	pdflib::page_item<pdflib::PAGE_CELL>& cell = *itr;
+
+	if(not cell.active)
+	  {
+	    continue;
+	  }
+	
+	nlohmann::json item = nlohmann::json::object({});
+
+	{
+	  nlohmann::json rect = nlohmann::json::object({});
+
+	  rect["r_x0"] = cell.r_x0; rect["r_y0"] = cell.r_y0;
+	  rect["r_x1"] = cell.r_x1; rect["r_y1"] = cell.r_y1;
+	  rect["r_x2"] = cell.r_x2; rect["r_y2"] = cell.r_y2;
+	  rect["r_x3"] = cell.r_x3; rect["r_y3"] = cell.r_y3;
+
+	  item["index"] = (order++);
+	  
+	  item["rect"] = rect;
+
+	  item["text"] = cell.text;
+	  item["orig"] = cell.text;
+
+	  item["font_key"] = cell.font_key;
+	  item["font_name"] = cell.font_name;
+
+	  item["rendering_mode"] = cell.rendering_mode;
+
+	  item["widget"] = cell.widget;
+	  item["left_to_right"] = cell.left_to_right;
+	}
+
+	result.push_back(item);
+      }
+    
+    return result;
+  }
+  
+  page_item<PAGE_CELLS> page_item_sanitator<PAGE_CELLS>::create_word_cells(page_item<PAGE_CELLS>& char_cells,
+									const decode_config& config)
+  {
+    LOG_S(INFO) << __FUNCTION__;
+    LOG_S(INFO) << "word_space_width_factor_for_merge: " << config.word_space_width_factor_for_merge;
+
+    // do a deep copy
+    page_item<PAGE_CELLS> word_cells;
+    word_cells = char_cells;
+
+    LOG_S(INFO) << "#-char cells: " << word_cells.size();
+
+    // Keep the space cells in place and let sanitize_bbox treat them as hard
+    // word-boundary barriers (block_spaces=true). An explicit space glyph is a
+    // far more reliable word separator than the geometric-gap heuristic, which
+    // is ambiguous for tightly-set fonts with narrow spaces. The spaces are
+    // erased afterwards, once the words have been contracted.
+
+    // > space_width_factor_for_merge, so nothing gets merged with a space
+    double space_width_factor_for_merge_with_space = 2.0*config.word_space_width_factor_for_merge;
+
+    sanitize_bbox(word_cells,
+		  config.horizontal_cell_tolerance,
+		  config.enforce_same_font,
+		  config.word_space_width_factor_for_merge,
+		  space_width_factor_for_merge_with_space,
+		  true);
+
+    // remove the space cells that acted as word-boundary barriers
+    auto itr = word_cells.begin();
+    while(itr!=word_cells.end())
+      {
+	if(utils::string::is_space(itr->text))
+	  {
+	    itr = word_cells.erase(itr);
+	  }
+	else
+	  {
+	    itr++;
+	  }
+      }
+
+    LOG_S(INFO) << "#-word cells: " << word_cells.size();
+
+    //return to_records(word_cells);
+    return word_cells;
+  }
+
+  page_item<PAGE_CELLS> page_item_sanitator<PAGE_CELLS>::create_line_cells(page_item<PAGE_CELLS>& char_cells,
+									const decode_config& config)
+  {
+    LOG_S(INFO) << __FUNCTION__ << " -> char_cells: " << char_cells.size();
+    LOG_S(INFO) << "line_space_width_factor_for_merge: " << config.line_space_width_factor_for_merge;
+    LOG_S(INFO) << "line_space_width_factor_for_merge_with_space: " << config.line_space_width_factor_for_merge_with_space;
+
+    // do a deep copy
+    page_item<PAGE_CELLS> line_cells;
+    line_cells = char_cells;
+
+    LOG_S(INFO) << "# char-cells: " << line_cells.size();
+
+    // lines keep their internal spaces, so spaces are merged normally (block_spaces=false)
+    sanitize_bbox(line_cells,
+		  config.horizontal_cell_tolerance,
+		  config.enforce_same_font,
+		  config.line_space_width_factor_for_merge,
+		  config.line_space_width_factor_for_merge_with_space,
+		  false);
+
+    LOG_S(INFO) << "# line-cells: " << line_cells.size();
+    
+    //return to_records(line_cells);
+    return line_cells;
+  }  
+
+  /*
+  void page_item_sanitator<PAGE_CELLS>::remove_duplicate_chars(page_item<PAGE_CELLS>& cells, double eps)
+  {
+    while(true)
+      {
+        bool erased_cell=false;
+        
+        for(int i=0; i<cells.size(); i++)
+          {
+	    if(not cells[i].active)
+	      {
+		continue;
+	      }
+	    
+	    for(int j=i+1; j<cells.size(); j++)
+	      {
+		if(not cells[j].active)
+		  {
+		    continue;
+		  }
+		
+		if(cells[i].font_name==cells[j].font_name and
+		   cells[i].text==cells[j].text and
+		   utils::values::distance(cells[i].r_x0, cells[i].r_y0, cells[j].r_x0, cells[j].r_y0)<eps and
+		   utils::values::distance(cells[i].r_x1, cells[i].r_y1, cells[j].r_x1, cells[j].r_y1)<eps and
+		   utils::values::distance(cells[i].r_x2, cells[i].r_y2, cells[j].r_x2, cells[j].r_y2)<eps and
+		   utils::values::distance(cells[i].r_x3, cells[i].r_y3, cells[j].r_x3, cells[j].r_y3)<eps)
+		  {
+		    LOG_S(WARNING) << "removing duplicate char with text: '" << cells[j].text << "' "
+				   << "with r_0: (" << cells[i].r_x0 << ", " << cells[i].r_y0 << ") "
+				   << "with r_2: (" << cells[i].r_x2 << ", " << cells[i].r_y2 << ") "
+				   << "with r'_0: (" << cells[j].r_x0 << ", " << cells[j].r_y0 << ") "
+				   << "with r'_2: (" << cells[j].r_x2 << ", " << cells[j].r_y2 << ") ";
+		    
+		    cells[j].active = false;
+		    erased_cell = true;		    
+		  }		
+	      }
+	  }
+	
+	if(not erased_cell)
+	  {
+	    break;
+	  }
+      }
+
+    page_item<PAGE_CELLS> cells_;
+    for(int i=0; i<cells.size(); i++)
+      {
+	if(cells[i].active)
+	  {
+	    cells_.push_back(cells[i]);
+	  }
+      }
+
+    cells = cells_;        
+  }
+  */
+
+  //void page_item_sanitator<PAGE_CELLS>::remove_duplicate_chars(page_item<PAGE_CELLS>& cells, double eps)
+  void page_item_sanitator<PAGE_CELLS>::remove_adjacent_cells(page_item<PAGE_CELLS>& cells, double eps)
+  {
+    for(int i=0; i<cells.size(); i++)
+      {
+	if(not cells[i].active)
+	  {
+	    continue;
+	  }
+	
+	int j = i+1;
+	
+	if(j+1>=cells.size() or (not cells[j].active))
+	  {
+	    continue;
+	  }
+		
+	if(cells[i].font_name==cells[j].font_name and
+	   cells[i].text==cells[j].text and
+	   utils::values::distance(cells[i].r_x0, cells[i].r_y0, cells[j].r_x0, cells[j].r_y0)<eps and
+	   utils::values::distance(cells[i].r_x1, cells[i].r_y1, cells[j].r_x1, cells[j].r_y1)<eps and
+	   utils::values::distance(cells[i].r_x2, cells[i].r_y2, cells[j].r_x2, cells[j].r_y2)<eps and
+	   utils::values::distance(cells[i].r_x3, cells[i].r_y3, cells[j].r_x3, cells[j].r_y3)<eps)
+	  {
+	    LOG_S(WARNING) << "removing duplicate char with text: '" << cells[j].text << "' "
+			   << "with r_0: (" << cells[i].r_x0 << ", " << cells[i].r_y0 << ") "
+			   << "with r_2: (" << cells[i].r_x2 << ", " << cells[i].r_y2 << ") "
+			   << "with r'_0: (" << cells[j].r_x0 << ", " << cells[j].r_y0 << ") "
+			   << "with r'_2: (" << cells[j].r_x2 << ", " << cells[j].r_y2 << ") ";
+	    
+	    cells[j].active = false;
+	  }		
+      }
+
+    cells.remove_inactive_cells();
+  }
+
+  void page_item_sanitator<PAGE_CELLS>::remove_duplicate_cells(page_item<PAGE_CELLS>& cells, double eps, bool same_line)
+  {
+    for(int i=0; i<cells.size(); i++)
+      {
+	if(not cells[i].active)
+	  {
+	    continue;
+	  }
+
+	for(int j=i+1; j<cells.size(); j++)
+	  {	
+	    if(same_line and std::abs(cells[i].r_y0-cells[j].r_y0)>eps)
+	      {
+		break;
+	      }
+
+	    if(not cells[j].active)
+	      {
+		continue;
+	      }
+
+	    if(cells[i].font_name==cells[j].font_name and
+	       cells[i].text==cells[j].text and
+	       utils::values::distance(cells[i].r_x0, cells[i].r_y0, cells[j].r_x0, cells[j].r_y0)<eps and
+	       utils::values::distance(cells[i].r_x1, cells[i].r_y1, cells[j].r_x1, cells[j].r_y1)<eps and
+	       utils::values::distance(cells[i].r_x2, cells[i].r_y2, cells[j].r_x2, cells[j].r_y2)<eps and
+	       utils::values::distance(cells[i].r_x3, cells[i].r_y3, cells[j].r_x3, cells[j].r_y3)<eps)
+	      {
+		LOG_S(WARNING) << "removing duplicate char with text: '" << cells[j].text << "' "
+			       << "with r_0: (" << cells[i].r_x0 << ", " << cells[i].r_y0 << ") "
+			       << "with r_2: (" << cells[i].r_x2 << ", " << cells[i].r_y2 << ") "
+			       << "with r'_0: (" << cells[j].r_x0 << ", " << cells[j].r_y0 << ") "
+			       << "with r'_2: (" << cells[j].r_x2 << ", " << cells[j].r_y2 << ") ";
+	    
+		cells[j].active = false;
+	      }
+	  }
+      }
+
+    cells.remove_inactive_cells();
+  }
+  
+  void page_item_sanitator<PAGE_CELLS>::sanitize_text(page_item<PAGE_CELLS>& cells)
+  {
+    for(int i=0; i<cells.size(); i++)
+      {
+	std::string& text = cells.at(i).text;
+
+	for(const std::pair<std::string, std::string>& pair:text_constants::replacements)
+	  {
+	    utils::string::replace(text, pair.first, pair.second);
+	  }
+      }
+
+    {
+      std::regex pattern(R"(^\/([A-Za-z])_([A-Za-z])(_([A-Za-z]))?$)");
+
+      for(int i=0; i<cells.size(); i++)
+	{
+	  std::string text = cells.at(i).text;
+	  
+	  std::smatch match;
+	  if(std::regex_match(text, match, pattern))
+	    {
+	      std::string replacement = match[1].str() + match[2].str();
+	      if(match[3].matched)
+		{
+		  replacement += match[4].str();
+		}
+	      
+	      LOG_S(WARNING) << "replacing `" << text << "` with `" << replacement << "`";	    
+	      cells.at(i).text = replacement;
+	    }
+	}      
+    }
+  }
+  
+  void page_item_sanitator<PAGE_CELLS>::sanitize_bbox(page_item<PAGE_CELLS>& cells,
+						double horizontal_cell_tolerance,
+						bool enforce_same_font,
+						double space_width_factor_for_merge,
+						double space_width_factor_for_merge_with_space,
+						bool block_spaces)
+  {
+    contract_cells_into_lines_v1(cells,
+				 horizontal_cell_tolerance,
+				 enforce_same_font,
+				 space_width_factor_for_merge,
+				 space_width_factor_for_merge_with_space,
+				 block_spaces);
+  }
+
+  bool page_item_sanitator<PAGE_CELLS>::applicable_for_merge(page_item<PAGE_CELL>& cell_i,
+						       page_item<PAGE_CELL>& cell_j,
+						       bool enforce_same_font,
+						       bool block_spaces)
+  {
+    if(not cell_i.active)
+      {
+	return false;
+      }
+
+    if(not cell_j.active)
+      {
+	return false;
+      }
+
+    // An explicit space glyph is a hard word boundary: never merge a space cell
+    // with anything, nor across one. The space cells are removed afterwards.
+    if(block_spaces and
+       (utils::string::is_space(cell_i.text) or utils::string::is_space(cell_j.text)))
+      {
+	return false;
+      }
+
+    if(enforce_same_font and cell_i.font_name!=cell_j.font_name)
+      {
+	// Exception: ligature glyphs are often encoded in a different font than
+	// the surrounding text, so allow merging when either cell is a ligature.
+	if(not utils::string::is_ligature(cell_i.text) and
+	   not utils::string::is_ligature(cell_j.text))
+	  {
+	    return false;
+	  }
+      }
+	    
+    if(not cell_i.has_same_reading_orientation(cell_j))
+      {
+	return false;
+      }
+
+    return true;
+  }
+  
+  void page_item_sanitator<PAGE_CELLS>::contract_cells_into_lines_v1(page_item<PAGE_CELLS>& cells,
+							       double horizontal_cell_tolerance,
+							       bool enforce_same_font,
+							       double space_width_factor_for_merge,
+							       double space_width_factor_for_merge_with_space,
+							       bool block_spaces)
+  {
+    contract_cells_into_lines_left_to_right(cells, horizontal_cell_tolerance, enforce_same_font, space_width_factor_for_merge, space_width_factor_for_merge_with_space, block_spaces, false);
+
+    contract_cells_into_lines_right_to_left(cells, horizontal_cell_tolerance, enforce_same_font, space_width_factor_for_merge, space_width_factor_for_merge_with_space, block_spaces);
+
+    contract_cells_into_lines_left_to_right(cells, horizontal_cell_tolerance, enforce_same_font, space_width_factor_for_merge, space_width_factor_for_merge_with_space, block_spaces, true);
+  }
+  
+  void page_item_sanitator<PAGE_CELLS>::contract_cells_into_lines_left_to_right(page_item<PAGE_CELLS>& cells,
+									  double horizontal_cell_tolerance,
+									  bool enforce_same_font,
+									  double space_width_factor_for_merge,
+									  double space_width_factor_for_merge_with_space,
+									  bool block_spaces,
+									  bool allow_reverse)
+  {
+    // take care for left to right printing
+    for(int i=0; i<cells.size(); i++)
+      {
+	if(not cells[i].active)
+	  {
+	    continue;
+	  }
+	// LOG_S(INFO) << "start merging cell-" << i << ": '" << cells[i].text << "'";
+
+	for(int j=i+1; j<cells.size(); j++)
+	  {
+	    if(not applicable_for_merge(cells[i], cells[j], enforce_same_font, block_spaces))
+	      {
+		break;
+	      }
+	    
+	    bool i_is_ligature = utils::string::is_ligature(cells[i].text) or cells[i].last_merged_cell_was_ligature;
+	    bool j_is_ligature = utils::string::is_ligature(cells[j].text) or cells[j].last_merged_cell_was_ligature;
+
+	    double delta_0 = cells[i].average_char_width()*space_width_factor_for_merge;
+	    double delta_1 = cells[i].average_char_width()*space_width_factor_for_merge_with_space;
+
+	    // Ligature glyphs often have taller bounding boxes than surrounding text,
+	    // inflating d1 (top-corner distance) in is_adjacent_to even when cells
+	    // are horizontally touching.  We therefore relax only eps_d1 (top-edge
+	    // tolerance) when a ligature is involved, leaving eps_d0 (bottom-edge /
+	    // horizontal-gap tolerance) unchanged.  This prevents the extra slack
+	    // from incorrectly bridging word-boundary gaps.
+	    double adj_eps_d1 = delta_0;
+	    if(i_is_ligature or j_is_ligature)
+	      {
+		adj_eps_d1 += horizontal_cell_tolerance;
+	      }
+
+	    if(cells[i].is_adjacent_to(cells[j], delta_0, adj_eps_d1))
+	      {
+		cells[i].merge_with(cells[j], delta_1);
+		// If cell_i was the ligature side, adopt cell_j's font so subsequent
+		// merges are not blocked by the ligature font.
+		if(i_is_ligature and not j_is_ligature)
+		  {
+		    cells[i].font_name = cells[j].font_name;
+		    cells[i].font_key  = cells[j].font_key;
+		  }
+		// Flag resets based only on whether the just-absorbed cell (j) is a
+		// raw ligature. This ensures extra tolerance lasts exactly one merge
+		// after a ligature and returns to normal once the inflated bbox is absorbed.
+		cells[i].last_merged_cell_was_ligature = utils::string::is_ligature(cells[j].text);
+		cells[j].active = false;
+
+		LOG_S(INFO) << " -> merging cell-" << i << " with " << j << " '" << cells[j].text << "'"<< ": " << cells[i].text;
+	      }
+	    else if(allow_reverse and cells[j].is_adjacent_to(cells[i], delta_0, adj_eps_d1))
+	      {
+		cells[j].merge_with(cells[i], delta_1);
+		// If cell_j was the ligature side, adopt cell_i's font.
+		if(j_is_ligature and not i_is_ligature)
+		  {
+		    cells[j].font_name = cells[i].font_name;
+		    cells[j].font_key  = cells[i].font_key;
+		  }
+		cells[j].last_merged_cell_was_ligature = utils::string::is_ligature(cells[i].text);
+		cells[i].active = false;
+		LOG_S(INFO) << " -> merging reverse cell-" << j << " with " << i << " '" << cells[i].text << "'"<< ": " << cells[j].text;
+	      }	    
+	    else
+	      {
+		break;
+	      }
+	  }
+      }
+
+    {
+      auto it = std::remove_if(cells.begin(), cells.end(), 
+                        [](const page_item<PAGE_CELL>& cell) {
+                            return !cell.active;
+                        });
+      cells.erase(it, cells.end());
+    }    
+  }
+  
+  void page_item_sanitator<PAGE_CELLS>::contract_cells_into_lines_right_to_left(page_item<PAGE_CELLS>& cells,
+									  double horizontal_cell_tolerance,
+									  bool enforce_same_font,
+									  double space_width_factor_for_merge,
+									  double space_width_factor_for_merge_with_space,
+									  bool block_spaces)
+  {
+    // take care for right to left printing
+    for(int i=cells.size()-1; i>=0; i--)
+      {
+	if(not cells[i].active)
+	  {
+	    continue;
+	  }
+	// LOG_S(INFO) << "start merging cell-" << i << ": '" << cells[i].text << "'";
+
+	for(int j=i-1; j>=0; j--)
+	  {
+	    if(not applicable_for_merge(cells[i], cells[j], enforce_same_font, block_spaces))
+	      {
+		break;
+	      }
+	    
+	    bool i_is_ligature = utils::string::is_ligature(cells[i].text) or cells[i].last_merged_cell_was_ligature;
+	    bool j_is_ligature = utils::string::is_ligature(cells[j].text) or cells[j].last_merged_cell_was_ligature;
+
+	    double delta_0 = cells[i].average_char_width()*space_width_factor_for_merge;
+	    double delta_1 = cells[i].average_char_width()*space_width_factor_for_merge_with_space;
+
+	    double adj_eps_d1 = delta_0;
+	    if(i_is_ligature or j_is_ligature)
+	      {
+		adj_eps_d1 += horizontal_cell_tolerance;
+	      }
+
+	    if(cells[j].is_adjacent_to(cells[i], delta_0, adj_eps_d1))
+	      {
+		cells[j].merge_with(cells[i], delta_1);
+		// If cell_j was the ligature side, adopt cell_i's font.
+		if(j_is_ligature and not i_is_ligature)
+		  {
+		    cells[j].font_name = cells[i].font_name;
+		    cells[j].font_key  = cells[i].font_key;
+		  }
+			// Flag resets based only on whether the just-absorbed cell (i) is a
+		// raw ligature — same one-step propagation semantics as L2R pass.
+		cells[j].last_merged_cell_was_ligature = utils::string::is_ligature(cells[i].text);
+
+		cells[i].active = false;
+		LOG_S(INFO) << " -> merging cell-" << i << " with " << j << " '" << cells[j].text << "'"<< ": " << cells[i].text;
+	      }
+	    else
+	      {
+		break;
+	      }
+	  }
+      }    
+
+    {
+      auto it = std::remove_if(cells.begin(), cells.end(), 
+                        [](const page_item<PAGE_CELL>& cell) {
+                            return !cell.active;
+                        });
+      cells.erase(it, cells.end());
+    }    
+  }
+
+  void page_item_sanitator<PAGE_CELLS>::contract_cells_into_lines_v2(page_item<PAGE_CELLS>& cells,
+							       double horizontal_cell_tolerance,
+							       bool enforce_same_font,
+							       double space_width_factor_for_merge,
+							       double space_width_factor_for_merge_with_space)
+  {
+    while(true)
+      {
+        bool erased_cell=false;
+        
+        for(int i=0; i<cells.size(); i++)
+          {
+	    if(not cells[i].active)
+	      {
+		continue;
+	      }
+	    LOG_S(INFO) << "start merging cell-" << i << ": '" << cells[i].text << "'";
+	    
+	    for(int j=i+1; j<cells.size(); j++)
+	      {
+		if(not cells[j].active)
+		  {
+		    continue;
+		  }
+
+		if(enforce_same_font and cells[i].font_name!=cells[j].font_name)
+		  {
+		    continue;
+		  }
+
+		if(not cells[i].has_same_reading_orientation(cells[j]))
+		  {
+		    continue;
+		  }
+		
+		double delta_0 = cells[i].average_char_width()*space_width_factor_for_merge;
+		double delta_1 = cells[i].average_char_width()*space_width_factor_for_merge_with_space;
+		
+		if(cells[i].is_adjacent_to(cells[j], delta_0))
+		  {
+		    cells[i].merge_with(cells[j], delta_1);
+
+		    cells[j].active = false;
+		    erased_cell = true;
+
+		    LOG_S(INFO) << " -> merging cell-" << i << " with " << j << " '" << cells[j].text << "'"<< ": " << cells[i].text;
+		  }		
+	      }
+	  }
+	
+	if(not erased_cell)
+	  {
+	    break;
+	  }
+      }
+
+    page_item<PAGE_CELLS> cells_;
+    for(int i=0; i<cells.size(); i++)
+      {
+	if(cells[i].active)
+	  {
+	    cells_.push_back(cells[i]);
+	  }
+      }
+
+    cells = cells_;    
+  }
+  
+}
+
+#endif

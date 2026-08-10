@@ -1,0 +1,180 @@
+[project]
+name = "docling-parse"
+version = "7.11.0"
+description = "Simple package to extract text with coordinates from programmatic PDFs"
+license = "MIT"
+keywords = ["docling", "pdf", "parser"]
+classifiers = [
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+readme = "README.md"
+authors = [
+    {name = "Peter Staar", email = "taa@zurich.ibm.com"},
+    {name = "Christoph Auer", email = "cau@zurich.ibm.com"},
+    {name = "Michele Dolfi", email = "dol@zurich.ibm.com"},
+    {name = "Panos Vagenas", email = "pva@zurich.ibm.com"},
+    {name = "Maxim Lysak", email = "mly@zurich.ibm.com"},
+]
+requires-python = ">=3.10"
+dependencies = [
+    "pillow>=10.0.0,<13.0.0",
+    "pydantic>=2.0.0",
+    "docling-core>=2.85.0,<3.0.0",
+    "pywin32>=305; sys_platform == 'win32'",
+]
+[project.urls]
+Homepage = "https://github.com/docling-project/docling-parse"
+Repository = "https://github.com/docling-project/docling-parse"
+
+[build-system]
+requires = [
+    "setuptools>=77.0.3",
+    "pybind11>=2.13.6",
+    "cibuildwheel>=2.19.2,<3.0.0; python_version < '3.11'",
+    "cibuildwheel>=2.19.2,<4.0.0; python_version >= '3.11'",
+    "wheel>=0.43.0,<1.0.0",
+    "delocate>=0.11.0,<1.0.0",
+    "cmake>=3.27.0,<4.0.0"
+]
+build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+build = [
+    "setuptools>=77.0.3",
+    "pybind11>=2.13.6",
+    "cibuildwheel>=2.19.2,<3.0.0; python_version < '3.11'",
+    "cibuildwheel>=2.19.2,<4.0.0; python_version >= '3.11'",
+    "wheel>=0.43.0,<1.0.0",
+    "delocate>=0.11.0,<1.0.0",
+    "cmake>=3.27.0,<4.0.0"
+]
+dev = [
+    "pytest>=9.0.3,<10.0.0",
+    "ruff>=0.11,<1.0",
+    "python-semantic-release>=7.32.2,<8.0.0",
+    "pre-commit>=3.7.1,<4.0.0",
+    "mypy>=1.13.0,<2.0.0",
+    "tqdm>=4.67.0,<5.0.0",
+    "boto>=2.49.0,<3.0.0",
+    "boto3>=1.35.67,<2.0.0",
+    "huggingface-hub>=1.11.0",
+    "tabulate>=0.9.0,<1.0.0",    
+]
+perf = [
+    "matplotlib>=3.10.8",
+    "pdfplumber>=0.11.7",
+    "pdfminer.six>=20240706",
+    "pymupdf>=1.26.4",
+    "pypdf>=5.1.0",
+    "pypdfium2>=4.30.0",
+    "huggingface-hub>=1.11.0",
+    "tabulate>=0.9.0,<1.0.0",
+]
+
+
+[tool.uv]
+package = true
+default-groups = "all"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = [".", "docling_parse*"]
+include = ["docling_parse*"]
+
+[tool.setuptools.package-data]
+"docling_parse" = [
+    "*.so", "*.pyd", "*.dll",
+    "pdf_resources/*"
+]
+
+[tool.setuptools.exclude-package-data]
+"docling_parse" = ["*.pyc", "__pycache__"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+respect-gitignore = true
+
+[tool.ruff.format]
+skip-magic-trailing-comma = false
+
+[tool.ruff.lint]
+select = [
+  "C",
+  "C9",
+  "E",
+  "F",
+  "I",
+  "PD",
+  "PIE",
+  "Q",
+  "RUF",
+  "S307",
+  "W",
+  "ASYNC",
+  "UP",
+]
+ignore = [
+  "C408",
+  "E501",
+  "D107",
+  "F401",
+  "F811",
+  "PL",
+  "RUF012",
+  "UP006",
+  "UP007",
+  "UP035",
+]
+
+[tool.ruff.lint.pep8-naming]
+classmethod-decorators = [
+  "pydantic.validator",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "F401"]
+"tests/*.py" = ["ASYNC"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 30
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.mypy]
+pretty = true
+no_implicit_optional = true
+namespace_packages = true
+show_error_codes = true
+python_version = "3.10"
+
+[[tool.mypy.overrides]]
+module = [
+    "tabulate.*",
+    "botocore.*",
+    "boto3.*",
+    "pypdfium2.*"
+]
+ignore_missing_imports = true
+
+[tool.semantic_release]
+version_source = "tag_only"
+branch = "main"
+parser_angular_allowed_types = "build,chore,ci,docs,feat,fix,perf,style,refactor,test"
+parser_angular_minor_types = "feat"
+parser_angular_patch_types = "fix,perf"
