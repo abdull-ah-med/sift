@@ -1,0 +1,25 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.2
+    hooks:
+      - id: ruff
+        args: [--fix]
+        exclude: ^vendor/
+      - id: ruff-format
+        exclude: ^vendor/
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.28.0
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.34.0
+    hooks:
+      - id: typos
+        exclude: ^(vendor/|uv\.lock|pnpm-lock\.yaml)
+  - repo: local
+    hooks:
+      - id: internal-docs-guard
+        name: reject internal-only paths
+        entry: bash -c 'git diff --cached --name-only | grep -E "^(\\.sift-local/|rules/|AGENTS\\.md$|CLAUDE\\.md$)" && exit 1 || exit 0'
+        language: system
+        pass_filenames: false

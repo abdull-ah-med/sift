@@ -12,6 +12,8 @@ x-sift-env: &sift-env
 
 services:
   postgres:
+    # ParadeDB tracks Postgres major; 18+ images expect the volume at
+    # /var/lib/postgresql (not .../data) so pg_upgrade can use versioned dirs.
     image: paradedb/paradedb:latest
     environment:
       POSTGRES_USER: sift
@@ -20,7 +22,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - sift-pg:/var/lib/postgresql/data
+      - sift-pg:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sift -d sift"]
       interval: 5s
@@ -87,7 +89,8 @@ services:
       context: ../..
       dockerfile: apps/web/Dockerfile
     ports:
-      - "3000:3000"
+      # Host 3000 is commonly taken locally; map scaffold UI to 3001.
+      - "3001:3000"
     depends_on:
       sift-api:
         condition: service_healthy

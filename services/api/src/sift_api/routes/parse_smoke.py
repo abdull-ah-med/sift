@@ -21,6 +21,7 @@ class ParseSmokeResponse(BaseModel):
     blocks: int = Field(ge=0)
     markdown_length: int = Field(ge=0)
     source_filename: str
+    engine: str
 
 
 @router.post(
@@ -29,7 +30,7 @@ class ParseSmokeResponse(BaseModel):
     status_code=status.HTTP_200_OK,
 )
 async def parse_smoke(file: UploadFile = File(...)) -> ParseSmokeResponse:
-    """Accept a PDF, run the vendored parse pipeline, return block counts."""
+    """Accept a PDF, run Phase 0 parse smoke, return block counts."""
     if not file.filename:
         raise HTTPException(status_code=400, detail="filename required")
     raw = await file.read()
@@ -56,4 +57,5 @@ async def parse_smoke(file: UploadFile = File(...)) -> ParseSmokeResponse:
         blocks=result.blocks,
         markdown_length=result.markdown_length,
         source_filename=file.filename,
+        engine=result.engine,
     )

@@ -1,0 +1,9 @@
+{
+  "nodes": [
+    {"id": "welcome", "label": "Welcome"},
+    {"id": "architecture", "label": "Architecture"}
+  ],
+  "edges": [
+    {"source": "welcome", "target": "architecture", "label": "wikilink"}
+  ]
+}
