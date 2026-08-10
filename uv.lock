@@ -535,12 +535,14 @@ name = "sift-parse"
 version = "0.0.0"
 source = { editable = "libs/sift-parse" }
 dependencies = [
+    { name = "pydantic" },
     { name = "pypdfium2" },
     { name = "sift-core" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "pydantic", specifier = ">=2.10" },
     { name = "pypdfium2", specifier = ">=5.12" },
     { name = "sift-core", editable = "libs/sift-core" },
 ]

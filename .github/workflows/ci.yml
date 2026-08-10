@@ -22,7 +22,8 @@ jobs:
         with:
           enable-cache: true
       - name: Sync
-        run: uv sync --group dev
+        # Install every workspace member so mypy/pytest see FastAPI, etc.
+        run: uv sync --all-packages --group dev
       - name: Ruff
         run: |
           uv run ruff check libs services apps tests tools

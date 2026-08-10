@@ -16,7 +16,7 @@ if ! command -v pnpm >/dev/null 2>&1; then
 fi
 
 uv python pin 3.13
-uv sync --group dev
+uv sync --all-packages --group dev
 pnpm install
 
 if command -v pre-commit >/dev/null 2>&1; then

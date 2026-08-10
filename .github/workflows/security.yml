@@ -29,6 +29,6 @@ jobs:
         with:
           enable-cache: true
       - name: Sync
-        run: uv sync --group dev
+        run: uv sync --all-packages --group dev
       - name: pip-audit
         run: uvx pip-audit --progress-spinner off
