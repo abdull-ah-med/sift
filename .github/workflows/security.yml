@@ -20,6 +20,8 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Read-only token cannot post review comments; scan result is enough.
+          GITLEAKS_ENABLE_COMMENTS: "false"
 
   python-audit:
     name: Python dep audit
