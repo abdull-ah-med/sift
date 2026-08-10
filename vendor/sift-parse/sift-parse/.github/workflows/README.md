@@ -1,3 +1,0 @@
-# workflows
-
-CI/CD workflows.

@@ -1,3 +1,0 @@
-# packages
-
-Shared TypeScript packages.

@@ -1,3 +1,0 @@
-# db
-
-Alembic migration helpers.
