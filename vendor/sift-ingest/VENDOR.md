@@ -22,10 +22,14 @@ Product name: **sift-ingest**. Upstream org attribution only in `LICENSES/` and 
 ## Refresh procedure
 
 1. Pull upstream tag into a temp shallow clone.
-2. Replace this directory (no nested `.git`).
-3. Re-apply `name = "sift-ingest"` and any sift patches.
-4. Run ingest unit tests + Phase 0 spikes that touch extract.
+2. Run `pytest tests/unit` on that clone (58 passed on `v0.1.5` at vendor time).
+3. Replace this directory with **runtime sources only** (no nested `.git`; drop `tests/`, `docs/`, `examples/`, lockfiles).
+4. Re-apply `name = "sift-ingest"` and any sift patches.
+5. Run sift Phase 0 spikes that touch extract.
 
+## Slimming
+
+Upstream tests are verified at refresh time, then deleted from this tree.
 ## Owner
 
 Abdullah Ahmed (`abdull-ah-med`)

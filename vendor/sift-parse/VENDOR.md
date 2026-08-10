@@ -22,13 +22,26 @@ Product / internal name: **sift-parse**. Upstream brand names stay in this file,
 
 PyPI / hatch `name` fields in each tree are renamed to `sift-parse*` so an accidental `uv add docling` cannot silently replace the vendored package.
 
+## Slimming
+
+Trees keep **runtime sources only**. After verifying a pin, delete upstream `tests/` / `test/`, `docs/`, `examples/`, lockfiles, and CI meta so the monorepo stays reviewable.
+
+Verification (2026-08-10) against shallow clones of the pins above:
+
+| Upstream | Result |
+|---|---|
+| `docling-core` `v2.91.0` | **589 passed**, 6 skipped |
+| `LongParser` `v0.1.5` (`tests/unit`) | **58 passed** (see `../sift-ingest/VENDOR.md`) |
+| `docling` / `docling-parse` / `docling-ibm-models` | Packages built at pin; full Docling pytest deferred (optional extras / ML) — sift parse-smoke + core suite cover Phase 0 |
+
 ## Refresh procedure
 
 1. Identify the upstream tag (or commit) to pull.
-2. Replace the matching directory contents (prefer shallow clone + copy; avoid re-introducing nested `.git`).
-3. Re-apply the distribution rename and any sift patches (see git history under `vendor/sift-parse/`).
-4. Run unit tests + spike P6 (CVE regression) + parse-smoke.
-5. Update this file’s tag/commit table and `NOTICES.md`.
+2. Shallow-clone upstream; run its test suite there.
+3. Copy runtime sources into this tree (no nested `.git`); strip tests/docs/examples again.
+4. Re-apply the distribution rename and any sift patches.
+5. Run sift pytest P6 (CVE pin) + parse-smoke.
+6. Update this file’s tag/commit table and `NOTICES.md`.
 
 ## Owner
 
