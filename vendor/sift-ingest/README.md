@@ -1,3 +1,3 @@
-# sift-ingest
+# sift-ingest (vendored)
 
-Vendored LongParser baseline; emptied by end of Phase 2 as code is absorbed.
+Transitional LongParser baseline. See [VENDOR.md](./VENDOR.md). Absorbed into `libs/sift-*` by end of Phase 2.
