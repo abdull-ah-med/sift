@@ -1,15 +1,22 @@
-"""Block-oriented chunker for Phase 2 (HybridChunker swap-in later).
+"""Chunking for Phase 2: HybridChunker + optional Anthropic contextual prefix.
 
-Builds one chunk per non-rejected block with a lightweight contextual prefix.
-Full Anthropic contextual-prefix LLM + vendored HybridChunker land in a
-follow-up slice once the review path is exercised end-to-end.
+``chunk_blocks`` remains the block-list finalize path until DoclingDocument
+persistence is wired. ``chunk_docling_document`` is the Phase 2 §3 contract.
 """
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sift_core.chunk import Chunk, ChunkType
 from sift_core.ids import IdKind, new_id
 from sift_core.models import Block, BlockType, ReviewState
+
+from sift_ingest.contextual_prefix import PrefixCostRecord, PrefixGenerator
+
+if TYPE_CHECKING:
+    from sift_parse_core.transforms.chunker.tokenizer.base import BaseTokenizer
+    from sift_parse_core.types.doc import DoclingDocument
 
 _REJECTED = frozenset({ReviewState.REJECTED})
 
@@ -34,6 +41,23 @@ def _approx_tokens(text: str) -> int:
 def _contextualize(*, document_title: str, block: Block, text: str) -> str:
     page = block.provenance.page_no
     return f"From document '{document_title}', page {page}:\n\n{text}"
+
+
+def chunk_docling_document(
+    doc: DoclingDocument,
+    *,
+    document_title: str,
+    tokenizer: BaseTokenizer | None = None,
+    prefix_generator: PrefixGenerator | None = None,
+    document_text: str | None = None,
+    cost_log: list[PrefixCostRecord] | None = None,
+) -> list[Chunk]:
+    """Run vendored ``HybridChunker`` then optional contextual prefix.
+
+    TDD stub — returns empty until the impl commit.
+    """
+    del doc, document_title, tokenizer, prefix_generator, document_text, cost_log
+    return []
 
 
 def chunk_blocks(
