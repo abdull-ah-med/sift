@@ -22,6 +22,7 @@ class IdKind(StrEnum):
     COLLECTION = "collection"
     DOCUMENT = "document"
     BLOCK = "block"
+    BLOCK_REVISION = "block_revision"
     CHUNK = "chunk"
     JOB = "job"
     SESSION = "session"
@@ -36,6 +37,7 @@ _PREFIX_BY_KIND: dict[IdKind, str] = {
     IdKind.COLLECTION: "col",
     IdKind.DOCUMENT: "doc",
     IdKind.BLOCK: "blk",
+    IdKind.BLOCK_REVISION: "brev",
     IdKind.CHUNK: "chunk",
     IdKind.JOB: "job",
     IdKind.SESSION: "session",
