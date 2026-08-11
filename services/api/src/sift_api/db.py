@@ -17,6 +17,16 @@ from sqlalchemy.ext.asyncio import (
 from sift_api.settings import Settings, get_settings
 
 
+def sync_dsn(settings: Settings | None = None) -> str:
+    """Rewrite async DSN to a sync psycopg URL for short-lived engines."""
+    raw = (settings or get_settings()).sift_pg_dsn
+    if raw.startswith("postgresql+asyncpg://"):
+        return "postgresql+psycopg://" + raw.removeprefix("postgresql+asyncpg://")
+    if raw.startswith("postgresql://"):
+        return "postgresql+psycopg://" + raw.removeprefix("postgresql://")
+    return raw
+
+
 @dataclass
 class _EngineState:
     engine: AsyncEngine | None = None

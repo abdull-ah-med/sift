@@ -19,6 +19,7 @@ ULID_BODY = r"[0-9A-HJKMNP-TV-Z]{26}"
         (IdKind.COLLECTION, "col"),
         (IdKind.DOCUMENT, "doc"),
         (IdKind.BLOCK, "blk"),
+        (IdKind.BLOCK_REVISION, "brev"),
         (IdKind.CHUNK, "chunk"),
         (IdKind.JOB, "job"),
         (IdKind.SESSION, "session"),

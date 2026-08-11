@@ -6,7 +6,7 @@ from typing import Any
 
 from sqlalchemy import create_engine, text
 
-from sift_api.ingest_stub import _sync_dsn
+from sift_api.db import sync_dsn
 from sift_core.audit import write_audit_event
 
 
@@ -19,7 +19,7 @@ def emit_audit(
     target_id: str,
     payload: dict[str, Any] | None = None,
 ) -> None:
-    eng = create_engine(_sync_dsn())
+    eng = create_engine(sync_dsn())
     try:
         with eng.begin() as conn:
             conn.execute(text("SET LOCAL ROLE sift_admin"))

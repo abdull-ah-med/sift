@@ -37,7 +37,7 @@ lint:
 	pnpm -r lint
 
 typecheck:
-	uv run mypy libs/sift-core/src libs/sift-parse/src services/api/src
+	uv run mypy libs/sift-core/src libs/sift-parse/src libs/sift-ingest/src services/api/src
 	pnpm -r typecheck
 
 integration:

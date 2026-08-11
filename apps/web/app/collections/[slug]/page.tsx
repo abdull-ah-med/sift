@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
@@ -106,6 +107,7 @@ function CollectionDetail() {
             <th>Title</th>
             <th>Status</th>
             <th>Id</th>
+            <th />
           </tr>
         </thead>
         <tbody>
@@ -114,6 +116,9 @@ function CollectionDetail() {
               <td>{d.title}</td>
               <td>{d.status}</td>
               <td className="muted">{d.id}</td>
+              <td>
+                <Link href={`/collections/detail/documents/${d.id}/review`}>Review</Link>
+              </td>
             </tr>
           ))}
         </tbody>

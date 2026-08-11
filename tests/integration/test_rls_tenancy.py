@@ -17,7 +17,9 @@ from sift_core.ids import IdKind, new_id
 TENANCY_TABLES = frozenset({"organizations", "tenants", "users_in_tenant"})
 CORPUS_TABLES = frozenset({"api_keys", "collections", "documents", "jobs"})
 AUDIT_TABLES = frozenset({"audit_events"})
+PHASE2_TABLES = frozenset({"blocks", "block_revisions", "chunks"})
 PHASE1_TABLES = TENANCY_TABLES | CORPUS_TABLES | AUDIT_TABLES
+SCHEMA_TABLES = PHASE1_TABLES | PHASE2_TABLES
 
 
 def _apply_tenant_context(connection: Connection, tenant_id: str) -> None:
@@ -44,7 +46,7 @@ def test_alembic_upgrade_downgrade_upgrade_when_postgres_available(
 ) -> None:
     command.upgrade(alembic_cfg, "head")
     with pg_engine.connect() as conn:
-        assert _public_tables(conn, PHASE1_TABLES) == set(PHASE1_TABLES)
+        assert _public_tables(conn, SCHEMA_TABLES) == set(SCHEMA_TABLES)
         has_hash_version = conn.execute(
             text(
                 """
@@ -56,14 +58,25 @@ def test_alembic_upgrade_downgrade_upgrade_when_postgres_available(
             )
         ).scalar_one_or_none()
         assert has_hash_version == 1
+        has_block_version = conn.execute(
+            text(
+                """
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = 'blocks'
+                  AND column_name = 'version'
+                """
+            )
+        ).scalar_one_or_none()
+        assert has_block_version == 1
 
     command.downgrade(alembic_cfg, "base")
     with pg_engine.connect() as conn:
-        assert _public_tables(conn, PHASE1_TABLES) == set()
+        assert _public_tables(conn, SCHEMA_TABLES) == set()
 
     command.upgrade(alembic_cfg, "head")
     with pg_engine.connect() as conn:
-        assert _public_tables(conn, PHASE1_TABLES) == set(PHASE1_TABLES)
+        assert _public_tables(conn, SCHEMA_TABLES) == set(SCHEMA_TABLES)
 
 
 def test_rls_when_tenant_a_cannot_read_tenant_b_rows(migrated_db: Engine) -> None:
