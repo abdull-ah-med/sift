@@ -10,7 +10,7 @@ from pathlib import Path
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
-from sift.parse import DigitalPdfParser, ParseConfig, Parser
+from sift.parse import ParseConfig, Parser
 from sift_api.db import sync_dsn
 from sift_api.ingest_parse import run_ingest_parse
 from sift_api.settings import Settings, get_settings
@@ -129,7 +129,7 @@ def run_ingest_document(
                         tenant_id=tenant_id,
                         engine=eng,
                         source_path=dest,
-                        parser=parser or DigitalPdfParser(),
+                        parser=parser,
                         parse_config=parse_config,
                         require_review=policy_require_review,
                     )
@@ -149,7 +149,7 @@ def run_ingest_document(
             tenant_id=tenant_id,
             engine=eng,
             source_path=local_path,
-            parser=parser or DigitalPdfParser(),
+            parser=parser,
             parse_config=parse_config,
             require_review=policy_require_review,
         )

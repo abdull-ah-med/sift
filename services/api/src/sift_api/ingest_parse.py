@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Protocol
@@ -10,10 +12,12 @@ from typing import Protocol
 from sqlalchemy import Connection, text
 from sqlalchemy.engine import Engine
 
-from sift.parse import DigitalPdfParser, ParseConfig, Parser, ParseResult
+from sift.parse import DigitalPdfParser, ParseConfig, Parser, ParseResult, StandardPdfParser
 from sift.parse._mapping import quality_score_from_confidences
 from sift_core.audit import write_audit_event
 from sift_core.models import ReviewState
+
+_log = logging.getLogger(__name__)
 
 
 class ObjectFetcher(Protocol):
@@ -26,6 +30,19 @@ def document_quality_score(result: ParseResult) -> float | None:
     """Roll up per-block confidences into ``documents.quality_score`` (ADR-0016)."""
     confidences = [b.confidence for b in result.blocks if b.confidence is not None]
     return quality_score_from_confidences(confidences)
+
+
+def select_parser(*, mime: str | None = None) -> Parser:
+    """Choose the default parser. DigitalPdfParser is fallback only."""
+    if os.environ.get("SIFT_PARSE_ENGINE", "").lower() == "digital-only":
+        return DigitalPdfParser()
+    if mime is not None and mime != "application/pdf" and not mime.endswith("/pdf"):
+        return DigitalPdfParser()
+    try:
+        return StandardPdfParser()
+    except Exception as exc:  # import / construct failure
+        _log.warning("StandardPdfParser unavailable (%s); falling back to DigitalPdfParser", exc)
+        return DigitalPdfParser()
 
 
 def document_status_after_parse(
@@ -111,7 +128,7 @@ def run_ingest_parse(
 
     Returns the resulting document status.
     """
-    active_parser: Parser = parser or DigitalPdfParser()
+    active_parser: Parser = parser or select_parser(mime="application/pdf")
     config = parse_config or ParseConfig()
 
     with engine.begin() as conn:

@@ -2,8 +2,15 @@
 
 from __future__ import annotations
 
+import pytest
+
+from sift.parse import DigitalPdfParser, StandardPdfParser
 from sift.parse.adapter import DocumentMetadata, Page, ParseResult
-from sift_api.ingest_parse import document_quality_score, document_status_after_parse
+from sift_api.ingest_parse import (
+    document_quality_score,
+    document_status_after_parse,
+    select_parser,
+)
 from sift_api.storage import parse_seaweed_uri
 from sift_core.ids import IdKind, new_id
 from sift_core.models import (
@@ -108,3 +115,13 @@ def test_parse_seaweed_uri_splits_bucket_and_key() -> None:
     bucket, key = parse_seaweed_uri("seaweed://sift-uploads/t/tenant/d/doc/original.pdf")
     assert bucket == "sift-uploads"
     assert key == "t/tenant/d/doc/original.pdf"
+
+
+def test_select_parser_defaults_to_standard(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("SIFT_PARSE_ENGINE", raising=False)
+    assert isinstance(select_parser(mime="application/pdf"), StandardPdfParser)
+
+
+def test_select_parser_digital_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SIFT_PARSE_ENGINE", "digital-only")
+    assert isinstance(select_parser(mime="application/pdf"), DigitalPdfParser)

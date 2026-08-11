@@ -1,5 +1,4 @@
 * text=auto eol=lf
-
 *.png binary
 *.jpg binary
 *.jpeg binary
@@ -14,9 +13,7 @@
 *.zip binary
 *.gz binary
 *.tar binary
-
 vendor/sift-parse/**/*.so filter=lfs diff=lfs merge=lfs -text
-
 *.md text diff=markdown
 *.py text diff=python
 *.ts text
@@ -29,3 +26,4 @@ vendor/sift-parse/**/*.so filter=lfs diff=lfs merge=lfs -text
 *.yaml text
 *.toml text
 *.json text
+evals/corpus/pdf/*.pdf filter=lfs diff=lfs merge=lfs -text
