@@ -71,6 +71,7 @@ known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_api
 "tools/db/seed/**/*.py" = ["E402"]
 "tools/auth/**/*.py" = ["PLR2004"]
 "tools/e2e/**/*.py" = ["PLR2004", "F401"]
+"tools/models/prefetch.py" = ["B008"]
 "tests/integration/test_review_api.py" = ["PLR2004"]
 "libs/sift-ingest/tests/**/*.py" = ["PLR2004"]
 

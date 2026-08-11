@@ -48,6 +48,19 @@ jobs:
       - name: Engine DocumentConverter construct
         run: |
           uv run python -c "from sift_parse.document_converter import DocumentConverter; DocumentConverter(); print('DocumentConverter ok')"
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/sift-hf
+          key: sift-parse-weights-${{ hashFiles('tools/models/prefetch.py') }}
+          restore-keys: sift-parse-weights-
+      - name: Prefetch parse model weights
+        env:
+          HF_HOME: ${{ runner.temp }}/sift-hf
+        run: |
+          uv run python tools/models/prefetch.py --dry-run
+          uv run python tools/models/prefetch.py --cache-dir "$HF_HOME"
+          echo "SIFT_HAVE_PARSE_WEIGHTS=1" >> "$GITHUB_ENV"
+          echo "HF_HOME=$HF_HOME" >> "$GITHUB_ENV"
       - name: Pytest
         run: uv run pytest -q --ignore=vendor
 

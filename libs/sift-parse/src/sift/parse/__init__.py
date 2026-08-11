@@ -8,11 +8,13 @@ from sift.parse.adapter import (
     ParseResult,
 )
 from sift.parse.digital import DigitalPdfParser
+from sift.parse.errors import MissingModelWeightsError
 from sift.parse.smoke import ParseSmokeResult, run_parse_smoke
 
 __all__ = [
     "DigitalPdfParser",
     "DocumentMetadata",
+    "MissingModelWeightsError",
     "Page",
     "ParseConfig",
     "ParseResult",

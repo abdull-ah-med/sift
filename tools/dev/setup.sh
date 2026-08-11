@@ -19,6 +19,14 @@ uv python pin 3.13
 uv sync --all-packages --group dev
 pnpm install
 
+# Prefetch StandardPdfPipeline weights (layout + TableFormer). Skip with
+# SIFT_SKIP_MODEL_PREFETCH=1 when air-gapped; see tools/models/README.md.
+if [[ "${SIFT_SKIP_MODEL_PREFETCH:-}" != "1" ]]; then
+  uv run python tools/models/prefetch.py
+else
+  echo "SIFT_SKIP_MODEL_PREFETCH=1 — skipping model weight prefetch"
+fi
+
 if command -v pre-commit >/dev/null 2>&1; then
   pre-commit install
 else
