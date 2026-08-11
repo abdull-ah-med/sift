@@ -46,7 +46,7 @@ def _configure_offline_tldextract() -> None:
         cache_dir=str(cache),
     )
     # Presidio EmailRecognizer calls the module-level singleton.
-    setattr(tldextract, "TLD_EXTRACTOR", extractor)
+    tldextract.TLD_EXTRACTOR = extractor  # type: ignore[attr-defined]
 
 
 class _BlankSpacyNlpEngine(SpacyNlpEngine):
