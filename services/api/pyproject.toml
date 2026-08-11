@@ -7,14 +7,20 @@ license = { text = "Apache-2.0" }
 dependencies = [
     "sift-core",
     "sift-parse",
+    "sift-obs",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.34",
     "python-multipart>=0.0.20",
     "sqlalchemy[asyncio]>=2.0",
     "asyncpg>=0.30",
+    "psycopg[binary]>=3.2",
     "redis>=5.0",
     "httpx>=0.28",
     "pydantic-settings>=2.0",
+    "PyJWT[crypto]>=2.10",
+    "boto3>=1.35",
+    "taskiq>=0.11",
+    "taskiq-redis>=1.0",
 ]
 
 
@@ -33,6 +39,7 @@ packages = ["src/sift_api"]
 [tool.uv.sources]
 sift-core = { workspace = true }
 sift-parse = { workspace = true }
+sift-obs = { workspace = true }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

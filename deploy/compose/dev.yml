@@ -7,6 +7,8 @@ x-sift-env: &sift-env
   SIFT_STORAGE_BUCKET: sift-uploads
   SIFT_STORAGE_ACCESS_KEY: sift
   SIFT_STORAGE_SECRET_KEY: sift-dev-secret
+  SIFT_API_KEY_PEPPER: dev-pepper-change-me
+  SIFT_OTEL_ENABLED: "false"
   SIFT_EMBED_URL: http://tei:80
   SIFT_RERANK_URL: http://tei-rerank:80
 
@@ -143,6 +145,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+
+  tempo:
+    profiles: ["obs"]
+    image: grafana/tempo:2.6.1
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo.yaml:ro
+    ports:
+      - "3200:3200"
+      - "4318:4318"
 
 volumes:
   sift-pg:

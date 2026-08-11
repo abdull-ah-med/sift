@@ -1,10 +1,14 @@
-"""Worker entrypoint (Phase 0 stub)."""
+"""Taskiq worker entrypoint."""
 
 from __future__ import annotations
 
+import subprocess
+import sys
+
 
 def main() -> None:
-    print("sift-worker scaffold — Taskiq broker lands with ingest jobs", flush=True)
+    cmd = [sys.executable, "-m", "taskiq", "worker", "sift_api.tasks:broker"]
+    raise SystemExit(subprocess.call(cmd))
 
 
 if __name__ == "__main__":

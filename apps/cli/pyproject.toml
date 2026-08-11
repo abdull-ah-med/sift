@@ -1,12 +1,18 @@
 [project]
 name = "sift-cli"
-version = "0.0.0"
-description = "sift CLI (scaffold)."
+version = "0.1.0"
+description = "sift CLI."
 requires-python = ">=3.13,<3.14"
 license = { text = "Apache-2.0" }
 dependencies = [
     "sift-core",
+    "httpx>=0.28",
+    "typer>=0.15",
+    "rich>=13.9",
 ]
+
+[project.scripts]
+sift = "sift_cli.__main__:main"
 
 [build-system]
 requires = ["hatchling"]

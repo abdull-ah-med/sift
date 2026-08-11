@@ -1,0 +1,13 @@
+{
+  auto_https off
+}
+
+:80 {
+  @api path /v1* /health* /docs* /openapi.json /parse*
+  handle @api {
+    reverse_proxy sift-api:8000
+  }
+  handle {
+    reverse_proxy sift-web:3000
+  }
+}

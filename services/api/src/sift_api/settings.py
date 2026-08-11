@@ -32,6 +32,17 @@ class Settings(BaseSettings):
         alias="SIFT_STORAGE_BUCKET",
     )
     sift_api_key_pepper: str = Field(default="", alias="SIFT_API_KEY_PEPPER")
+    sift_zitadel_issuer: str = Field(default="", alias="SIFT_ZITADEL_ISSUER")
+    sift_zitadel_audience: str = Field(default="sift-api", alias="SIFT_ZITADEL_AUDIENCE")
+    sift_storage_access_key: str = Field(default="sift", alias="SIFT_STORAGE_ACCESS_KEY")
+    sift_storage_secret_key: str = Field(
+        default="sift-dev-secret", alias="SIFT_STORAGE_SECRET_KEY"
+    )
+    sift_otlp_endpoint: str = Field(
+        default="http://127.0.0.1:4318/v1/traces",
+        alias="SIFT_OTLP_ENDPOINT",
+    )
+    sift_otel_enabled: bool = Field(default=False, alias="SIFT_OTEL_ENABLED")
 
 
 @lru_cache

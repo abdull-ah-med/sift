@@ -17,8 +17,10 @@ Optional profiles:
 |---|---|
 | `ml` | TEI embed + rerank (large model download) |
 | `auth` | Zitadel |
-| `obs` | Langfuse |
+| `obs` | Langfuse + Tempo (OTLP :4318) |
 
 ```bash
 docker compose -f deploy/compose/dev.yml --profile ml up -d
 ```
+
+Production single-node stack: `deploy/compose/prod-single.yml` (Caddy + resource limits).

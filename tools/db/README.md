@@ -34,7 +34,13 @@ Application sessions must `SET ROLE sift_app` (or connect as a login role that i
 
 ## Seed
 
-Dev seed scripts will live under `tools/db/seed/` (later Phase 1 slice).
+```bash
+export SIFT_API_KEY_PEPPER=dev-pepper-change-me
+uv run alembic -c tools/db/alembic.ini upgrade head
+uv run python tools/db/seed/dev_bootstrap.py
+```
+
+Prints a one-time `raw_key` for local CLI/UI login.
 
 ## Revisions
 
