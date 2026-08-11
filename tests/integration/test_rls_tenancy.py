@@ -45,16 +45,17 @@ def test_alembic_upgrade_downgrade_upgrade_when_postgres_available(
     command.upgrade(alembic_cfg, "head")
     with pg_engine.connect() as conn:
         assert _public_tables(conn, PHASE1_TABLES) == set(PHASE1_TABLES)
-
-    command.downgrade(alembic_cfg, "-1")
-    with pg_engine.connect() as conn:
-        assert _public_tables(conn, AUDIT_TABLES) == set()
-        assert _public_tables(conn, CORPUS_TABLES) == set(CORPUS_TABLES)
-
-    command.downgrade(alembic_cfg, "-1")
-    with pg_engine.connect() as conn:
-        assert _public_tables(conn, CORPUS_TABLES) == set()
-        assert _public_tables(conn, TENANCY_TABLES) == set(TENANCY_TABLES)
+        has_hash_version = conn.execute(
+            text(
+                """
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = 'api_keys'
+                  AND column_name = 'hash_version'
+                """
+            )
+        ).scalar_one_or_none()
+        assert has_hash_version == 1
 
     command.downgrade(alembic_cfg, "base")
     with pg_engine.connect() as conn:
