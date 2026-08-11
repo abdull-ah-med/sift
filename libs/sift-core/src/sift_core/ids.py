@@ -40,7 +40,7 @@ _PREFIX_BY_KIND: dict[IdKind, str] = {
     IdKind.JOB: "job",
     IdKind.SESSION: "session",
     IdKind.API_KEY: "key",
-    IdKind.EVENT: "event",
+    IdKind.EVENT: "aud",
     IdKind.TAG: "tag",
 }
 

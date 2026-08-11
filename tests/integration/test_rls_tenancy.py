@@ -1,58 +1,28 @@
 """Migration + RLS isolation tests (requires Postgres).
 
-Skipped unless Postgres is reachable at SIFT_PG_DSN / DATABASE_URL / default
-local Compose DSN. Start stack with ``make up`` (postgres service).
+Skipped unless Postgres is reachable (see ``conftest.py``). Start with
+``docker compose -f deploy/compose/dev.yml up -d postgres``.
 """
 
 from __future__ import annotations
 
-import os
-from collections.abc import Iterator
-from pathlib import Path
-
-import pytest
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import Connection, create_engine, text
+from sqlalchemy import Connection, text
 from sqlalchemy.engine import Engine
 
 from sift_core.db import tenant_guc_statements
 from sift_core.ids import IdKind, new_id
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-ALEMBIC_INI = REPO_ROOT / "tools" / "db" / "alembic.ini"
-
 TENANCY_TABLES = frozenset({"organizations", "tenants", "users_in_tenant"})
 CORPUS_TABLES = frozenset({"api_keys", "collections", "documents", "jobs"})
-PHASE1_TABLES = TENANCY_TABLES | CORPUS_TABLES
+AUDIT_TABLES = frozenset({"audit_events"})
+PHASE1_TABLES = TENANCY_TABLES | CORPUS_TABLES | AUDIT_TABLES
 
 
 def _apply_tenant_context(connection: Connection, tenant_id: str) -> None:
     for statement in tenant_guc_statements(tenant_id):
         connection.execute(text(statement))
-
-
-def _sync_dsn() -> str:
-    raw = os.environ.get("SIFT_PG_DSN") or os.environ.get("DATABASE_URL")
-    if not raw:
-        raw = "postgresql+psycopg://sift:sift@127.0.0.1:5432/sift"
-    if raw.startswith("postgresql+asyncpg://"):
-        return "postgresql+psycopg://" + raw.removeprefix("postgresql+asyncpg://")
-    if raw.startswith("postgresql://"):
-        return "postgresql+psycopg://" + raw.removeprefix("postgresql://")
-    return raw
-
-
-def _postgres_reachable(dsn: str) -> bool:
-    engine = create_engine(dsn, pool_pre_ping=True)
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        return True
-    except Exception:
-        return False
-    finally:
-        engine.dispose()
 
 
 def _public_tables(conn: Connection, names: frozenset[str]) -> set[str]:
@@ -68,43 +38,6 @@ def _public_tables(conn: Connection, names: frozenset[str]) -> set[str]:
     return {row[0] for row in rows}
 
 
-@pytest.fixture(scope="module")
-def pg_dsn() -> str:
-    dsn = _sync_dsn()
-    if not _postgres_reachable(dsn):
-        pytest.skip("Postgres not reachable; start deploy/compose/dev.yml postgres")
-    return dsn
-
-
-@pytest.fixture(scope="module")
-def pg_engine(pg_dsn: str) -> Iterator[Engine]:
-    engine = create_engine(pg_dsn, pool_pre_ping=True)
-    yield engine
-    engine.dispose()
-
-
-@pytest.fixture(scope="module")
-def alembic_cfg(pg_dsn: str) -> Iterator[Config]:
-    # Never use str(engine.url) — SQLAlchemy hides the password as ***.
-    previous = os.environ.get("SIFT_PG_DSN")
-    os.environ["SIFT_PG_DSN"] = pg_dsn
-    cfg = Config(str(ALEMBIC_INI))
-    try:
-        yield cfg
-    finally:
-        if previous is None:
-            os.environ.pop("SIFT_PG_DSN", None)
-        else:
-            os.environ["SIFT_PG_DSN"] = previous
-
-
-@pytest.fixture(scope="module")
-def migrated_db(alembic_cfg: Config, pg_engine: Engine) -> Iterator[Engine]:
-    command.upgrade(alembic_cfg, "head")
-    yield pg_engine
-    command.downgrade(alembic_cfg, "base")
-
-
 def test_alembic_upgrade_downgrade_upgrade_when_postgres_available(
     alembic_cfg: Config,
     pg_engine: Engine,
@@ -112,6 +45,11 @@ def test_alembic_upgrade_downgrade_upgrade_when_postgres_available(
     command.upgrade(alembic_cfg, "head")
     with pg_engine.connect() as conn:
         assert _public_tables(conn, PHASE1_TABLES) == set(PHASE1_TABLES)
+
+    command.downgrade(alembic_cfg, "-1")
+    with pg_engine.connect() as conn:
+        assert _public_tables(conn, AUDIT_TABLES) == set()
+        assert _public_tables(conn, CORPUS_TABLES) == set(CORPUS_TABLES)
 
     command.downgrade(alembic_cfg, "-1")
     with pg_engine.connect() as conn:

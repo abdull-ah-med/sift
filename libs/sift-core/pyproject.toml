@@ -5,7 +5,10 @@ description = "Shared types, IDs, errors, tenants, auth primitives, and settings
 requires-python = ">=3.13,<3.14"
 license = { text = "Apache-2.0" }
 dependencies = [
+    "blake3>=1.0.9",
     "python-ulid>=3.0",
+    "rfc8785>=0.1.4",
+    "sqlalchemy>=2.0",
 ]
 
 [build-system]

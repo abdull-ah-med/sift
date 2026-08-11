@@ -117,6 +117,27 @@ wheels = [
 ]
 
 [[package]]
+name = "blake3"
+version = "1.0.9"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/26/6a/4cc5a9dd40fd8a6d283fd3761e5f59c490109571ef8e3c73245417e5a305/blake3-1.0.9.tar.gz", hash = "sha256:5fa374fa5070ca084368776c19b420157eb0f2d3f091343d6bc59189929d62e2", size = 116872, upload-time = "2026-06-22T18:02:25.366Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/41/1b/95b473d649f5322e69674622a307ffdb4f0b63adb0a0adcbc5cb8a8833c2/blake3-1.0.9-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:69ff5aebc7650954443aa701feff2028d7c7ea5b5e18ee265f15e2104e892328", size = 343869, upload-time = "2026-06-22T18:00:51.936Z" },
+    { url = "https://files.pythonhosted.org/packages/4b/9d/adec22c719d8451af1dc9e624bf5907008ef1e0afa51aa69fd1e8c91e60e/blake3-1.0.9-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:0cdfeff65488089ef86f7587c76055ff72b28d28d10e427b547f5711477c376d", size = 328482, upload-time = "2026-06-22T18:00:53.39Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/aa/0a6967ff9a6ae182419a681aed54f7338b34a1f71372e90f787a2afa42e6/blake3-1.0.9-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:766f1555cbe614f14f399c2fbec0983568d20edb36837ba04040807eb9e1a609", size = 373616, upload-time = "2026-06-22T18:00:54.701Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/51/5d4e198bf3ae902c6697ad6ec77d7210736ad8f680980e8b648dcfcd09a0/blake3-1.0.9-cp313-cp313-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:128a62136c9a39c7cb9fdaa5fb38471f2418853da7f5a89f31495735d0ba6f2c", size = 374149, upload-time = "2026-06-22T18:00:56.015Z" },
+    { url = "https://files.pythonhosted.org/packages/7e/62/d3c7c364925b3f10828e5137376f3947f112c32188e899b42f09c2fde98a/blake3-1.0.9-cp313-cp313-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:d1ea0bf17b184b03444007646d902207d2b4d4f3e91a0cac3836552d83db74b9", size = 446151, upload-time = "2026-06-22T18:00:57.378Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/01/55b89389c5036c9d24b1d762d6265e91552e10b76a3c99fece3c4a7a4783/blake3-1.0.9-cp313-cp313-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:73a48f7e9f0e047f51a445d9b0361ab1907bdc72b6857815a84dacd2e59556f8", size = 487256, upload-time = "2026-06-22T18:00:58.763Z" },
+    { url = "https://files.pythonhosted.org/packages/b2/7a/a21b52253292ad3e4df63ea4a01ce11d3ee8f4a8a8d80eaf0c7ce92a62bd/blake3-1.0.9-cp313-cp313-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:b27550ada40f839aca64c66127940e4318bb6ef3e291890ef913017f6f637448", size = 383977, upload-time = "2026-06-22T18:01:00.192Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/f0/fe7188201a29ee9b042616c786a98afd864d537ca96198e64c3fe4ff13a9/blake3-1.0.9-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:66c84dbc2a31eda88b55bbf5c5b711037bf0698eba0fd1faf06bdaf313c39048", size = 383615, upload-time = "2026-06-22T18:01:01.557Z" },
+    { url = "https://files.pythonhosted.org/packages/22/08/f6a213b950e30fe9ef7d7fc061ec388e66ed62643570226882e6f7136ea3/blake3-1.0.9-cp313-cp313-manylinux_2_31_riscv64.whl", hash = "sha256:dab59b324aa65c09e937d6c43de5de85ec9581627f4e79dcc9806d85b54a1c34", size = 380288, upload-time = "2026-06-22T18:01:03.025Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/fb/b171e47c1b835483bcf1545ebc289458165f8dc0f5c7f74a9176d7e9af03/blake3-1.0.9-cp313-cp313-musllinux_1_1_aarch64.whl", hash = "sha256:eca281fedcbe5c56655bd5a4176e6036eddbbe57df96114a03838fce08b1e0ca", size = 549122, upload-time = "2026-06-22T18:01:04.486Z" },
+    { url = "https://files.pythonhosted.org/packages/a7/d8/7bf71c2c85a0951e406971f151435e0751716907e3924c6c48a2d6dae0db/blake3-1.0.9-cp313-cp313-musllinux_1_1_x86_64.whl", hash = "sha256:3cbe7f190164896dc3908e920716ee66bc31d40f1a0fb603ed59ac53290fb9cf", size = 591183, upload-time = "2026-06-22T18:01:06.259Z" },
+    { url = "https://files.pythonhosted.org/packages/20/85/34c3ea03cc90b2516628494ab3e0a98aec4ca8b04d037840ccd390e480ca/blake3-1.0.9-cp313-cp313-win32.whl", hash = "sha256:508ccaf8f9377cc47e6026c2897fdc37de61faeb1420dc023b6379cc2474eb65", size = 229053, upload-time = "2026-06-22T18:01:07.638Z" },
+    { url = "https://files.pythonhosted.org/packages/db/2e/f09e8ed426f360aa2005206466ceab2f707486eb5d9db7051dbcbae056d1/blake3-1.0.9-cp313-cp313-win_amd64.whl", hash = "sha256:caded2806d2cbeed638c5e2517ed8b2a94165b3452fda35e72896142d22070e0", size = 217589, upload-time = "2026-06-22T18:01:08.922Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2026.7.22"
 source = { registry = "https://pypi.org/simple" }
@@ -563,6 +584,15 @@ wheels = [
 ]
 
 [[package]]
+name = "rfc8785"
+version = "0.1.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ef/2f/fa1d2e740c490191b572d33dbca5daa180cb423c24396b856f5886371d8b/rfc8785-0.1.4.tar.gz", hash = "sha256:e545841329fe0eee4f6a3b44e7034343100c12b4ec566dc06ca9735681deb4da", size = 14321, upload-time = "2024-09-27T16:33:31.206Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4d/78/119878110660b2ad709888c8a1614fce7e2fab39080ab960656dc8605bf6/rfc8785-0.1.4-py3-none-any.whl", hash = "sha256:520d690b448ecf0703691c76e1a34a24ddcd4fc5bc41d589cb7c58ec651bcd48", size = 9240, upload-time = "2024-09-27T16:33:29.683Z" },
+]
+
+[[package]]
 name = "ruff"
 version = "0.16.2"
 source = { registry = "https://pypi.org/simple" }
@@ -672,11 +702,19 @@ name = "sift-core"
 version = "0.0.0"
 source = { editable = "libs/sift-core" }
 dependencies = [
+    { name = "blake3" },
     { name = "python-ulid" },
+    { name = "rfc8785" },
+    { name = "sqlalchemy" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "python-ulid", specifier = ">=3.0" }]
+requires-dist = [
+    { name = "blake3", specifier = ">=1.0.9" },
+    { name = "python-ulid", specifier = ">=3.0" },
+    { name = "rfc8785", specifier = ">=0.1.4" },
+    { name = "sqlalchemy", specifier = ">=2.0" },
+]
 
 [[package]]
 name = "sift-parse"

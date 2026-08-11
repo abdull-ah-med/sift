@@ -23,7 +23,7 @@ ULID_BODY = r"[0-9A-HJKMNP-TV-Z]{26}"
         (IdKind.JOB, "job"),
         (IdKind.SESSION, "session"),
         (IdKind.API_KEY, "key"),
-        (IdKind.EVENT, "event"),
+        (IdKind.EVENT, "aud"),
         (IdKind.TAG, "tag"),
     ],
 )

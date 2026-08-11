@@ -42,5 +42,4 @@ Dev seed scripts will live under `tools/db/seed/` (later Phase 1 slice).
 |-----|----------|
 | `0001` | extensions, `sift_app`/`sift_admin`, organizations, tenants, users_in_tenant + RLS |
 | `0002` | api_keys, collections, documents, jobs + RLS |
-
-`audit_events` is intentionally not in `0002` until the hash-chain algorithm is specified.
+| `0003` | audit_events + RLS (hashing in `sift_core.audit`, ADR-0014) |
