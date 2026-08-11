@@ -61,17 +61,22 @@ sift-parse-core-engine = { workspace = true }
 include-package-data = true
 
 [tool.setuptools.packages.find]
-where = [".", "sift_parse_pdf*"]
-include = ["sift_parse_pdf*"]
+where = ["."]
+include = ["sift_parse_pdf*", "docling_parse*"]
 
 [tool.setuptools.package-data]
-"sift_parse_pdf" = [
-    "*.so", "*.pyd", "*.dll",
-    "pdf_resources/*"
+"sift_parse_pdf" = ["*.so", "*.pyd", "*.dll", "py.typed"]
+"docling_parse" = [
+    "*.so",
+    "*.pyd",
+    "*.dll",
+    "pdf_resources/*",
+    "pdf_resources/**/*",
 ]
 
 [tool.setuptools.exclude-package-data]
 "sift_parse_pdf" = ["*.pyc", "__pycache__"]
+"docling_parse" = ["*.pyc", "__pycache__"]
 
 [tool.ruff]
 target-version = "py310"

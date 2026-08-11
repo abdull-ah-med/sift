@@ -30,7 +30,7 @@ from sift_parse_core.types.doc.page import (
 from PIL import Image as PILImage
 from pydantic import BaseModel, ConfigDict
 
-from sift_parse_pdf.pdf_parsers import (  # type: ignore[import]
+from docling_parse.pdf_parsers import (  # type: ignore[import]
     TIMING_KEY_CREATE_LINE_CELLS,
     TIMING_KEY_CREATE_WORD_CELLS,
     TIMING_KEY_DECODE_ANNOTS,
