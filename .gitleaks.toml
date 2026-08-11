@@ -1,0 +1,14 @@
+# gitleaks config for sift.
+# Extends the default ruleset; allowlists cover known false positives only.
+
+title = "sift"
+
+[extend]
+useDefault = true
+
+# Global allowlist (gitleaks v8 uses singular [allowlist]).
+[allowlist]
+description = "Vendored upstream trees (Docling → sift-parse, LongParser → sift-ingest)"
+paths = [
+  '''vendor/.*''',
+]
