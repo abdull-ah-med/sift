@@ -82,3 +82,46 @@ jobs:
         run: pnpm -r test
       - name: Typecheck
         run: pnpm -r typecheck
+
+  preflight:
+    name: Agent preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Lock expected local identity (CI contract)
+        run: |
+          git config --local user.name "Abdullah Ahmed"
+          git config --local user.email "contactabdullahahmed@gmail.com"
+          git config --local commit.gpgsign true
+          git config --local tag.gpgsign true
+      - name: Preflight
+        env:
+          SIFT_PREFLIGHT_CI: "1"
+        run: python3 tools/agent/preflight.py
+      - name: Verify commit authors on range
+        run: |
+          set -euo pipefail
+          EXPECTED='Abdullah Ahmed <contactabdullahahmed@gmail.com>'
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          if [ -z "${BASE}" ] || [ "${BASE}" = "0000000000000000000000000000000000000000" ]; then
+            echo "No base SHA; checking HEAD author only"
+            author="$(git log -1 --format='%an <%ae>')"
+            if [ "${author}" != "${EXPECTED}" ]; then
+              echo "HEAD author mismatch: ${author}"
+              exit 1
+            fi
+            exit 0
+          fi
+          bad="$(git log --format='%an <%ae>' "${BASE}"..HEAD | grep -v -F "${EXPECTED}" || true)"
+          if [ -n "${bad}" ]; then
+            echo "Non-locked authors found:"
+            echo "${bad}"
+            exit 1
+          fi
+          echo "All authors on ${BASE}..HEAD match locked identity"
