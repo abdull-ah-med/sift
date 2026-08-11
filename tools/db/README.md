@@ -35,3 +35,12 @@ Application sessions must `SET ROLE sift_app` (or connect as a login role that i
 ## Seed
 
 Dev seed scripts will live under `tools/db/seed/` (later Phase 1 slice).
+
+## Revisions
+
+| Rev | Contents |
+|-----|----------|
+| `0001` | extensions, `sift_app`/`sift_admin`, organizations, tenants, users_in_tenant + RLS |
+| `0002` | api_keys, collections, documents, jobs + RLS |
+
+`audit_events` is intentionally not in `0002` until the hash-chain algorithm is specified.

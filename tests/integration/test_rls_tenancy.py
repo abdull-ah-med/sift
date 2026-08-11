@@ -22,6 +22,10 @@ from sift_core.ids import IdKind, new_id
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ALEMBIC_INI = REPO_ROOT / "tools" / "db" / "alembic.ini"
 
+TENANCY_TABLES = frozenset({"organizations", "tenants", "users_in_tenant"})
+CORPUS_TABLES = frozenset({"api_keys", "collections", "documents", "jobs"})
+PHASE1_TABLES = TENANCY_TABLES | CORPUS_TABLES
+
 
 def _apply_tenant_context(connection: Connection, tenant_id: str) -> None:
     for statement in tenant_guc_statements(tenant_id):
@@ -49,6 +53,19 @@ def _postgres_reachable(dsn: str) -> bool:
         return False
     finally:
         engine.dispose()
+
+
+def _public_tables(conn: Connection, names: frozenset[str]) -> set[str]:
+    rows = conn.execute(
+        text(
+            """
+            SELECT tablename FROM pg_tables
+            WHERE schemaname = 'public' AND tablename = ANY(:names)
+            """
+        ),
+        {"names": list(names)},
+    )
+    return {row[0] for row in rows}
 
 
 @pytest.fixture(scope="module")
@@ -94,43 +111,32 @@ def test_alembic_upgrade_downgrade_upgrade_when_postgres_available(
 ) -> None:
     command.upgrade(alembic_cfg, "head")
     with pg_engine.connect() as conn:
-        tables = {
-            row[0]
-            for row in conn.execute(
-                text(
-                    """
-                    SELECT tablename FROM pg_tables
-                    WHERE schemaname = 'public'
-                      AND tablename IN ('organizations', 'tenants', 'users_in_tenant')
-                    """
-                )
-            )
-        }
-    assert tables == {"organizations", "tenants", "users_in_tenant"}
+        assert _public_tables(conn, PHASE1_TABLES) == set(PHASE1_TABLES)
 
     command.downgrade(alembic_cfg, "-1")
     with pg_engine.connect() as conn:
-        remaining = conn.execute(
-            text(
-                """
-                SELECT count(*) FROM pg_tables
-                WHERE schemaname = 'public'
-                  AND tablename IN ('organizations', 'tenants', 'users_in_tenant')
-                """
-            )
-        ).scalar_one()
-    assert remaining == 0
+        assert _public_tables(conn, CORPUS_TABLES) == set()
+        assert _public_tables(conn, TENANCY_TABLES) == set(TENANCY_TABLES)
+
+    command.downgrade(alembic_cfg, "base")
+    with pg_engine.connect() as conn:
+        assert _public_tables(conn, PHASE1_TABLES) == set()
 
     command.upgrade(alembic_cfg, "head")
+    with pg_engine.connect() as conn:
+        assert _public_tables(conn, PHASE1_TABLES) == set(PHASE1_TABLES)
 
 
 def test_rls_when_tenant_a_cannot_read_tenant_b_rows(migrated_db: Engine) -> None:
     org_id = new_id(IdKind.ORGANIZATION)
     tenant_a = new_id(IdKind.TENANT)
     tenant_b = new_id(IdKind.TENANT)
+    col_a = new_id(IdKind.COLLECTION)
+    col_b = new_id(IdKind.COLLECTION)
+    doc_a = new_id(IdKind.DOCUMENT)
+    doc_b = new_id(IdKind.DOCUMENT)
 
     with migrated_db.begin() as conn:
-        # Superuser/admin path seeds both tenants (bypasses RLS).
         conn.execute(text("SET LOCAL ROLE sift_admin"))
         conn.execute(
             text(
@@ -163,6 +169,46 @@ def test_rls_when_tenant_a_cannot_read_tenant_b_rows(migrated_db: Engine) -> Non
             ),
             {"a": tenant_a, "b": tenant_b},
         )
+        conn.execute(
+            text(
+                """
+                INSERT INTO collections (id, tenant_id, name, slug)
+                VALUES
+                  (:ca, :a, 'Corpus A', 'corpus-a'),
+                  (:cb, :b, 'Corpus B', 'corpus-b')
+                """
+            ),
+            {"ca": col_a, "cb": col_b, "a": tenant_a, "b": tenant_b},
+        )
+        conn.execute(
+            text(
+                """
+                INSERT INTO documents (
+                  id, tenant_id, collection_id, title, slug,
+                  source_uri, source_mime, source_bytes, source_sha256,
+                  status, created_by
+                ) VALUES
+                  (
+                    :da, :a, :ca, 'Doc A', 'doc-a',
+                    'seaweed://t/a/d/a/original.pdf', 'application/pdf', 10, 'aaa',
+                    'queued', 'user-a'
+                  ),
+                  (
+                    :db, :b, :cb, 'Doc B', 'doc-b',
+                    'seaweed://t/b/d/b/original.pdf', 'application/pdf', 10, 'bbb',
+                    'queued', 'user-b'
+                  )
+                """
+            ),
+            {
+                "da": doc_a,
+                "db": doc_b,
+                "a": tenant_a,
+                "b": tenant_b,
+                "ca": col_a,
+                "cb": col_b,
+            },
+        )
 
     with migrated_db.begin() as conn:
         conn.execute(text("SET LOCAL ROLE sift_app"))
@@ -173,6 +219,14 @@ def test_rls_when_tenant_a_cannot_read_tenant_b_rows(migrated_db: Engine) -> Non
             .scalars()
             .all()
         )
+        visible_collections = (
+            conn.execute(text("SELECT id FROM collections ORDER BY slug")).scalars().all()
+        )
+        visible_documents = (
+            conn.execute(text("SELECT id FROM documents ORDER BY slug")).scalars().all()
+        )
 
     assert visible_tenants == [tenant_a]
     assert visible_users == ["user-a"]
+    assert visible_collections == [col_a]
+    assert visible_documents == [doc_a]
