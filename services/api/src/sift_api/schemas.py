@@ -149,3 +149,27 @@ class AuditEventOut(StrictModel):
     target_id: str
     occurred_at: datetime
     payload: dict[str, Any]
+
+
+class BlockOut(StrictModel):
+    id: str
+    document_id: str
+    ordinal: int
+    block_type: str
+    text: str | None
+    html: str | None
+    provenance: dict[str, Any]
+    confidence: float | None
+    review_state: str
+    version: int
+
+
+class BlockPatch(StrictModel):
+    text: str = Field(min_length=0, max_length=200_000)
+
+
+class FinalizeOut(StrictModel):
+    document_id: str
+    status: str
+    block_count: int
+    needs_review_count: int

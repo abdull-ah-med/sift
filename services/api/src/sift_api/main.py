@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sift_api.db import dispose_engine, get_engine
 from sift_api.routes.health import router as health_router
 from sift_api.routes.parse_smoke import router as parse_smoke_router
+from sift_api.routes.review import router as review_router
 from sift_api.routes.v1 import router as v1_router
 from sift_api.settings import get_settings
 
@@ -49,3 +50,4 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(parse_smoke_router)
 app.include_router(v1_router)
+app.include_router(review_router)

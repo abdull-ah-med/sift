@@ -60,11 +60,13 @@ known-first-party = ["sift", "sift_core", "sift_parse", "sift_api", "sift_worker
 "services/api/src/sift_api/storage.py" = ["PLR0913"]
 "services/api/src/sift_api/ingest.py" = ["PLR0913"]
 "services/api/src/sift_api/ingest_parse.py" = ["PLR0913"]
+"services/api/src/sift_api/routes/review.py" = ["B008", "PLC0415", "PLR0913"]
 "apps/cli/src/sift_cli/**/*.py" = ["B008"]
 "libs/sift-parse/src/sift/parse/smoke.py" = ["PLC0415"]
 "tools/db/seed/**/*.py" = ["E402"]
 "tools/auth/**/*.py" = ["PLR2004"]
 "tools/e2e/**/*.py" = ["PLR2004", "F401"]
+"tests/integration/test_review_api.py" = ["PLR2004"]
 
 [tool.ruff.format]
 quote-style = "double"
