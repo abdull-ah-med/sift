@@ -8,6 +8,7 @@ dependencies = [
     "sift-core",
     "pydantic>=2.10",
     "sift-parse-core-engine[chunking]",
+    "presidio-analyzer>=2.2,<3",
 ]
 
 [build-system]

@@ -9,6 +9,7 @@ from sift.parse.adapter import DocumentMetadata, Page, ParseResult
 from sift_api.ingest_parse import (
     document_quality_score,
     document_status_after_parse,
+    enrich_parse_result_with_pii,
     select_parser,
 )
 from sift_api.storage import parse_seaweed_uri
@@ -125,3 +126,35 @@ def test_select_parser_defaults_to_standard(monkeypatch: pytest.MonkeyPatch) -> 
 def test_select_parser_digital_only(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("SIFT_PARSE_ENGINE", "digital-only")
     assert isinstance(select_parser(mime="application/pdf"), DigitalPdfParser)
+
+
+def test_enrich_parse_result_with_pii_populates_offsets_only() -> None:
+    seeded = "Contact alice.secret@example.com for details."
+    block = _block(ReviewState.APPROVED)
+    block = block.model_copy(update={"text": seeded})
+    result = ParseResult(
+        blocks=[block],
+        metadata=DocumentMetadata(source_path="/tmp/x.pdf", page_count=1),
+        pages=[Page(page_no=1, block_count=1)],
+    )
+    enriched = enrich_parse_result_with_pii(result)
+    assert enriched.blocks[0].pii_map is not None
+    blob = str(enriched.blocks[0].pii_map)
+    assert "alice.secret@example.com" not in blob
+
+
+def test_enrich_parse_result_with_pii_swallows_scanner_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def boom(_blocks: object) -> list[object]:
+        raise RuntimeError("scanner down")
+
+    monkeypatch.setattr("sift_api.ingest_parse.annotate_blocks_with_pii", boom)
+    result = ParseResult(
+        blocks=[_block(ReviewState.APPROVED)],
+        metadata=DocumentMetadata(source_path="/tmp/x.pdf", page_count=1),
+        pages=[Page(page_no=1, block_count=1)],
+    )
+    out = enrich_parse_result_with_pii(result)
+    assert out.blocks[0].pii_map is None
+    assert out.blocks[0].text == "hello"

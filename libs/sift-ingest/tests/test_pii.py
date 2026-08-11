@@ -20,10 +20,7 @@ from sift_ingest.pii import annotate_blocks_with_pii, detect_pii
 _EMAIL = "alice.secret@example.com"
 _PHONE = "415-555-0137"
 _SSN = "078-05-1120"
-_SEEDED = (
-    f"Contact {_EMAIL} or call {_PHONE}. "
-    f"SSN on file: {_SSN}. No other secrets."
-)
+_SEEDED = f"Contact {_EMAIL} or call {_PHONE}. SSN on file: {_SSN}. No other secrets."
 
 
 def _block(text: str) -> Block:
@@ -57,8 +54,10 @@ def test_detect_pii_returns_offsets_without_raw_values() -> None:
     assert _SSN not in blob
     for ent in entities:
         assert isinstance(ent, dict)
-        assert "start" in ent and "end" in ent
-        assert isinstance(ent["start"], int) and isinstance(ent["end"], int)
+        assert "start" in ent
+        assert "end" in ent
+        assert isinstance(ent["start"], int)
+        assert isinstance(ent["end"], int)
         assert ent["end"] > ent["start"]
         assert "text" not in ent
         assert "value" not in ent

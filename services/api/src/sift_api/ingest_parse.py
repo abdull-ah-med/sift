@@ -16,6 +16,7 @@ from sift.parse import DigitalPdfParser, ParseConfig, Parser, ParseResult, Stand
 from sift.parse._mapping import quality_score_from_confidences
 from sift_core.audit import write_audit_event
 from sift_core.models import ReviewState
+from sift_ingest.pii import annotate_blocks_with_pii
 
 _log = logging.getLogger(__name__)
 
@@ -24,6 +25,19 @@ class ObjectFetcher(Protocol):
     """Fetch a stored object to a local path for parsing."""
 
     def fetch_to_path(self, *, source_uri: str, dest: Path) -> Path: ...
+
+
+def enrich_parse_result_with_pii(result: ParseResult) -> ParseResult:
+    """Attach Presidio ``pii_map`` to blocks; never fail the ingest on PII errors."""
+    try:
+        return result.model_copy(update={"blocks": annotate_blocks_with_pii(result.blocks)})
+    except Exception:
+        _log.exception(
+            "pii_scan_failed block_count=%d text_chars=%d",
+            len(result.blocks),
+            sum(len(b.text or "") for b in result.blocks),
+        )
+        return result
 
 
 def document_quality_score(result: ParseResult) -> float | None:
@@ -177,6 +191,7 @@ def run_ingest_parse(
 
         try:
             result = active_parser.parse(source_path, config)
+            result = enrich_parse_result_with_pii(result)
             needs_review = insert_blocks(
                 conn,
                 tenant_id=tenant_id,
