@@ -1,0 +1,149 @@
+name: sift-prod
+
+x-sift-env: &sift-env
+  SIFT_PG_DSN: postgresql+asyncpg://sift:${SIFT_PG_PASSWORD}@postgres:5432/sift
+  SIFT_VALKEY_URL: redis://valkey:6379/0
+  SIFT_STORAGE_ENDPOINT: http://seaweedfs:8333
+  SIFT_STORAGE_BUCKET: sift-uploads
+  SIFT_STORAGE_ACCESS_KEY: ${SIFT_STORAGE_ACCESS_KEY}
+  SIFT_STORAGE_SECRET_KEY: ${SIFT_STORAGE_SECRET_KEY}
+  SIFT_API_KEY_PEPPER: ${SIFT_API_KEY_PEPPER}
+  SIFT_OTEL_ENABLED: ${SIFT_OTEL_ENABLED:-true}
+  SIFT_OTLP_ENDPOINT: http://tempo:4318/v1/traces
+
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - sift-api
+      - sift-web
+    restart: unless-stopped
+
+  postgres:
+    image: paradedb/paradedb:latest
+    environment:
+      POSTGRES_USER: sift
+      POSTGRES_PASSWORD: ${SIFT_PG_PASSWORD}
+      POSTGRES_DB: sift
+    volumes:
+      - sift-pg:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sift -d sift"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  valkey:
+    image: valkey/valkey:8
+    command: ["valkey-server", "--save", "60", "1000", "--appendonly", "yes"]
+    volumes:
+      - sift-valkey:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:3.80
+    command: "server -s3 -s3.port=8333 -dir=/data -ip=seaweedfs"
+    volumes:
+      - sift-seaweed:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8333/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  sift-api:
+    build:
+      context: ../..
+      dockerfile: services/api/Dockerfile
+    environment:
+      <<: *sift-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  sift-worker:
+    build:
+      context: ../..
+      dockerfile: services/worker/Dockerfile
+    environment:
+      <<: *sift-env
+    depends_on:
+      valkey:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  sift-web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    environment:
+      NEXT_PUBLIC_SIFT_API_URL: https://api.localhost
+    depends_on:
+      sift-api:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  tempo:
+    profiles: ["obs"]
+    image: grafana/tempo:2.6.1
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo.yaml:ro
+    ports:
+      - "3200:3200"
+    restart: unless-stopped
+
+volumes:
+  sift-pg:
+  sift-valkey:
+  sift-seaweed:
+  caddy-data:
+  caddy-config:

@@ -18,12 +18,17 @@ dev = [
     "ruff>=0.9",
     "mypy>=1.14",
     "httpx>=0.28",
+    "alembic>=1.14",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.30",
+    "psycopg[binary]>=3.2",
 ]
 
 [tool.uv.workspace]
 members = [
     "libs/sift-core",
     "libs/sift-parse",
+    "libs/sift-obs",
     "services/api",
     "services/worker",
     "apps/cli",
@@ -48,8 +53,16 @@ select = ["E", "F", "I", "UP", "B", "SIM", "PL", "C4", "PT", "RUF"]
 known-first-party = ["sift", "sift_core", "sift_parse", "sift_api", "sift_worker", "sift_cli"]
 
 [tool.ruff.lint.per-file-ignores]
-"services/api/src/sift_api/routes/*.py" = ["B008"]
+"services/api/src/sift_api/routes/*.py" = ["B008", "PLC0415"]
+"services/api/src/sift_api/auth.py" = ["PLC0415"]
+"services/api/src/sift_api/main.py" = ["PLC0415"]
+"services/api/src/sift_api/audit_emit.py" = ["PLR0913"]
+"services/api/src/sift_api/storage.py" = ["PLR0913"]
+"apps/cli/src/sift_cli/**/*.py" = ["B008"]
 "libs/sift-parse/src/sift/parse/smoke.py" = ["PLC0415"]
+"tools/db/seed/**/*.py" = ["E402"]
+"tools/auth/**/*.py" = ["PLR2004"]
+"tools/e2e/**/*.py" = ["PLR2004", "F401"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -62,8 +75,15 @@ warn_unused_configs = true
 disallow_untyped_defs = true
 exclude = ["vendor/"]
 
+[[tool.mypy.overrides]]
+module = ["boto3.*", "botocore.*", "botocore.client"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["libs", "services", "apps", "tests"]
 pythonpath = ["."]
 addopts = "-q --ignore=vendor"
+markers = [
+    "slow: tests that need Docker / external services",
+]

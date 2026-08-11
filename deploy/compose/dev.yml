@@ -7,6 +7,11 @@ x-sift-env: &sift-env
   SIFT_STORAGE_BUCKET: sift-uploads
   SIFT_STORAGE_ACCESS_KEY: sift
   SIFT_STORAGE_SECRET_KEY: sift-dev-secret
+  SIFT_API_KEY_PEPPER: dev-pepper-change-me
+  SIFT_OTEL_ENABLED: "false"
+  SIFT_TUS_URL: http://tusd:8080/files/
+  SIFT_ZITADEL_ISSUER: http://localhost:8085
+  SIFT_ZITADEL_AUDIENCE: sift-web
   SIFT_EMBED_URL: http://tei:80
   SIFT_RERANK_URL: http://tei-rerank:80
 
@@ -23,6 +28,7 @@ services:
       - "5432:5432"
     volumes:
       - sift-pg:/var/lib/postgresql
+      - ./postgres/init-extra-dbs.sql:/docker-entrypoint-initdb.d/02-extra-dbs.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sift -d sift"]
       interval: 5s
@@ -53,6 +59,24 @@ services:
       timeout: 5s
       retries: 15
       start_period: 10s
+
+  tusd:
+    image: tusproject/tusd:v2.8.0
+    command:
+      - "-port=8080"
+      - "-base-path=/files/"
+      - "-upload-dir=/srv/tusd-data"
+      - "-behind-proxy"
+    ports:
+      - "1080:8080"
+    volumes:
+      - sift-tusd:/srv/tusd-data
+    healthcheck:
+      # tusd answers GET /files/ with 405; treat that as "listening".
+      test: ["CMD-SHELL", "wget -S -O /dev/null http://127.0.0.1:8080/files/ 2>&1 | grep -q '405 Method Not Allowed'"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
 
   sift-api:
     build:
@@ -110,24 +134,64 @@ services:
     ports:
       - "8081:80"
 
+  zitadel-db:
+    profiles: ["auth"]
+    # Zitadel setup migrations are not yet compatible with ParadeDB/Postgres 18.
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: zitadel
+      POSTGRES_PASSWORD: zitadel
+      POSTGRES_DB: zitadel
+    volumes:
+      - sift-zitadel-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zitadel -d zitadel"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   zitadel:
     profiles: ["auth"]
-    image: ghcr.io/zitadel/zitadel:latest
-    command: start-from-init --masterkeyFromEnv
+    image: ghcr.io/zitadel/zitadel:v2.71.8
+    user: "0"
+    command: start-from-init --masterkeyFromEnv --tlsMode disabled
     environment:
       ZITADEL_MASTERKEY: "LocalDevMasterKeyMustBe32Bytes!!"
-      ZITADEL_DATABASE_POSTGRES_HOST: postgres
-      ZITADEL_DATABASE_POSTGRES_DATABASE: zitadel
-      ZITADEL_DATABASE_POSTGRES_USER_USERNAME: sift
-      ZITADEL_DATABASE_POSTGRES_USER_PASSWORD: sift
-      ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME: sift
-      ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD: sift
+      ZITADEL_EXTERNALDOMAIN: localhost
+      ZITADEL_EXTERNALPORT: "8085"
       ZITADEL_EXTERNALSECURE: "false"
+      ZITADEL_TLS_ENABLED: "false"
+      ZITADEL_DATABASE_POSTGRES_HOST: zitadel-db
+      ZITADEL_DATABASE_POSTGRES_PORT: "5432"
+      ZITADEL_DATABASE_POSTGRES_DATABASE: zitadel
+      ZITADEL_DATABASE_POSTGRES_USER_USERNAME: zitadel
+      ZITADEL_DATABASE_POSTGRES_USER_PASSWORD: zitadel
+      ZITADEL_DATABASE_POSTGRES_USER_SSL_MODE: disable
+      ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME: zitadel
+      ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD: zitadel
+      ZITADEL_DATABASE_POSTGRES_ADMIN_SSL_MODE: disable
+      ZITADEL_FIRSTINSTANCE_ORG_NAME: sift
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_USERNAME: sift-admin
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORD: "SiftAdmin1!"
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORDCHANGEREQUIRED: "false"
+      ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_USERNAME: sift-bootstrap
+      ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_NAME: sift-bootstrap
+      ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINEKEY_TYPE: "1"
+      ZITADEL_FIRSTINSTANCE_MACHINEKEYPATH: /zitadel/bootstrap/machinekey.json
+      ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED: "false"
+    volumes:
+      - ./zitadel-bootstrap:/zitadel/bootstrap
     ports:
       - "8085:8080"
     depends_on:
-      postgres:
+      zitadel-db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/app/zitadel", "ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 30s
 
   langfuse:
     profiles: ["obs"]
@@ -144,6 +208,18 @@ services:
       postgres:
         condition: service_healthy
 
+  tempo:
+    profiles: ["obs"]
+    image: grafana/tempo:2.6.1
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo.yaml:ro
+    ports:
+      - "3200:3200"
+      - "4318:4318"
+
 volumes:
   sift-pg:
   sift-seaweed:
+  sift-tusd:
+  sift-zitadel-pg:

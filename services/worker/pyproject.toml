@@ -1,12 +1,19 @@
 [project]
 name = "sift-worker"
-version = "0.0.0"
-description = "sift Taskiq workers (scaffold)."
+version = "0.1.0"
+description = "sift Taskiq workers."
 requires-python = ">=3.13,<3.14"
 license = { text = "Apache-2.0" }
 dependencies = [
     "sift-core",
+    "sift-api",
+    "sift-obs",
+    "taskiq>=0.11",
+    "taskiq-redis>=1.0",
 ]
+
+[project.scripts]
+sift-worker = "sift_worker.__main__:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -17,3 +24,5 @@ packages = ["src/sift_worker"]
 
 [tool.uv.sources]
 sift-core = { workspace = true }
+sift-api = { workspace = true }
+sift-obs = { workspace = true }

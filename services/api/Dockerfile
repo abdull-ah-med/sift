@@ -13,6 +13,7 @@ FROM base AS deps
 COPY pyproject.toml uv.lock ./
 COPY libs/sift-core ./libs/sift-core
 COPY libs/sift-parse ./libs/sift-parse
+COPY libs/sift-obs ./libs/sift-obs
 COPY services/api ./services/api
 COPY services/worker ./services/worker
 COPY apps/cli ./apps/cli

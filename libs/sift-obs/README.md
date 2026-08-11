@@ -1,3 +1,1 @@
-# sift-obs
-
-OpenTelemetry, structlog, Langfuse client.
+# sift-obs — OpenTelemetry + structlog helpers shared by api and worker.
