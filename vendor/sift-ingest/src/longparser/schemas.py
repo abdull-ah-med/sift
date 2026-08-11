@@ -24,7 +24,7 @@ class BlockType(str, Enum):
 
 class ExtractorType(str, Enum):
     """Document extraction engines."""
-    DOCLING = "docling"
+    DOCLING = "sift_parse"
     SURYA = "surya"
     MARKER = "marker"
     NATIVE_PDF = "native_pdf"
@@ -169,7 +169,7 @@ class Document(BaseModel):
 class ProcessingConfig(BaseModel):
     """Configuration for pipeline execution."""
     # --- v0.1.4: Backend selection ---
-    backend: str = Field(default="docling", description="Extraction backend: 'docling' | 'pymupdf' | 'marker' | 'auto'")
+    backend: str = Field(default="sift_parse", description="Extraction backend: 'sift_parse' | 'pymupdf' | 'marker' | 'auto'")
     force_marker_cpu: bool = Field(default=False, description="Bypass 10-page soft cap when running Marker on CPU")
 
     # --- v0.1.4: Language detection ---

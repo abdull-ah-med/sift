@@ -1,6 +1,6 @@
 # Docling Core
 
-[![PyPI version](https://img.shields.io/pypi/v/docling-core)](https://pypi.org/project/docling-core/)
+[![PyPI version](https://img.shields.io/pypi/v/sift-parse-core)](https://pypi.org/project/sift-parse-core/)
 ![Python](https://img.shields.io/badge/python-3.10%20%7C%20%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -14,9 +14,9 @@ Docling Core is a library that defines core data types and transformations in [D
 
 ## Installation
 
-To use Docling Core, simply install `docling-core` from your package manager, e.g. pip:
+To use Docling Core, simply install `sift-parse-core` from your package manager, e.g. pip:
 ```bash
-pip install docling-core
+pip install sift-parse-core
 ```
 
 ### Development setup
@@ -47,8 +47,8 @@ as well as for basic operations, e.g. exporting to various formats, like Markdow
 and others.
 
 👉 More details:
-- [Architecture docs](https://docling-project.github.io/docling/concepts/architecture/)
-- [DoclingDocument docs](https://docling-project.github.io/docling/concepts/docling_document/)
+- [Architecture docs](https://docling-project.github.io/sift_parse/concepts/architecture/)
+- [DoclingDocument docs](https://docling-project.github.io/sift_parse/concepts/docling_document/)
 
 ### Serialization
 
@@ -58,8 +58,8 @@ while providing feature-rich built-in implementations (on which the respective
 DoclingDocument helpers are actually based).
 
 👉 More details:
-- [Serialization docs](https://docling-project.github.io/docling/concepts/serialization/)
-- [Serialization example](https://docling-project.github.io/docling/examples/serialization/)
+- [Serialization docs](https://docling-project.github.io/sift_parse/concepts/serialization/)
+- [Serialization example](https://docling-project.github.io/sift_parse/examples/serialization/)
 
 ### Chunking
 
@@ -68,9 +68,9 @@ a design that enables easy extension, this way tackling customization requiremen
 different use cases.
 
 👉 More details:
-- [Chunking docs](https://docling-project.github.io/docling/concepts/chunking/)
-- [Hybrid chunking example](https://docling-project.github.io/docling/examples/hybrid_chunking/)
-- [Advanced chunking and serialization](https://docling-project.github.io/docling/examples/advanced_chunking_and_serialization/)
+- [Chunking docs](https://docling-project.github.io/sift_parse/concepts/chunking/)
+- [Hybrid chunking example](https://docling-project.github.io/sift_parse/examples/hybrid_chunking/)
+- [Advanced chunking and serialization](https://docling-project.github.io/sift_parse/examples/advanced_chunking_and_serialization/)
 
 ### Profiling
 

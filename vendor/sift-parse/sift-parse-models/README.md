@@ -1,5 +1,5 @@
-[![PyPI version](https://img.shields.io/pypi/v/docling-ibm-models)](https://pypi.org/project/docling-ibm-models/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/docling-ibm-models)](https://pypi.org/project/docling-ibm-models/)
+[![PyPI version](https://img.shields.io/pypi/v/sift-parse-models)](https://pypi.org/project/sift-parse-models/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/sift-parse-models)](https://pypi.org/project/sift-parse-models/)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
@@ -21,10 +21,10 @@ The package provides two variants which allow to seemlessly switch between `open
 
 ```sh
 # Option 1: with opencv-python-headless
-pip install "docling-ibm-models[opencv-python-headless]"
+pip install "sift-parse-models[opencv-python-headless]"
 
 # Option 2: with opencv-python
-pip install "docling-ibm-models[opencv-python]"
+pip install "sift-parse-models[opencv-python]"
 ```
 
 ## Pipeline Overview

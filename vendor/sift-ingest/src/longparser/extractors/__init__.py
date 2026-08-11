@@ -1,9 +1,9 @@
 """Document extractors for LongParser."""
 
 from .base import BaseExtractor
-from .docling_extractor import DoclingExtractor
+from .sift_parse_extractor import SiftParseExtractor
 
 __all__ = [
     "BaseExtractor",
-    "DoclingExtractor",
+    "SiftParseExtractor",
 ]

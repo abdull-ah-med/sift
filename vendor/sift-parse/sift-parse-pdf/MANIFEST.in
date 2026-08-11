@@ -9,5 +9,5 @@ recursive-include cmake *
 recursive-include src *
 recursive-include tests *
 
-recursive-include docling_parse *.so *.pyd *.dll
-recursive-include docling_parse/pdf_resources *
+recursive-include sift_parse_pdf *.so *.pyd *.dll
+recursive-include sift_parse_pdf/pdf_resources *

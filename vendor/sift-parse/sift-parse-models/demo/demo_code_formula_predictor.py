@@ -8,7 +8,7 @@ from pathlib import Path
 from huggingface_hub import snapshot_download
 from PIL import Image
 
-from docling_ibm_models.code_formula_model.code_formula_predictor import CodeFormulaPredictor
+from sift_parse_models.code_formula_model.code_formula_predictor import CodeFormulaPredictor
 
 
 def demo(

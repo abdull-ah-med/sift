@@ -5,7 +5,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from sift_api.main import app
-from sift_parse.smoke import ParseSmokeResult
+from sift.parse.smoke import ParseSmokeResult
 
 CORPUS = Path(__file__).resolve().parents[3] / "evals" / "corpus"
 _MIN_DIGITAL_PDFS = 5

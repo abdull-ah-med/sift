@@ -3,7 +3,7 @@ name = "sift-parse-pdf"
 version = "7.11.0"
 description = "Simple package to extract text with coordinates from programmatic PDFs"
 license = "MIT"
-keywords = ["docling", "pdf", "parser"]
+keywords = ["sift_parse", "pdf", "parser"]
 classifiers = [
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: POSIX :: Linux",
@@ -31,7 +31,7 @@ requires-python = ">=3.10"
 dependencies = [
     "pillow>=10.0.0,<13.0.0",
     "pydantic>=2.0.0",
-    "docling-core>=2.85.0,<3.0.0",
+    "sift-parse-core>=2.85.0,<3.0.0",
     "pywin32>=305; sys_platform == 'win32'",
 ]
 [project.urls]
@@ -92,17 +92,17 @@ default-groups = "all"
 include-package-data = true
 
 [tool.setuptools.packages.find]
-where = [".", "docling_parse*"]
-include = ["docling_parse*"]
+where = [".", "sift_parse_pdf*"]
+include = ["sift_parse_pdf*"]
 
 [tool.setuptools.package-data]
-"docling_parse" = [
+"sift_parse_pdf" = [
     "*.so", "*.pyd", "*.dll",
     "pdf_resources/*"
 ]
 
 [tool.setuptools.exclude-package-data]
-"docling_parse" = ["*.pyc", "__pycache__"]
+"sift_parse_pdf" = ["*.pyc", "__pycache__"]
 
 [tool.ruff]
 target-version = "py310"

@@ -8,7 +8,7 @@ version = "2.119.0"  # DO NOT EDIT, updated automatically
 description = "Modular version of the Docling package: SDK and CLI for parsing PDF, DOCX, HTML, and more, to a unified document representation for powering downstream workflows such as gen AI applications."
 license = "MIT"
 keywords = [
-  "docling",
+  "sift_parse",
   "convert",
   "document",
   "pdf",
@@ -33,7 +33,7 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
-readme = "packages/docling-slim/README.md"
+readme = "packages/sift-parse/README.md"
 authors = [
   { name = "Christoph Auer", email = "cau@zurich.ibm.com" },
   { name = "Michele Dolfi", email = "dol@zurich.ibm.com" },
@@ -48,7 +48,7 @@ requires-python = '>=3.10,<4.0'
 # MINIMAL BASE (8 packages) - ~50MB
 dependencies = [
   'pydantic>=2.0.0,<3.0.0',
-  'docling-core>=2.90.0,<3.0.0',
+  'sift-parse-core>=2.90.0,<3.0.0',
   'pydantic-settings>=2.3.0,<3.0.0',
   'filetype>=1.2.0,<2.0.0',
   'requests>=2.32.2,<3.0.0',
@@ -63,13 +63,13 @@ repository = "https://github.com/docling-project/docling"
 issues = "https://github.com/docling-project/docling/issues"
 changelog = "https://github.com/docling-project/docling/blob/main/CHANGELOG.md"
 
-[project.entry-points.docling]
-"docling_defaults" = "docling.models.plugins.defaults"
+[project.entry-points.sift_parse]
+"sift_parse_defaults" = "sift_parse.models.plugins.defaults"
 
-# CLI scripts (require cli extra: pip install docling-slim[cli])
+# CLI scripts (require cli extra: pip install sift-parse[cli])
 [project.scripts]
-docling = "docling.cli.main:app"
-docling-tools = "docling.cli.tools:app"
+sift-parse = "sift_parse.cli.main:app"
+sift-parse-tools = "sift_parse.cli.tools:app"
 
 [project.optional-dependencies]
 # ============================================================================
@@ -83,7 +83,7 @@ convert-core = [
 ]
 
 extract-core = [
-  'docling-slim[convert-core]',
+  'sift-parse[convert-core]',
   'polyfactory>=2.22.2',
 ]
 
@@ -95,13 +95,13 @@ extract-core = [
 format-pdf-pypdfium2 = [
   'pypdfium2>=4.30.0,!=4.30.1,<6.0.0',
 ]
-format-pdf-docling = [
+format-pdf-sift-parse = [
   'pypdfium2>=4.30.0,!=4.30.1,<6.0.0',
-  'docling-parse>=7.0.0,<8.0.0',
+  'sift-parse-pdf>=7.0.0,<8.0.0',
 ]
 
 format-pdf = [
-  'docling-slim[format-pdf-pypdfium2,format-pdf-docling]',
+  'sift-parse[format-pdf-pypdfium2,format-pdf-sift-parse]',
 ]
 
 # --- Office Formats ---
@@ -118,7 +118,7 @@ format-xlsx = [
 ]
 
 format-office = [
-  'docling-slim[format-docx,format-pptx,format-xlsx]',
+  'sift-parse[format-docx,format-pptx,format-xlsx]',
 ]
 
 # --- OpenDocument Formats (ODT, ODS, ODP) ---
@@ -136,7 +136,7 @@ format-markdown = [
 ]
 
 format-web = [
-  'docling-slim[format-html,format-markdown]',
+  'sift-parse[format-html,format-markdown]',
 ]
 
 # --- Other Formats ---
@@ -145,18 +145,18 @@ format-latex = [
 ]
 
 format-email = [
-  'docling-slim[format-html]',
+  'sift-parse[format-html]',
   'mail-parser>=4.1.4,<5.0.0',
   'python-oxmsg>=0.0.2,<0.1.0',
 ]
 
 format-xml-jats = [
-  'docling-slim[format-html]',
+  'sift-parse[format-html]',
   'lxml>=4.0.0,<7.0.0',
 ]
 
 format-xml-uspto = [
-  'docling-slim[format-html]',
+  'sift-parse[format-html]',
   'defusedxml>=0.7.1,<0.8.0',
 ]
 
@@ -177,7 +177,7 @@ format-audio = [
 
 # Video pipeline: transcription (format-audio) plus speaker diarization.
 format-video = [
-  'docling-slim[format-audio]',
+  'sift-parse[format-audio]',
   'resemblyzer>=0.1.4,<0.2.0',
   'soundfile>=0.12.1,<1.0.0',
   'scikit-learn>=1.3.0,<2.0.0',
@@ -223,7 +223,7 @@ feat-ocr-nemotron = [
 models-local = [
   'torch>=2.2.2,<3.0.0',
   'torchvision>=0,<1',
-  'docling-ibm-models>=3.13.0,<4',
+  'sift-parse-models>=3.13.0,<4',
   'accelerate>=1.0.0,<2',
   'huggingface_hub>=0.23,<2',
   'defusedxml>=0.7.1,<0.8.0',
@@ -254,7 +254,7 @@ models-vlm-inline = [
 # ============================================================================
 # Document chunking for RAG applications
 feat-chunking = [
-  'docling-core[chunking]>=2.73.0,<3.0.0',
+  'sift-parse-core[chunking]>=2.73.0,<3.0.0',
 ]
 
 service-client = [
@@ -262,7 +262,7 @@ service-client = [
   'websockets>=14.0,<17.0',
   'typer>=0.12.5,<0.27.0',
   'rich>=13.0.0',
-  # Best-effort .env loading for `docling convert-remote`; the command still
+  # Best-effort .env loading for `sift_parse convert-remote`; the command still
   # works (flags + env vars) if this is absent.
   'python-dotenv~=1.0',
 ]
@@ -270,7 +270,7 @@ service-client = [
 cli = [
   'typer>=0.12.5,<0.27.0',
   'rich>=13.0.0',
-  # Best-effort .env loading for `docling convert-remote`; the command still
+  # Best-effort .env loading for `sift_parse convert-remote`; the command still
   # works (flags + env vars) if this is absent.
   'python-dotenv~=1.0',
 ]
@@ -280,7 +280,7 @@ cli = [
 # CONVENIENCE BUNDLES
 # ============================================================================
 standard = [
-  'docling-slim[format-pdf,models-local,feat-ocr-rapidocr,format-office,format-web,format-latex,format-email,feat-chunking,extract-core,service-client,cli]',
+  'sift-parse[format-pdf,models-local,feat-ocr-rapidocr,format-office,format-web,format-latex,format-email,feat-chunking,extract-core,service-client,cli]',
 ]
 
 all = [
@@ -288,8 +288,8 @@ all = [
   # requires webrtcvad, which has no wheels and needs Python dev headers
   # (Python.h) plus a C compiler to build from source. `all` must install
   # cleanly without a compiler, so speaker diarization stays opt-in via
-  # docling-slim[format-video].
-  'docling-slim[standard,models-vlm-inline,format-audio,format-html-render,format-xml-jats,format-xml-uspto,format-xml-xbrl,models-remote,models-onnxruntime,feat-ocr-easyocr,feat-ocr-tesserocr,feat-ocr-mac]',
+  # sift-parse[format-video].
+  'sift-parse[standard,models-vlm-inline,format-audio,format-html-render,format-xml-jats,format-xml-uspto,format-xml-xbrl,models-remote,models-onnxruntime,feat-ocr-easyocr,feat-ocr-tesserocr,feat-ocr-mac]',
 ]
 
 [dependency-groups]
@@ -306,7 +306,7 @@ typecheck = [
 ]
 pr-fast-checks = [
   { include-group = "typecheck" },
-  "docling-core[chunking] (>=2.73.0,<3.0.0)",
+  "sift-parse-core[chunking] (>=2.73.0,<3.0.0)",
   "pydantic (>=2.0.0,<3.0.0)",
   "pydantic-settings (>=2.3.0,<3.0.0)",
   "ruff==0.15.12",
@@ -364,12 +364,12 @@ constraints = [
 ]
 
 [tool.uv.workspace]
-members = ["packages/docling"]
+members = ["packages/sift_parse"]
 
 [tool.uv.sources]
-docling = { workspace = true }
-# docling-parse = { git = "https://github.com/docling-project/docling-parse", rev = "main" }
-# docling-core = { git = "https://github.com/docling-project/docling-core/", rev = "main" }
+sift_parse = { workspace = true }
+# sift-parse-pdf = { git = "https://github.com/docling-project/docling-parse", rev = "main" }
+# sift-parse-core = { git = "https://github.com/docling-project/docling-core/", rev = "main" }
 
 [tool.uv]
 package = true
@@ -380,10 +380,10 @@ override-dependencies = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["docling"]
+packages = ["sift_parse"]
 
 [tool.hatch.build.targets.sdist]
-only-include = ["docling", "pyproject.toml", "README.md", "LICENSE"]
+only-include = ["sift_parse", "pyproject.toml", "README.md", "LICENSE"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -458,13 +458,13 @@ all = "warn"
 python-version = "3.10"
 
 [tool.ty.src]
-include = ["docling", ".github/scripts"]
+include = ["sift_parse", ".github/scripts"]
 
 [tool.ty.analysis]
 allowed-unresolved-imports = [
   "arelle.**",
-  "docling_ibm_models.**",
-  "docling_parse.**",
+  "sift_parse_models.**",
+  "sift_parse_pdf.**",
   "easyocr.**",
   "filetype.**",
   "huggingface_hub.**",

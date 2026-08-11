@@ -5,9 +5,9 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
-        files: '^(docling|docs/examples|tests|perfs)/.*\.py$|^(\.pre-commit-config\.yaml|pyproject\.toml|tach\.toml)$'
+        files: '^(sift_parse|docs/examples|tests|perfs)/.*\.py$|^(\.pre-commit-config\.yaml|pyproject\.toml|tach\.toml)$'
       - id: end-of-file-fixer
-        files: '^(docling|docs/examples|tests|perfs)/.*\.py$|^(\.pre-commit-config\.yaml|pyproject\.toml|tach\.toml)$'
+        files: '^(sift_parse|docs/examples|tests|perfs)/.*\.py$|^(\.pre-commit-config\.yaml|pyproject\.toml|tach\.toml)$'
       - id: check-yaml
         args: [--unsafe]
       - id: check-toml
@@ -20,30 +20,30 @@ repos:
       - id: ruff
         name: "Ruff linter"
         args: [--exit-non-zero-on-fix, --fix, --config=pyproject.toml]
-        files: '^(docling|tests|docs/examples|perfs).*\.(py|ipynb)$'
+        files: '^(sift_parse|tests|docs/examples|perfs).*\.(py|ipynb)$'
       - id: ruff-format
         name: "Ruff formatter"
         args: [--config=pyproject.toml]
-        files: '^(docling|tests|docs/examples|perfs).*\.(py|ipynb)$'
+        files: '^(sift_parse|tests|docs/examples|perfs).*\.(py|ipynb)$'
   - repo: local
     hooks:
       - id: ty
         name: ty
         entry: uv run --no-sync ty check
         language: system
-        files: '^(docling|\.github/scripts)/.*\.py$'
+        files: '^(sift_parse|\.github/scripts)/.*\.py$'
       - id: tach
         name: Tach
         entry: uv run --no-sync tach check
         pass_filenames: false
         language: system
-        files: '^docling/.*\.py$|^tach\.toml$'
+        files: '^sift_parse/.*\.py$|^tach\.toml$'
       - id: tach-module-coverage
         name: Tach module coverage
         entry: python3 scripts/check_tach_module_coverage.py
         pass_filenames: false
         language: system
-        files: '^docling/.*\.py$|^tach\.toml$|^scripts/check_tach_module_coverage\.py$'
+        files: '^sift_parse/.*\.py$|^tach\.toml$|^scripts/check_tach_module_coverage\.py$'
       - id: max-lines
         name: Check max lines per file
         entry: python3 scripts/check_max_lines.py

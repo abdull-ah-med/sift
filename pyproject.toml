@@ -45,11 +45,11 @@ extend-exclude = ["vendor"]
 select = ["E", "F", "I", "UP", "B", "SIM", "PL", "C4", "PT", "RUF"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["sift_core", "sift_parse", "sift_api", "sift_worker", "sift_cli"]
+known-first-party = ["sift", "sift_core", "sift_parse", "sift_api", "sift_worker", "sift_cli"]
 
 [tool.ruff.lint.per-file-ignores]
 "services/api/src/sift_api/routes/*.py" = ["B008"]
-"libs/sift-parse/src/sift_parse/smoke.py" = ["PLC0415"]
+"libs/sift-parse/src/sift/parse/smoke.py" = ["PLC0415"]
 
 [tool.ruff.format]
 quote-style = "double"

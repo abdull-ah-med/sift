@@ -3,7 +3,7 @@ name = "sift-parse-models"
 version = "3.13.3" # DO NOT EDIT, updated automatically
 description = "This package contains the AI models used by the Docling PDF conversion package"
 license = "MIT"
-keywords = ["docling", "convert", "document", "pdf", "layout model", "segmentation", "table structure", "table former"]
+keywords = ["sift_parse", "convert", "document", "pdf", "layout model", "segmentation", "table structure", "table former"]
 readme = "README.md"
 authors = [
   { name = "Nikos Livathinos", email = "nli@zurich.ibm.com" },
@@ -38,7 +38,7 @@ dependencies = [
   'huggingface_hub (>=0.23,<2)',
   'safetensors[torch] (>=0.4.3,<1)',
   'pydantic (>=2.0.0,<3.0.0)',
-  'docling-core (>=2.19.0,<3.0.0)',
+  'sift-parse-core (>=2.19.0,<3.0.0)',
   # temporary solution until huggingface/transformers#46159 is resolved
   'transformers (>=4.42.0,<5.9.0,!=5.0.*,!=5.1.*,!=5.2.*,!=5.3.*) ; sys_platform == "darwin"',
   'transformers (>=4.42.0,<6.0.0,!=5.0.*,!=5.1.*,!=5.2.*,!=5.3.*) ; sys_platform != "darwin"',
@@ -89,7 +89,7 @@ conflicts = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["docling_ibm_models*"]
+include = ["sift_parse_models*"]
 
 [tool.black]
 line-length = 88

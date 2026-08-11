@@ -2,7 +2,7 @@
 
 Supports multiple extraction backends:
 
-- ``"docling"`` (default) — Docling with Tesseract CLI OCR (MIT)
+- ``"sift_parse"`` (default) — Docling with Tesseract CLI OCR (MIT)
 - ``"pymupdf"`` — PyMuPDF4LLM for fast native PDF extraction (AGPL, optional)
 - ``"auto"``    — Automatic backend selection based on document properties
 
@@ -17,8 +17,8 @@ import logging
 import json
 
 from ..schemas import Document, ProcessingConfig, JobRequest, BlockType, ChunkingConfig, Chunk
-from ..extractors import DoclingExtractor
-from ..extractors.docling_extractor import HierarchyChunk
+from ..extractors import SiftParseExtractor
+from ..extractors.sift_parse_extractor import HierarchyChunk
 from ..chunkers import HybridChunker
 from ..utils.lang_detect import detect_language, get_tesseract_langs, extract_sample_text
 
@@ -93,7 +93,7 @@ class PipelineOrchestrator:
 
         elif backend == "auto":
             # Auto mode: start with Docling (safe default), route at process time
-            self.extractor = DoclingExtractor(
+            self.extractor = SiftParseExtractor(
                 tesseract_lang=tesseract_lang,
                 tessdata_path=tessdata_path,
                 force_full_page_ocr=force_full_page_ocr,
@@ -103,12 +103,12 @@ class PipelineOrchestrator:
 
         else:
             # Default: Docling (MIT, always available)
-            self.extractor = DoclingExtractor(
+            self.extractor = SiftParseExtractor(
                 tesseract_lang=tesseract_lang,
                 tessdata_path=tessdata_path,
                 force_full_page_ocr=force_full_page_ocr,
             )
-            self._backend_name = "docling"
+            self._backend_name = "sift_parse"
             logger.info("Pipeline initialized with Docling backend (default)")
 
     def _resolve_languages(
@@ -212,7 +212,7 @@ class PipelineOrchestrator:
             extractor = self.extractor
 
             # Resolve languages for Docling backend
-            if isinstance(extractor, DoclingExtractor):
+            if isinstance(extractor, SiftParseExtractor):
                 resolved_langs = self._resolve_languages(file_path, config)
                 extractor._languages = resolved_langs
 
@@ -234,8 +234,8 @@ class PipelineOrchestrator:
             document.metadata.detected_language = self._detected_lang
             document.metadata.language_confidence = self._detected_lang_confidence
 
-        # Get hierarchy (only DoclingExtractor has this)
-        if isinstance(extractor, DoclingExtractor):
+        # Get hierarchy (only SiftParseExtractor has this)
+        if isinstance(extractor, SiftParseExtractor):
             hierarchy = extractor.get_hierarchy(file_path, config)
         else:
             hierarchy = []

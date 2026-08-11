@@ -8,7 +8,7 @@ from pathlib import Path
 from huggingface_hub import snapshot_download
 from PIL import Image
 
-from docling_ibm_models.document_figure_classifier_model.document_figure_classifier_predictor import DocumentFigureClassifierPredictor
+from sift_parse_models.document_figure_classifier_model.document_figure_classifier_predictor import DocumentFigureClassifierPredictor
 
 
 def demo(

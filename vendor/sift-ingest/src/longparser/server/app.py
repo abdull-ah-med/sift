@@ -724,7 +724,7 @@ async def _rechunk_job(tenant_id: str, job_id: str) -> int:
                 source_file=b.get("provenance", {}).get("source_file", ""),
                 page_number=b.get("page_number", 0),
                 bbox=BoundingBox(**b.get("provenance", {}).get("bbox", {"x0": 0, "y0": 0, "x1": 0, "y1": 0})),
-                extractor=b.get("provenance", {}).get("extractor", "docling"),
+                extractor=b.get("provenance", {}).get("extractor", "sift_parse"),
             ),
             confidence=Confidence(overall=1.0),
         ))

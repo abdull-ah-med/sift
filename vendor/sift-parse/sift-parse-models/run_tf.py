@@ -9,8 +9,8 @@ import numpy as np
 import cv2
 from PIL import Image, ImageDraw
 
-import docling_ibm_models.tableformer.data_management.tf_predictor as tf_predictor
-from docling_ibm_models.tableformer.data_management.tf_predictor import \
+import sift_parse_models.tableformer.data_management.tf_predictor as tf_predictor
+from sift_parse_models.tableformer.data_management.tf_predictor import \
     TFPredictor
 
 ########################################################################################### 
@@ -581,7 +581,7 @@ def test_tf_predictor():
                         xi1 = max(xi0, iocr_word["bbox"]["r"])
                         yi1 = max(yi0, iocr_word["bbox"]["b"])
                         img1.rectangle(((xi0, yi0), (xi1, yi1)), outline="gray")
-                    # Visualize original docling_ibm_models.tableformer predictions:
+                    # Visualize original sift_parse_models.tableformer predictions:
                     for predicted_bbox in predict_details["prediction_bboxes_page"]:
                         xp0 = predicted_bbox[0] - 1
                         yp0 = predicted_bbox[1] - 1
@@ -692,7 +692,7 @@ def run_tf_predictor(page_input_fn: str, table_bboxes_fn: str):
             #     xi1 = max(xi0, iocr_word["bbox"]["r"])
             #     yi1 = max(yi0, iocr_word["bbox"]["b"])
             #     img1.rectangle(((xi0, yi0), (xi1, yi1)), outline="gray")
-            # Visualize original docling_ibm_models.tableformer predictions:
+            # Visualize original sift_parse_models.tableformer predictions:
             for predicted_bbox in predict_details["prediction_bboxes_page"]:
                 xp0 = predicted_bbox[0] - 1
                 yp0 = predicted_bbox[1] - 1

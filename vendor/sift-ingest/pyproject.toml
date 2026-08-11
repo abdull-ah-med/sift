@@ -14,7 +14,7 @@ authors = [
 ]
 keywords = [
     "pdf", "document", "parsing", "ocr", "rag", "ai",
-    "docling", "chunking", "extraction", "retrieval-augmented-generation",
+    "sift_parse", "chunking", "extraction", "retrieval-augmented-generation",
     "longparser",
 ]
 classifiers = [
@@ -33,8 +33,8 @@ classifiers = [
 ]
 dependencies = [
     "pydantic>=2.0,<3",
-    "docling>=2.14",
-    "docling-core>=2.13",
+    "sift_parse>=2.14",
+    "sift-parse-core>=2.13",
     "langgraph-checkpoint-mongodb>=0.3.1",
     "fast-langdetect>=0.3,<1.0",  # Apache-2.0 — document language detection
 ]
@@ -236,10 +236,10 @@ warn_unused_ignores = true
 source = ["src/longparser"]
 omit = [
     "tests/*",
-    # These modules require heavy optional deps (server, langchain, docling GPU)
+    # These modules require heavy optional deps (server, langchain, sift_parse GPU)
     # not installed in the lightweight CI environment
     "src/longparser/server/*",
-    "src/longparser/extractors/docling_extractor.py",
+    "src/longparser/extractors/sift_parse_extractor.py",
     "src/longparser/extractors/latex_ocr.py",
     "src/longparser/integrations/*",
     "src/longparser/pipeline/*",

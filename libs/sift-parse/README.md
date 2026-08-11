@@ -1,3 +1,5 @@
 # sift-parse
 
-Thin adapter over the vendored Docling stack under `vendor/sift-parse/`. Phase 0 exposes `run_parse_smoke` for the internal parse-smoke endpoint.
+Product-facing adapter package. Import **`sift.parse`** (not `vendor/`).
+
+Phase 0 exposes `sift.parse.run_parse_smoke` for the internal parse-smoke endpoint. The optional full engine path loads vendored modules (`sift_parse`, `sift_parse_core`, …) per ADR-0011.

@@ -1,7 +1,7 @@
 # Docling Parse
 
-[![PyPI version](https://img.shields.io/pypi/v/docling-parse)](https://pypi.org/project/docling-parse/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/docling-parse)](https://pypi.org/project/docling-parse/)
+[![PyPI version](https://img.shields.io/pypi/v/sift-parse-pdf)](https://pypi.org/project/sift-parse-pdf/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/sift-parse-pdf)](https://pypi.org/project/sift-parse-pdf/)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Pybind11](https://img.shields.io/badge/build-pybind11-blue)](https://github.com/pybind/pybind11/)
 [![Platforms](https://img.shields.io/badge/platform-macos%20|%20linux%20|%20windows-blue)](https://github.com/docling-project/docling-parse/)
@@ -12,7 +12,7 @@ Simple package to extract text, paths and bitmap images with coordinates from pr
 To do the visualizations yourself, simply run (change `word` into `char` or `line`),
 
 ```sh
-uv run python ./docling_parse/visualize.py -i <path-to-pdf-file> -c word --interactive
+uv run python ./sift_parse_pdf/visualize.py -i <path-to-pdf-file> -c word --interactive
 ```
 
 <table>
@@ -60,19 +60,19 @@ uv run python ./docling_parse/visualize.py -i <path-to-pdf-file> -c word --inter
 Install the package from PyPI:
 
 ```sh
-pip install docling-parse
+pip install sift-parse-pdf
 ```
 
 ### Sequential parsing
 
-`docling-parse` v7 split page parsing into two public configs:
+`sift-parse-pdf` v7 split page parsing into two public configs:
 
 - `DecodeConfig`: how to compute pages. This is fixed when a document is opened.
 - `ContentConfig`: what to keep or materialize per page. This can be overridden per page.
 
 ```python
-from docling_core.types.doc.page import TextCellUnit
-from docling_parse.pdf_parser import (
+from sift_parse_core.types.doc.page import TextCellUnit
+from sift_parse_pdf.pdf_parser import (
     ContentConfig,
     ContentLevel,
     DecodeConfig,
@@ -111,7 +111,7 @@ new `content_config` needs entities that were previously skipped, that page is
 re-decoded automatically:
 
 ```python
-from docling_parse.pdf_parser import ContentConfig, ContentLevel
+from sift_parse_pdf.pdf_parser import ContentConfig, ContentLevel
 
 page = pdf_doc.get_page(
     1,
@@ -154,7 +154,7 @@ batch already computed.
 Parse one or more PDFs in parallel with backpressure:
 
 ```python
-from docling_parse.pdf_parser import (
+from sift_parse_pdf.pdf_parser import (
     ContentConfig,
     ContentLevel,
     DecodeConfig,
@@ -205,8 +205,8 @@ For threaded parse-and-render workloads, set
 Use the CLI
 
 ```sh
-$ docling-parse -h
-usage: docling-parse [-h] -p PDF
+$ sift-parse-pdf -h
+usage: sift-parse-pdf [-h] -p PDF
 
 Process a PDF file.
 
@@ -217,7 +217,7 @@ options:
 
 ## Performance Benchmarks
 
-[`docs/performance_benchmarks.md`](./docs/performance_benchmarks.md) compares `docling-parse` against the other widely used PDF packages on parsing and rendering, with the methodology and the commands to reproduce it.
+[`docs/performance_benchmarks.md`](./docs/performance_benchmarks.md) compares `sift-parse-pdf` against the other widely used PDF packages on parsing and rendering, with the methodology and the commands to reproduce it.
 
 The tooling behind it lives under [`perf/`](./perf/README.md):
 
@@ -314,7 +314,7 @@ For individual model usage, please refer to the model licenses found in the orig
 
 ## LF AI & Data
 
-Docling (and also docling-parse) is hosted as a project in the [LF AI & Data Foundation](https://lfaidata.foundation/projects/).
+Docling (and also sift-parse-pdf) is hosted as a project in the [LF AI & Data Foundation](https://lfaidata.foundation/projects/).
 
 ### IBM ❤️ Open Source AI
 

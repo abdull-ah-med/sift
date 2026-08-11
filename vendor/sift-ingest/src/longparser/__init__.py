@@ -51,14 +51,15 @@ from .schemas import (
     TableCell,
 )
 
-# Heavy dependencies (docling, motor, etc.) are imported lazily so that
+# Heavy dependencies (sift_parse, motor, etc.) are imported lazily so that
 # ``import longparser`` and ``from longparser.schemas import ...`` work
 # in environments where optional extras are not installed.
 def __getattr__(name: str):
     """Lazy import shim for optional heavy dependencies."""
-    if name == "DoclingExtractor":
-        from .extractors import DoclingExtractor
-        return DoclingExtractor
+    if name in {"SiftParseExtractor", "DoclingExtractor"}:
+        from .extractors import SiftParseExtractor
+
+        return SiftParseExtractor
     if name == "PyMuPDFExtractor":
         # AGPL-isolated — only loaded when explicitly requested
         from .extractors.pymupdf_extractor import PyMuPDFExtractor
@@ -104,7 +105,8 @@ __all__ = [
     "JobRequest",
     "JobResult",
     # Lazily imported (require extras)
-    "DoclingExtractor",
+    "SiftParseExtractor",
+    "DoclingExtractor",  # deprecated alias of SiftParseExtractor
     "PyMuPDFExtractor",
     "PipelineOrchestrator",
     "DocumentPipeline",

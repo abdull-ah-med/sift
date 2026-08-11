@@ -19,8 +19,8 @@ when you explicitly install them and select them in your configuration.
 | Package | License | Purpose |
 |---------|---------|---------|
 | `pydantic` | MIT | Schema validation |
-| `docling` | MIT | Default PDF extraction engine |
-| `docling-core` | MIT | Docling data models |
+| `sift_parse` | MIT | Default PDF extraction engine |
+| `sift-parse-core` | MIT | Docling data models |
 | `fast-langdetect` | Apache-2.0 | Document language detection |
 
 ## What This Means for You

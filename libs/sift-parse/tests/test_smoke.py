@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from sift_parse.smoke import ParseSmokeResult, run_parse_smoke
+from sift.parse.smoke import ParseSmokeResult, run_parse_smoke
 
 CORPUS = Path(__file__).resolve().parents[3] / "evals" / "corpus"
 DIGITAL_PDFS = sorted(CORPUS.glob("digital-*.pdf"))

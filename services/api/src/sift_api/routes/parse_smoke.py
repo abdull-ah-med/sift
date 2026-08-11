@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from pydantic import BaseModel, ConfigDict, Field
 
-from sift_parse.smoke import ParseSmokeResult, run_parse_smoke
+from sift.parse.smoke import ParseSmokeResult, run_parse_smoke
 
 router = APIRouter(prefix="/internal", tags=["internal"])
 

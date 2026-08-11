@@ -10,7 +10,7 @@ import torch
 from huggingface_hub import snapshot_download
 from PIL import Image, ImageDraw, ImageFont
 
-from docling_ibm_models.layoutmodel.layout_predictor import LayoutPredictor
+from sift_parse_models.layoutmodel.layout_predictor import LayoutPredictor
 
 
 def save_predictions(
