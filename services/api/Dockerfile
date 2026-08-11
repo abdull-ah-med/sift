@@ -13,7 +13,9 @@ FROM base AS deps
 COPY pyproject.toml uv.lock ./
 COPY libs/sift-core ./libs/sift-core
 COPY libs/sift-parse ./libs/sift-parse
+COPY libs/sift-ingest ./libs/sift-ingest
 COPY libs/sift-obs ./libs/sift-obs
+COPY vendor/sift-parse ./vendor/sift-parse
 COPY services/api ./services/api
 COPY services/worker ./services/worker
 COPY apps/cli ./apps/cli
