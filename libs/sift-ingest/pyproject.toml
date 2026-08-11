@@ -1,0 +1,26 @@
+[project]
+name = "sift-ingest"
+version = "0.0.0"
+description = "Extract → chunk pipeline (absorbs vendor sift-ingest)."
+requires-python = ">=3.13,<3.14"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "sift-core",
+    "pydantic>=2.10",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sift_ingest"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/sift_ingest" = "sift_ingest"
+
+[tool.uv.sources]
+sift-core = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -172,4 +172,5 @@ class FinalizeOut(StrictModel):
     document_id: str
     status: str
     block_count: int
+    chunk_count: int
     needs_review_count: int

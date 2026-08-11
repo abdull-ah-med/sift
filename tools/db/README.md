@@ -51,3 +51,4 @@ Prints a one-time `raw_key` for local CLI/UI login.
 | `0003` | audit_events + RLS (hashing in `sift_core.audit`, ADR-0014) |
 | `0004` | `api_keys.hash_version` (ADR-0013 pepper rotation) |
 | `0005` | `blocks`, `block_revisions` + RLS (Phase 2) |
+| `0006` | `chunks` + RLS (Phase 2; BM25 deferred to Phase 3) |

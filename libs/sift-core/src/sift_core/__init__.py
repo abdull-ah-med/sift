@@ -1,5 +1,6 @@
 """Shared primitives for sift services and libraries."""
 
+from sift_core.chunk import Chunk, ChunkType
 from sift_core.db import tenant_guc_statements
 from sift_core.ids import IdKind, new_id, parse_id, prefix_for, validate_id
 from sift_core.models import (
@@ -23,6 +24,8 @@ __all__ = [
     "Block",
     "BlockType",
     "BoundingBox",
+    "Chunk",
+    "ChunkType",
     "IdKind",
     "Provenance",
     "ReviewAction",

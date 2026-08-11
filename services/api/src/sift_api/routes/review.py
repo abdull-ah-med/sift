@@ -12,13 +12,20 @@ from sift_api.audit_emit import emit_audit
 from sift_api.auth import AuthContext, require_scopes, tenant_db
 from sift_api.schemas import BlockOut, BlockPatch, FinalizeOut
 from sift_core.ids import IdKind, new_id
-from sift_core.models import ReviewState
+from sift_core.models import (
+    Block,
+    BlockType,
+    BoundingBox,
+    Provenance,
+    ReviewState,
+)
 from sift_core.review import (
     ReviewAction,
     ReviewTransitionError,
     document_ready_to_finalize,
     next_review_state,
 )
+from sift_ingest.chunker import chunk_blocks
 
 router = APIRouter(prefix="/v1", tags=["review"])
 
@@ -342,7 +349,7 @@ async def finalize_document(
             await session.execute(
                 text(
                     """
-                SELECT id, status FROM documents
+                SELECT id, title, collection_id, status FROM documents
                 WHERE id = :id AND deleted_at IS NULL
                 """
                 ),
@@ -355,19 +362,101 @@ async def finalize_document(
     if doc is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="document not found")
 
-    states = [
-        ReviewState(r[0])
-        for r in (
+    block_rows = (
+        (
             await session.execute(
-                text("SELECT review_state FROM blocks WHERE document_id = :id"),
+                text(
+                    """
+                SELECT id, ordinal, block_type, text, html, provenance, confidence,
+                       hierarchy, cross_refs, review_state, version
+                FROM blocks WHERE document_id = :id ORDER BY ordinal
+                """
+                ),
                 {"id": document_id},
             )
-        ).all()
-    ]
+        )
+        .mappings()
+        .all()
+    )
+    domain_blocks: list[Block] = []
+    for row in block_rows:
+        prov = dict(row["provenance"])
+        bbox = prov.get("bbox") or {"x0": 0, "y0": 0, "x1": 0, "y1": 0}
+        hierarchy = None
+        if row["hierarchy"] is not None:
+            raw_h = row["hierarchy"]
+            if isinstance(raw_h, dict):
+                hierarchy = list(raw_h.get("section_path") or [])
+            elif isinstance(raw_h, list):
+                hierarchy = list(raw_h)
+        domain_blocks.append(
+            Block(
+                id=row["id"],
+                ordinal=row["ordinal"],
+                block_type=BlockType(row["block_type"]),
+                text=row["text"],
+                html=row["html"],
+                provenance=Provenance(
+                    page_no=int(prov.get("page_no") or 1),
+                    bbox=BoundingBox(
+                        x0=float(bbox["x0"]),
+                        y0=float(bbox["y0"]),
+                        x1=float(bbox["x1"]),
+                        y1=float(bbox["y1"]),
+                    ),
+                    extractor=str(prov.get("extractor") or "unknown"),
+                    model_version=str(prov.get("model_version") or "unknown"),
+                ),
+                confidence=row["confidence"],
+                hierarchy=hierarchy,
+                cross_refs=list(row["cross_refs"] or []),
+                review_state=ReviewState(row["review_state"]),
+                version=row["version"],
+            )
+        )
+
+    states = [b.review_state for b in domain_blocks]
     if not document_ready_to_finalize(states):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="document still has blocks awaiting review",
+        )
+
+    chunks = chunk_blocks(domain_blocks, document_title=doc["title"])
+    await session.execute(
+        text("DELETE FROM chunks WHERE document_id = :id"),
+        {"id": document_id},
+    )
+    for chunk in chunks:
+        await session.execute(
+            text(
+                """
+                INSERT INTO chunks (
+                  id, tenant_id, document_id, collection_id, ordinal,
+                  text_raw, text_contextualized, token_count, chunk_type,
+                  section_path, page_numbers, block_ids, quality_score, review_state
+                ) VALUES (
+                  :id, :tenant_id, :document_id, :collection_id, :ordinal,
+                  :text_raw, :text_contextualized, :token_count, :chunk_type,
+                  :section_path, :page_numbers, :block_ids, :quality_score, 'approved'
+                )
+                """
+            ),
+            {
+                "id": chunk.id,
+                "tenant_id": ctx.tenant_id,
+                "document_id": document_id,
+                "collection_id": doc["collection_id"],
+                "ordinal": chunk.ordinal,
+                "text_raw": chunk.text_raw,
+                "text_contextualized": chunk.text_contextualized,
+                "token_count": chunk.token_count,
+                "chunk_type": chunk.chunk_type.value,
+                "section_path": chunk.section_path,
+                "page_numbers": chunk.page_numbers,
+                "block_ids": chunk.block_ids,
+                "quality_score": chunk.quality_score,
+            },
         )
 
     needs = await _refresh_needs_review(session, document_id)
@@ -387,11 +476,16 @@ async def finalize_document(
         action="document.finalize",
         target_kind="document",
         target_id=document_id,
-        payload={"status": "indexing", "block_count": len(states)},
+        payload={
+            "status": "indexing",
+            "block_count": len(domain_blocks),
+            "chunk_count": len(chunks),
+        },
     )
     return FinalizeOut(
         document_id=document_id,
         status="indexing",
-        block_count=len(states),
+        block_count=len(domain_blocks),
+        chunk_count=len(chunks),
         needs_review_count=needs,
     )

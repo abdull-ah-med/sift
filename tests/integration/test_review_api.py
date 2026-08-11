@@ -208,6 +208,7 @@ def test_claim_approve_flow(api_client: TestClient, migrated_db: Engine) -> None
     assert finalized.status_code == HTTPStatus.OK
     assert finalized.json()["status"] == "indexing"
     assert finalized.json()["needs_review_count"] == 0
+    assert finalized.json()["chunk_count"] >= 1
 
 
 def test_patch_requires_if_match_and_records_revision(

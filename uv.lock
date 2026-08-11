@@ -8,6 +8,7 @@ members = [
     "sift-api",
     "sift-cli",
     "sift-core",
+    "sift-ingest",
     "sift-obs",
     "sift-parse",
     "sift-worker",
@@ -1304,6 +1305,7 @@ dependencies = [
     { name = "python-multipart" },
     { name = "redis" },
     { name = "sift-core" },
+    { name = "sift-ingest" },
     { name = "sift-obs" },
     { name = "sift-parse" },
     { name = "sqlalchemy", extra = ["asyncio"] },
@@ -1330,6 +1332,7 @@ requires-dist = [
     { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "redis", specifier = ">=5.0" },
     { name = "sift-core", editable = "libs/sift-core" },
+    { name = "sift-ingest", editable = "libs/sift-ingest" },
     { name = "sift-obs", editable = "libs/sift-obs" },
     { name = "sift-parse", editable = "libs/sift-parse" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
@@ -1377,6 +1380,21 @@ requires-dist = [
     { name = "python-ulid", specifier = ">=3.0" },
     { name = "rfc8785", specifier = ">=0.1.4" },
     { name = "sqlalchemy", specifier = ">=2.0" },
+]
+
+[[package]]
+name = "sift-ingest"
+version = "0.0.0"
+source = { editable = "libs/sift-ingest" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "sift-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pydantic", specifier = ">=2.10" },
+    { name = "sift-core", editable = "libs/sift-core" },
 ]
 
 [[package]]

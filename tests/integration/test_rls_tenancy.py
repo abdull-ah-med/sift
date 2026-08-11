@@ -17,7 +17,7 @@ from sift_core.ids import IdKind, new_id
 TENANCY_TABLES = frozenset({"organizations", "tenants", "users_in_tenant"})
 CORPUS_TABLES = frozenset({"api_keys", "collections", "documents", "jobs"})
 AUDIT_TABLES = frozenset({"audit_events"})
-PHASE2_TABLES = frozenset({"blocks", "block_revisions"})
+PHASE2_TABLES = frozenset({"blocks", "block_revisions", "chunks"})
 PHASE1_TABLES = TENANCY_TABLES | CORPUS_TABLES | AUDIT_TABLES
 SCHEMA_TABLES = PHASE1_TABLES | PHASE2_TABLES
 
