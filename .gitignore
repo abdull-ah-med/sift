@@ -61,6 +61,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+!vendor/sift-parse/**/*.so
 .Python
 build/
 develop-eggs/

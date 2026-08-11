@@ -1,5 +1,5 @@
 [project]
-name = "sift-parse-models"
+name = "sift-parse-models-engine"
 version = "3.13.3" # DO NOT EDIT, updated automatically
 description = "This package contains the AI models used by the Docling PDF conversion package"
 license = "MIT"
@@ -38,7 +38,7 @@ dependencies = [
   'huggingface_hub (>=0.23,<2)',
   'safetensors[torch] (>=0.4.3,<1)',
   'pydantic (>=2.0.0,<3.0.0)',
-  'sift-parse-core (>=2.19.0,<3.0.0)',
+  'sift-parse-core-engine (>=2.19.0,<3.0.0)',
   # temporary solution until huggingface/transformers#46159 is resolved
   'transformers (>=4.42.0,<5.9.0,!=5.0.*,!=5.1.*,!=5.2.*,!=5.3.*) ; sys_platform == "darwin"',
   'transformers (>=4.42.0,<6.0.0,!=5.0.*,!=5.1.*,!=5.2.*,!=5.3.*) ; sys_platform != "darwin"',
@@ -57,27 +57,6 @@ repository = "https://github.com/docling-project/docling-ibm-models"
 issues = "https://github.com/docling-project/docling-ibm-models/issues"
 changelog = "https://github.com/docling-project/docling-ibm-models/blob/main/CHANGELOG.md"
 
-[dependency-groups]
-dev = [
-    "opencv-python-headless (>=4.6.0.66,<5.0.0.0)",
-    "pre-commit~=3.7",
-    "mypy~=1.10",
-    "black~=24.4",
-    "isort~=5.10",
-    "autoflake~=2.0",
-    "flake8~=7.1",
-    "flake8-docstrings~=1.6",
-    "types-setuptools~=70.3",
-    "pandas-stubs~=2.1",
-    "types-requests~=2.31",
-    "coverage~=7.6",
-    "pytest~=8.3",
-    "pytest-cov>=6.1.1",
-    "pytest-dependency~=0.6",
-    "pytest-xdist~=3.3",
-    "python-semantic-release~=7.32",
-    'datasets~=3.2; python_version < "3.14"',
-]
 
 [tool.uv]
 package = true
@@ -87,6 +66,9 @@ conflicts = [
         { extra = "opencv-python" },
     ]
 ]
+
+[tool.uv.sources]
+sift-parse-core-engine = { workspace = true }
 
 [tool.setuptools.packages.find]
 include = ["sift_parse_models*"]

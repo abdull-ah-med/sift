@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "sift-parse"
+name = "sift-parse-engine"
 version = "2.119.0"  # DO NOT EDIT, updated automatically
 description = "Modular version of the Docling package: SDK and CLI for parsing PDF, DOCX, HTML, and more, to a unified document representation for powering downstream workflows such as gen AI applications."
 license = "MIT"
@@ -33,7 +33,7 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
 ]
-readme = "packages/sift-parse/README.md"
+readme = "README.md"
 authors = [
   { name = "Christoph Auer", email = "cau@zurich.ibm.com" },
   { name = "Michele Dolfi", email = "dol@zurich.ibm.com" },
@@ -48,7 +48,7 @@ requires-python = '>=3.10,<4.0'
 # MINIMAL BASE (8 packages) - ~50MB
 dependencies = [
   'pydantic>=2.0.0,<3.0.0',
-  'sift-parse-core>=2.90.0,<3.0.0',
+  'sift-parse-core-engine>=2.90.0,<3.0.0',
   'pydantic-settings>=2.3.0,<3.0.0',
   'filetype>=1.2.0,<2.0.0',
   'requests>=2.32.2,<3.0.0',
@@ -66,7 +66,7 @@ changelog = "https://github.com/docling-project/docling/blob/main/CHANGELOG.md"
 [project.entry-points.sift_parse]
 "sift_parse_defaults" = "sift_parse.models.plugins.defaults"
 
-# CLI scripts (require cli extra: pip install sift-parse[cli])
+# CLI scripts (require cli extra: pip install sift-parse-engine[cli])
 [project.scripts]
 sift-parse = "sift_parse.cli.main:app"
 sift-parse-tools = "sift_parse.cli.tools:app"
@@ -83,7 +83,7 @@ convert-core = [
 ]
 
 extract-core = [
-  'sift-parse[convert-core]',
+  'sift-parse-engine[convert-core]',
   'polyfactory>=2.22.2',
 ]
 
@@ -97,11 +97,11 @@ format-pdf-pypdfium2 = [
 ]
 format-pdf-sift-parse = [
   'pypdfium2>=4.30.0,!=4.30.1,<6.0.0',
-  'sift-parse-pdf>=7.0.0,<8.0.0',
+  'sift-parse-pdf-engine>=7.0.0,<8.0.0',
 ]
 
 format-pdf = [
-  'sift-parse[format-pdf-pypdfium2,format-pdf-sift-parse]',
+  'sift-parse-engine[format-pdf-pypdfium2,format-pdf-sift-parse]',
 ]
 
 # --- Office Formats ---
@@ -118,7 +118,7 @@ format-xlsx = [
 ]
 
 format-office = [
-  'sift-parse[format-docx,format-pptx,format-xlsx]',
+  'sift-parse-engine[format-docx,format-pptx,format-xlsx]',
 ]
 
 # --- OpenDocument Formats (ODT, ODS, ODP) ---
@@ -136,7 +136,7 @@ format-markdown = [
 ]
 
 format-web = [
-  'sift-parse[format-html,format-markdown]',
+  'sift-parse-engine[format-html,format-markdown]',
 ]
 
 # --- Other Formats ---
@@ -145,18 +145,18 @@ format-latex = [
 ]
 
 format-email = [
-  'sift-parse[format-html]',
+  'sift-parse-engine[format-html]',
   'mail-parser>=4.1.4,<5.0.0',
   'python-oxmsg>=0.0.2,<0.1.0',
 ]
 
 format-xml-jats = [
-  'sift-parse[format-html]',
+  'sift-parse-engine[format-html]',
   'lxml>=4.0.0,<7.0.0',
 ]
 
 format-xml-uspto = [
-  'sift-parse[format-html]',
+  'sift-parse-engine[format-html]',
   'defusedxml>=0.7.1,<0.8.0',
 ]
 
@@ -177,7 +177,7 @@ format-audio = [
 
 # Video pipeline: transcription (format-audio) plus speaker diarization.
 format-video = [
-  'sift-parse[format-audio]',
+  'sift-parse-engine[format-audio]',
   'resemblyzer>=0.1.4,<0.2.0',
   'soundfile>=0.12.1,<1.0.0',
   'scikit-learn>=1.3.0,<2.0.0',
@@ -223,7 +223,7 @@ feat-ocr-nemotron = [
 models-local = [
   'torch>=2.2.2,<3.0.0',
   'torchvision>=0,<1',
-  'sift-parse-models>=3.13.0,<4',
+  'sift-parse-models-engine>=3.13.0,<4',
   'accelerate>=1.0.0,<2',
   'huggingface_hub>=0.23,<2',
   'defusedxml>=0.7.1,<0.8.0',
@@ -254,7 +254,7 @@ models-vlm-inline = [
 # ============================================================================
 # Document chunking for RAG applications
 feat-chunking = [
-  'sift-parse-core[chunking]>=2.73.0,<3.0.0',
+  'sift-parse-core-engine[chunking]>=2.73.0,<3.0.0',
 ]
 
 service-client = [
@@ -280,7 +280,7 @@ cli = [
 # CONVENIENCE BUNDLES
 # ============================================================================
 standard = [
-  'sift-parse[format-pdf,models-local,feat-ocr-rapidocr,format-office,format-web,format-latex,format-email,feat-chunking,extract-core,service-client,cli]',
+  'sift-parse-engine[format-pdf,models-local,feat-ocr-rapidocr,format-office,format-web,format-latex,format-email,feat-chunking,extract-core,service-client,cli]',
 ]
 
 all = [
@@ -288,93 +288,18 @@ all = [
   # requires webrtcvad, which has no wheels and needs Python dev headers
   # (Python.h) plus a C compiler to build from source. `all` must install
   # cleanly without a compiler, so speaker diarization stays opt-in via
-  # sift-parse[format-video].
-  'sift-parse[standard,models-vlm-inline,format-audio,format-html-render,format-xml-jats,format-xml-uspto,format-xml-xbrl,models-remote,models-onnxruntime,feat-ocr-easyocr,feat-ocr-tesserocr,feat-ocr-mac]',
+  # sift-parse-engine[format-video].
+  'sift-parse-engine[standard,models-vlm-inline,format-audio,format-html-render,format-xml-jats,format-xml-uspto,format-xml-xbrl,models-remote,models-onnxruntime,feat-ocr-easyocr,feat-ocr-tesserocr,feat-ocr-mac]',
 ]
 
-[dependency-groups]
-typecheck = [
-  "ty==0.0.33",
-  "types-setuptools~=70.3",
-  "pandas-stubs~=2.1",
-  "types-openpyxl~=3.1",
-  "types-requests~=2.31",
-  "boto3-stubs~=1.37",
-  "types-urllib3~=1.26",
-  "types-tqdm~=4.67",
-  "types-defusedxml>=0.7.0.20250822,<0.8.0",
-]
-pr-fast-checks = [
-  { include-group = "typecheck" },
-  "sift-parse-core[chunking] (>=2.73.0,<3.0.0)",
-  "pydantic (>=2.0.0,<3.0.0)",
-  "pydantic-settings (>=2.3.0,<3.0.0)",
-  "ruff==0.15.12",
-]
-dev = [
-  { include-group = "typecheck" },
-  "dprint-py==0.53.1.0",
-  "prek>=0.3.10",
-  "tach>=0.34.0,<1",
-  "coverage~=7.6",
-  "pytest~=9.0.3",
-  "pytest-cov>=6.1.1",
-  "pytest-dependency~=0.6",
-  "pytest-durations~=1.6.1",
-  "pytest-xdist~=3.3",
-  "ipykernel~=6.29",
-  "ipywidgets~=8.1",
-  "nbqa~=1.9",
-  "python-semantic-release~=7.32",
-  "matplotlib>=3.10.9",
-]
-
-docs = [
-  "zensical>=0.0.40,<0.1",
-  "mkdocs-redirects~=1.2",
-  "mkdocstrings[python]~=0.27",
-  "griffe-pydantic~=1.1",
-  # pymdown-extensions was previously a transitive dep of mkdocs-material;
-  # mkdocs.yml's markdown_extensions list still relies on pymdownx.* and on
-  # pymdownx.slugs.slugify, so pin it directly now that material is removed.
-  "pymdown-extensions~=10.0",
-  # Used by scripts/render_notebooks.py to convert example notebooks and
-  # jupytext percent-format .py scripts to markdown at docs build time. Zensical
-  # has no mkdocs-jupyter equivalent on its roadmap, so the example pages are
-  # pre-rendered into docs/_generated/examples before build.
-  "nbconvert~=7.16",
-  "jupytext~=1.16",
-]
-
-examples = [
-  "datasets~=2.21",
-  "python-dotenv~=1.0",
-  "langchain-huggingface>=0.0.3",
-  "langchain-milvus~=0.1",
-  "langchain-text-splitters>=0.2",
-  "modelscope>=1.29.0",
-  'gliner>=0.2.21 ; python_version < "3.14"',
-]
-
-constraints = [
-  'numba>=0.63.0',
-  'langchain-core>=0.3.81',
-  'pandas>=2.1.4,<3.0.0 ; python_version < "3.11"',
-  'pandas>=2.1.4,<4.0.0 ; python_version >= "3.11"',
-]
-
-[tool.uv.workspace]
-members = ["packages/sift_parse"]
 
 [tool.uv.sources]
-sift_parse = { workspace = true }
-# sift-parse-pdf = { git = "https://github.com/docling-project/docling-parse", rev = "main" }
-# sift-parse-core = { git = "https://github.com/docling-project/docling-core/", rev = "main" }
+sift-parse-core-engine = { workspace = true }
+sift-parse-pdf-engine = { workspace = true }
+sift-parse-models-engine = { workspace = true }
 
 [tool.uv]
 package = true
-default-groups = "all"
-
 override-dependencies = [
   "grpcio>=1.75.1"
 ]

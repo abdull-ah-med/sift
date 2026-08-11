@@ -33,6 +33,10 @@ members = [
     "services/api",
     "services/worker",
     "apps/cli",
+    "vendor/sift-parse/sift-parse",
+    "vendor/sift-parse/sift-parse-core",
+    "vendor/sift-parse/sift-parse-pdf",
+    "vendor/sift-parse/sift-parse-models",
 ]
 
 [tool.uv]

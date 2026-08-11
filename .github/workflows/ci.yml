@@ -18,9 +18,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
+      - name: Verify vendored pdf_parsers hashes
+        run: |
+          echo "68ed665a8a52a653f2bcff7753668be305eeb440bc6f65212db3e12a752c2f8b  vendor/sift-parse/sift-parse-pdf/sift_parse_pdf/pdf_parsers.cpython-313-darwin.so" | shasum -a 256 -c -
+          echo "a704c4cb9c7cf9e55293655f33a989249a5e6b5acd3ac6a73cc50336f9b4ffa5  vendor/sift-parse/sift-parse-pdf/sift_parse_pdf/pdf_parsers.cpython-313-x86_64-linux-gnu.so" | shasum -a 256 -c -
       - name: Sync
         # Install every workspace member so mypy/pytest see FastAPI, etc.
         run: uv sync --all-packages --group dev
@@ -30,6 +36,9 @@ jobs:
           uv run ruff format --check libs services apps tests tools
       - name: Mypy
         run: uv run mypy libs/sift-core/src libs/sift-parse/src services/api/src
+      - name: Engine DocumentConverter construct
+        run: |
+          uv run python -c "from sift_parse.document_converter import DocumentConverter; DocumentConverter(); print('DocumentConverter ok')"
       - name: Pytest
         run: uv run pytest -q --ignore=vendor
 
