@@ -84,19 +84,21 @@ async def list_organizations(
     session = await begin_admin_session()
     try:
         rows = (
-            await session.execute(
-                text(
-                    """
+            (
+                await session.execute(
+                    text(
+                        """
                     SELECT id, name, slug, created_at FROM organizations
                     WHERE deleted_at IS NULL ORDER BY created_at
                     """
+                    )
                 )
             )
-        ).mappings().all()
+            .mappings()
+            .all()
+        )
         return [
-            OrganizationOut(
-                id=r["id"], name=r["name"], slug=r["slug"], created_at=r["created_at"]
-            )
+            OrganizationOut(id=r["id"], name=r["name"], slug=r["slug"], created_at=r["created_at"])
             for r in rows
         ]
     finally:
@@ -153,15 +155,19 @@ async def list_tenants(
     session: Annotated[AsyncSession, Depends(tenant_db)],
 ) -> list[TenantOut]:
     rows = (
-        await session.execute(
-            text(
-                """
+        (
+            await session.execute(
+                text(
+                    """
                 SELECT id, organization_id, name, slug, created_at
                 FROM tenants WHERE deleted_at IS NULL
                 """
+                )
             )
         )
-    ).mappings().all()
+        .mappings()
+        .all()
+    )
     return [
         TenantOut(
             id=r["id"],
@@ -223,15 +229,19 @@ async def list_collections(
     session: Annotated[AsyncSession, Depends(tenant_db)],
 ) -> list[CollectionOut]:
     rows = (
-        await session.execute(
-            text(
-                """
+        (
+            await session.execute(
+                text(
+                    """
                 SELECT id, tenant_id, name, slug, description, created_at
                 FROM collections WHERE deleted_at IS NULL ORDER BY created_at
                 """
+                )
             )
         )
-    ).mappings().all()
+        .mappings()
+        .all()
+    )
     return [
         CollectionOut(
             id=r["id"],
@@ -252,16 +262,20 @@ async def get_collection(
     session: Annotated[AsyncSession, Depends(tenant_db)],
 ) -> CollectionOut:
     r = (
-        await session.execute(
-            text(
-                """
+        (
+            await session.execute(
+                text(
+                    """
                 SELECT id, tenant_id, name, slug, description, created_at
                 FROM collections WHERE id = :id AND deleted_at IS NULL
                 """
-            ),
-            {"id": collection_id},
+                ),
+                {"id": collection_id},
+            )
         )
-    ).mappings().one_or_none()
+        .mappings()
+        .one_or_none()
+    )
     if r is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not found")
     return CollectionOut(
@@ -351,15 +365,19 @@ async def list_api_keys(
     session: Annotated[AsyncSession, Depends(tenant_db)],
 ) -> list[ApiKeyOut]:
     rows = (
-        await session.execute(
-            text(
-                """
+        (
+            await session.execute(
+                text(
+                    """
                 SELECT id, name, prefix, scopes, created_at, revoked_at
                 FROM api_keys ORDER BY created_at DESC
                 """
+                )
             )
         )
-    ).mappings().all()
+        .mappings()
+        .all()
+    )
     return [
         ApiKeyOut(
             id=r["id"],
@@ -571,18 +589,22 @@ async def list_documents(
     session: Annotated[AsyncSession, Depends(tenant_db)],
 ) -> list[DocumentOut]:
     rows = (
-        await session.execute(
-            text(
-                """
+        (
+            await session.execute(
+                text(
+                    """
                 SELECT id, collection_id, title, slug, status, source_uri, created_at
                 FROM documents
                 WHERE collection_id = :cid AND deleted_at IS NULL
                 ORDER BY created_at DESC
                 """
-            ),
-            {"cid": collection_id},
+                ),
+                {"cid": collection_id},
+            )
         )
-    ).mappings().all()
+        .mappings()
+        .all()
+    )
     return [
         DocumentOut(
             id=r["id"],
@@ -604,16 +626,20 @@ async def get_document(
     session: Annotated[AsyncSession, Depends(tenant_db)],
 ) -> DocumentOut:
     r = (
-        await session.execute(
-            text(
-                """
+        (
+            await session.execute(
+                text(
+                    """
                 SELECT id, collection_id, title, slug, status, source_uri, created_at
                 FROM documents WHERE id = :id AND deleted_at IS NULL
                 """
-            ),
-            {"id": document_id},
+                ),
+                {"id": document_id},
+            )
         )
-    ).mappings().one_or_none()
+        .mappings()
+        .one_or_none()
+    )
     if r is None:
         raise HTTPException(status_code=404, detail="not found")
     return DocumentOut(
@@ -651,16 +677,20 @@ async def get_job(
     session: Annotated[AsyncSession, Depends(tenant_db)],
 ) -> JobOut:
     r = (
-        await session.execute(
-            text(
-                """
+        (
+            await session.execute(
+                text(
+                    """
                 SELECT id, kind, status, document_id, progress, created_at
                 FROM jobs WHERE id = :id
                 """
-            ),
-            {"id": job_id},
+                ),
+                {"id": job_id},
+            )
         )
-    ).mappings().one_or_none()
+        .mappings()
+        .one_or_none()
+    )
     if r is None:
         raise HTTPException(status_code=404, detail="not found")
     return JobOut(
@@ -679,18 +709,22 @@ async def list_audit_events(
     session: Annotated[AsyncSession, Depends(tenant_db)],
 ) -> list[AuditEventOut]:
     rows = (
-        await session.execute(
-            text(
-                """
+        (
+            await session.execute(
+                text(
+                    """
                 SELECT event_id, chain_index, action, actor, target_kind, target_id,
                        occurred_at, payload
                 FROM audit_events
                 ORDER BY chain_index DESC
                 LIMIT 100
                 """
+                )
             )
         )
-    ).mappings().all()
+        .mappings()
+        .all()
+    )
     return [
         AuditEventOut(
             event_id=r["event_id"],

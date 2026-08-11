@@ -75,6 +75,10 @@ warn_unused_configs = true
 disallow_untyped_defs = true
 exclude = ["vendor/"]
 
+[[tool.mypy.overrides]]
+module = ["boto3.*", "botocore.*", "botocore.client"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["libs", "services", "apps", "tests"]

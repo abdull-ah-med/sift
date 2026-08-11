@@ -25,15 +25,19 @@ def run_ingest_stub(*, document_id: str, job_id: str, tenant_id: str) -> None:
     try:
         with eng.begin() as conn:
             conn.execute(text("SET LOCAL ROLE sift_admin"))
-            row = conn.execute(
-                text(
-                    """
+            row = (
+                conn.execute(
+                    text(
+                        """
                     SELECT status FROM jobs
                     WHERE id = :job_id AND tenant_id = :tenant_id
                     """
-                ),
-                {"job_id": job_id, "tenant_id": tenant_id},
-            ).mappings().one_or_none()
+                    ),
+                    {"job_id": job_id, "tenant_id": tenant_id},
+                )
+                .mappings()
+                .one_or_none()
+            )
             if row is None or row["status"] in {"succeeded", "cancelled"}:
                 return
             now = datetime.now(UTC)

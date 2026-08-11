@@ -35,9 +35,7 @@ class Settings(BaseSettings):
     sift_zitadel_issuer: str = Field(default="", alias="SIFT_ZITADEL_ISSUER")
     sift_zitadel_audience: str = Field(default="sift-api", alias="SIFT_ZITADEL_AUDIENCE")
     sift_storage_access_key: str = Field(default="sift", alias="SIFT_STORAGE_ACCESS_KEY")
-    sift_storage_secret_key: str = Field(
-        default="sift-dev-secret", alias="SIFT_STORAGE_SECRET_KEY"
-    )
+    sift_storage_secret_key: str = Field(default="sift-dev-secret", alias="SIFT_STORAGE_SECRET_KEY")
     sift_otlp_endpoint: str = Field(
         default="http://127.0.0.1:4318/v1/traces",
         alias="SIFT_OTLP_ENDPOINT",

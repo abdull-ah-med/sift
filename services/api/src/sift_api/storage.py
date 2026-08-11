@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 from dataclasses import dataclass
+from typing import Any
 
 import boto3
 from botocore.client import Config
@@ -23,7 +24,7 @@ class PresignedUpload:
     expires_in: int = 3600
 
 
-def _s3_client(settings: Settings):
+def _s3_client(settings: Settings) -> Any:
     return boto3.client(
         "s3",
         endpoint_url=settings.sift_storage_endpoint,

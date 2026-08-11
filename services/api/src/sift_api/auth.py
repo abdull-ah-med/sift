@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy import text
@@ -25,7 +25,7 @@ class AuthContext:
     user_sub: str | None = None
 
 
-def require_scopes(*needed: str):
+def require_scopes(*needed: str) -> Callable[..., Awaitable[AuthContext]]:
     """Dependency factory: require all listed scopes on the auth context."""
 
     async def _dep(ctx: Annotated[AuthContext, Depends(get_auth_context)]) -> AuthContext:
@@ -76,19 +76,23 @@ async def _auth_from_api_key(raw: str, settings: Settings) -> AuthContext:
     session = await begin_admin_session()
     try:
         row = (
-            await session.execute(
-                text(
-                    """
+            (
+                await session.execute(
+                    text(
+                        """
                     SELECT id, tenant_id, hash, scopes, revoked_at, expires_at
                     FROM api_keys
                     WHERE prefix = :prefix
                     ORDER BY created_at DESC
                     LIMIT 5
                     """
-                ),
-                {"prefix": prefix},
+                    ),
+                    {"prefix": prefix},
+                )
             )
-        ).mappings().all()
+            .mappings()
+            .all()
+        )
         match = None
         for candidate in row:
             if verify_secret(pepper, secret, bytes(candidate["hash"])):
@@ -139,7 +143,7 @@ async def _auth_from_jwt(token: str, settings: Settings) -> AuthContext:
     ]
     try:
         signing_key = jwks.get_signing_key_from_jwt(token)
-        decode_kwargs: dict = {
+        decode_kwargs: dict[str, Any] = {
             "algorithms": ["RS256", "ES256"],
             "issuer": settings.sift_zitadel_issuer,
             "options": {"require": ["exp", "iat", "sub"]},
@@ -147,7 +151,9 @@ async def _auth_from_jwt(token: str, settings: Settings) -> AuthContext:
         if audiences:
             decode_kwargs["audience"] = audiences if len(audiences) > 1 else audiences[0]
         else:
-            decode_kwargs["options"]["verify_aud"] = False
+            options = decode_kwargs["options"]
+            assert isinstance(options, dict)
+            options["verify_aud"] = False
         claims = jwt.decode(token, signing_key.key, **decode_kwargs)
     except Exception as exc:
         raise HTTPException(
@@ -160,19 +166,26 @@ async def _auth_from_jwt(token: str, settings: Settings) -> AuthContext:
     session = await begin_admin_session()
     try:
         membership = (
-            await session.execute(
-                text(
-                    """
+            (
+                await session.execute(
+                    text(
+                        """
                     SELECT tenant_id, role FROM users_in_tenant
                     WHERE user_sub = :sub
                     ORDER BY created_at ASC
                     LIMIT 1
                     """
-                ),
-                {"sub": sub},
+                    ),
+                    {"sub": sub},
+                )
             )
-        ).mappings().one_or_none()
-        if membership is None and settings.sift_bootstrap_tenant_id:
+            .mappings()
+            .one_or_none()
+        )
+        tenant_id: str | None = None
+        if membership is not None:
+            tenant_id = str(membership["tenant_id"])
+        elif settings.sift_bootstrap_tenant_id:
             await session.execute(
                 text(
                     """
@@ -188,11 +201,8 @@ async def _auth_from_jwt(token: str, settings: Settings) -> AuthContext:
                 },
             )
             await session.commit()
-            membership = {
-                "tenant_id": settings.sift_bootstrap_tenant_id,
-                "role": "owner",
-            }
-        if membership is None:
+            tenant_id = settings.sift_bootstrap_tenant_id
+        if tenant_id is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="no tenant membership",
@@ -209,7 +219,7 @@ async def _auth_from_jwt(token: str, settings: Settings) -> AuthContext:
             }
         )
         return AuthContext(
-            tenant_id=membership["tenant_id"],
+            tenant_id=tenant_id,
             actor=f"user:{sub}",
             scopes=scopes,
             user_sub=sub,

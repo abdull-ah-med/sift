@@ -18,9 +18,7 @@ async def open_tenant_session(tenant_id: str) -> AsyncIterator[AsyncSession]:
     """
     engine = get_engine()
     async with AsyncSession(engine, expire_on_commit=False) as session:
-        await session.connection(
-            execution_options={"isolation_level": "READ COMMITTED"}
-        )
+        await session.connection(execution_options={"isolation_level": "READ COMMITTED"})
         conn = await session.connection()
         await conn.execute(text("SET LOCAL ROLE sift_app"))
         for stmt in tenant_guc_statements(tenant_id):
