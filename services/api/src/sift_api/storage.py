@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import boto3
@@ -77,3 +78,30 @@ def create_presigned_put(
 
 def seaweed_uri(bucket: str, object_key: str) -> str:
     return f"seaweed://{bucket}/{object_key}"
+
+
+def parse_seaweed_uri(uri: str) -> tuple[str, str]:
+    """Split ``seaweed://bucket/key`` into ``(bucket, key)``."""
+    prefix = "seaweed://"
+    if not uri.startswith(prefix):
+        raise ValueError(f"unsupported source_uri scheme: {uri!r}")
+    rest = uri.removeprefix(prefix)
+    bucket, sep, key = rest.partition("/")
+    if not sep or not bucket or not key:
+        raise ValueError(f"invalid seaweed uri: {uri!r}")
+    return bucket, key
+
+
+def download_object(
+    *,
+    source_uri: str,
+    dest: Path,
+    settings: Settings | None = None,
+) -> Path:
+    """Download ``source_uri`` from SeaweedFS/S3 to ``dest``."""
+    cfg = settings or get_settings()
+    bucket, key = parse_seaweed_uri(source_uri)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    client = _s3_client(cfg)
+    client.download_file(bucket, key, str(dest))
+    return dest

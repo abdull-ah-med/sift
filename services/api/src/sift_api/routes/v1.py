@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sift_api.audit_emit import emit_audit
 from sift_api.auth import AuthContext, get_auth_context, require_scopes, tenant_db
-from sift_api.ingest_stub import run_ingest_stub
+from sift_api.ingest import run_ingest_document
 from sift_api.schemas import (
     ApiKeyCreate,
     ApiKeyCreated,
@@ -553,9 +553,8 @@ async def register_document(
             "created_at": now,
         },
     )
-    # Commit so the sync ingest stub (separate connection) can see rows.
+    # Commit so sync ingest (separate connection) can see rows.
     await session.commit()
-    run_ingest_stub(document_id=doc_id, job_id=job_id, tenant_id=ctx.tenant_id)
     emit_audit(
         tenant_id=ctx.tenant_id,
         actor=ctx.actor,
@@ -564,6 +563,16 @@ async def register_document(
         target_id=doc_id,
         payload={"collection_id": collection_id, "job_id": job_id},
     )
+    doc_status = "queued"
+    try:
+        doc_status = run_ingest_document(
+            document_id=doc_id,
+            job_id=job_id,
+            tenant_id=ctx.tenant_id,
+            settings=settings,
+        )
+    except Exception:
+        doc_status = "failed"
     try:
         from sift_api.tasks import ingest_document
 
@@ -576,7 +585,7 @@ async def register_document(
         collection_id=collection_id,
         title=body.title,
         slug=body.slug,
-        status="ready",
+        status=doc_status if doc_status not in {"skipped", "missing"} else "queued",
         source_uri=source_uri,
         created_at=now,
     )
