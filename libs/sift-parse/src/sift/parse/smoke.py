@@ -80,7 +80,7 @@ def _digital_pdf_smoke(path: Path) -> ParseSmokeResult:
 
 def _vendored_converter() -> SupportsConvert:
     try:
-        from sift_parse.document_converter import (  # type: ignore[import-not-found]
+        from sift_parse.document_converter import (
             DocumentConverter,
         )
     except ImportError as exc:  # pragma: no cover - optional heavy dep

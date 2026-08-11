@@ -8,6 +8,10 @@ dependencies = [
     "sift-core",
     "pydantic>=2.10",
     "pypdfium2>=5.12",
+    "sift-parse-engine[convert-core,format-pdf,models-local,format-office,format-web,format-latex,format-email]",
+    "sift-parse-core-engine",
+    "sift-parse-pdf-engine",
+    "sift-parse-models-engine",
 ]
 
 [build-system]
@@ -22,6 +26,10 @@ packages = ["src/sift"]
 
 [tool.uv.sources]
 sift-core = { workspace = true }
+sift-parse-engine = { workspace = true }
+sift-parse-core-engine = { workspace = true }
+sift-parse-pdf-engine = { workspace = true }
+sift-parse-models-engine = { workspace = true }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

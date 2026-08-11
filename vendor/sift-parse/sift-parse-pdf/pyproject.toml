@@ -1,5 +1,5 @@
 [project]
-name = "sift-parse-pdf"
+name = "sift-parse-pdf-engine"
 version = "7.11.0"
 description = "Simple package to extract text with coordinates from programmatic PDFs"
 license = "MIT"
@@ -31,7 +31,7 @@ requires-python = ">=3.10"
 dependencies = [
     "pillow>=10.0.0,<13.0.0",
     "pydantic>=2.0.0",
-    "sift-parse-core>=2.85.0,<3.0.0",
+    "sift-parse-core-engine>=2.85.0,<3.0.0",
     "pywin32>=305; sys_platform == 'win32'",
 ]
 [project.urls]
@@ -50,43 +50,12 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
-[dependency-groups]
-build = [
-    "setuptools>=77.0.3",
-    "pybind11>=2.13.6",
-    "cibuildwheel>=2.19.2,<3.0.0; python_version < '3.11'",
-    "cibuildwheel>=2.19.2,<4.0.0; python_version >= '3.11'",
-    "wheel>=0.43.0,<1.0.0",
-    "delocate>=0.11.0,<1.0.0",
-    "cmake>=3.27.0,<4.0.0"
-]
-dev = [
-    "pytest>=9.0.3,<10.0.0",
-    "ruff>=0.11,<1.0",
-    "python-semantic-release>=7.32.2,<8.0.0",
-    "pre-commit>=3.7.1,<4.0.0",
-    "mypy>=1.13.0,<2.0.0",
-    "tqdm>=4.67.0,<5.0.0",
-    "boto>=2.49.0,<3.0.0",
-    "boto3>=1.35.67,<2.0.0",
-    "huggingface-hub>=1.11.0",
-    "tabulate>=0.9.0,<1.0.0",    
-]
-perf = [
-    "matplotlib>=3.10.8",
-    "pdfplumber>=0.11.7",
-    "pdfminer.six>=20240706",
-    "pymupdf>=1.26.4",
-    "pypdf>=5.1.0",
-    "pypdfium2>=4.30.0",
-    "huggingface-hub>=1.11.0",
-    "tabulate>=0.9.0,<1.0.0",
-]
-
 
 [tool.uv]
 package = true
-default-groups = "all"
+
+[tool.uv.sources]
+sift-parse-core-engine = { workspace = true }
 
 [tool.setuptools]
 include-package-data = true

@@ -129,6 +129,7 @@ __pycache__/
 
 # C extensions
 *.so
+!sift_parse_pdf/pdf_parsers*.so
 
 # Distribution / packaging
 .Python

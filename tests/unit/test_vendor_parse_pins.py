@@ -24,10 +24,10 @@ def _name(pyproject: Path) -> str:
 
 
 def test_vendor_distribution_names_are_sift_prefixed() -> None:
-    assert _name(VENDOR / "sift-parse" / "pyproject.toml") == "sift-parse"
-    assert _name(VENDOR / "sift-parse-core" / "pyproject.toml") == "sift-parse-core"
-    assert _name(VENDOR / "sift-parse-models" / "pyproject.toml") == "sift-parse-models"
-    assert _name(VENDOR / "sift-parse-pdf" / "pyproject.toml") == "sift-parse-pdf"
+    assert _name(VENDOR / "sift-parse" / "pyproject.toml") == "sift-parse-engine"
+    assert _name(VENDOR / "sift-parse-core" / "pyproject.toml") == "sift-parse-core-engine"
+    assert _name(VENDOR / "sift-parse-models" / "pyproject.toml") == "sift-parse-models-engine"
+    assert _name(VENDOR / "sift-parse-pdf" / "pyproject.toml") == "sift-parse-pdf-engine"
 
 
 def test_core_version_meets_cve_floor() -> None:
