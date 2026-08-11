@@ -18,6 +18,10 @@ dev = [
     "ruff>=0.9",
     "mypy>=1.14",
     "httpx>=0.28",
+    "alembic>=1.14",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.30",
+    "psycopg[binary]>=3.2",
 ]
 
 [tool.uv.workspace]
@@ -67,3 +71,6 @@ asyncio_mode = "auto"
 testpaths = ["libs", "services", "apps", "tests"]
 pythonpath = ["."]
 addopts = "-q --ignore=vendor"
+markers = [
+    "slow: tests that need Docker / external services",
+]

@@ -1,4 +1,4 @@
-.PHONY: setup up seed web api worker mcp-proxy test integration eval lint typecheck
+.PHONY: setup up seed web api worker mcp-proxy test integration eval lint typecheck migrate migrate-down
 
 setup:
 	./tools/dev/setup.sh
@@ -8,6 +8,12 @@ up:
 
 seed:
 	@echo "seed lands in Phase 1"
+
+migrate:
+	uv run alembic -c tools/db/alembic.ini upgrade head
+
+migrate-down:
+	uv run alembic -c tools/db/alembic.ini downgrade -1
 
 web:
 	pnpm --filter @sift/web dev
