@@ -19,7 +19,7 @@ from sift_ingest.chunker import chunk_docling_document
 from sift_ingest.contextual_prefix import PrefixCostRecord, PrefixGenerator
 
 
-class _WordTokenizer(BaseTokenizer):
+class _WordTokenizer(BaseTokenizer):  # type: ignore[misc]
     """Deterministic stand-in until BGE-M3 tokenizer lands in Phase 3."""
 
     def count_tokens(self, text: str) -> int:

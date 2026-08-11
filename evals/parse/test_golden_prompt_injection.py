@@ -11,12 +11,7 @@ import pytest
 from sift.parse import ParseConfig, StandardPdfParser
 from sift_core.models import BlockType, ReviewState
 
-_FIXTURE = (
-    Path(__file__).resolve().parents[1]
-    / "corpus"
-    / "pdf"
-    / "prompt_injection_liu_2023.pdf"
-)
+_FIXTURE = Path(__file__).resolve().parents[1] / "corpus" / "pdf" / "prompt_injection_liu_2023.pdf"
 _SHA256 = "7671887b19dad8ac4d514a45b4701882575860530615edee560c495623064828"
 
 

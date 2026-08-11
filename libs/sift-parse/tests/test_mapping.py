@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 from sift_parse_core.types.doc import (
     BoundingBox,
@@ -90,7 +91,8 @@ def test_map_table_3x3() -> None:
     assert block.table_data is not None
     assert block.table_data["num_rows"] == 3
     assert block.table_data["num_cols"] == 3
-    assert len(block.table_data["cells"]) == 9
+    cells = cast(list[object], block.table_data["cells"])
+    assert len(cells) == 9
 
 
 def test_map_figure_and_caption() -> None:

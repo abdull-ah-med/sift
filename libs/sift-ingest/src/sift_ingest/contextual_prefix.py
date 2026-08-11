@@ -31,9 +31,29 @@ def apply_contextual_prefixes(
     generator: PrefixGenerator,
     cost_log: list[PrefixCostRecord] | None = None,
 ) -> list[Chunk]:
-    """Prepend LLM situating context so ``text_contextualized ≠ text_raw``.
+    """Prepend LLM situating context so ``text_contextualized ≠ text_raw``."""
+    if not chunks:
+        if cost_log is not None:
+            cost_log.append(PrefixCostRecord(total_usd=0.0, chunk_count=0))
+        return []
 
-    TDD stub — real Anthropic-style prompt lands in the impl commit.
-    """
-    del document_text, generator, cost_log
-    return list(chunks)
+    total_usd = 0.0
+    out: list[Chunk] = []
+    for chunk in chunks:
+        prefix, cost = generator.generate(
+            document_text=document_text,
+            chunk_text=chunk.text_raw,
+        )
+        total_usd += float(cost)
+        contextualized = f"{prefix.strip()}\n\n{chunk.text_raw}"
+        out.append(
+            chunk.model_copy(
+                update={
+                    "text_contextualized": contextualized,
+                    "token_count": max(1, len(contextualized.split())),
+                }
+            )
+        )
+    if cost_log is not None:
+        cost_log.append(PrefixCostRecord(total_usd=total_usd, chunk_count=len(out)))
+    return out

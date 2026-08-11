@@ -78,6 +78,7 @@ known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_api
 "tools/db/backfill_reparse.py" = ["PLR0913"]
 "evals/**/*.py" = ["PLR2004"]
 "tests/integration/test_review_api.py" = ["PLR2004"]
+"libs/sift-ingest/src/sift_ingest/chunker.py" = ["PLR0913"]
 "libs/sift-ingest/tests/**/*.py" = ["PLR2004"]
 
 [tool.ruff.format]
