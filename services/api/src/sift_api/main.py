@@ -19,12 +19,15 @@ from sift_api.settings import get_settings
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     if settings.sift_otel_enabled:
-        from sift_obs import setup_tracing
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        from sift_obs import setup_logging, setup_tracing
 
         setup_tracing(
             service_name="sift-api",
             otlp_endpoint=settings.sift_otlp_endpoint,
         )
+        setup_logging(json_logs=True)
+        FastAPIInstrumentor.instrument_app(_app)
     get_engine()
     yield
     await dispose_engine()

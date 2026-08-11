@@ -128,16 +128,27 @@ async def _auth_from_jwt(token: str, settings: Settings) -> AuthContext:
 
     jwks_url = settings.sift_zitadel_issuer.rstrip("/") + "/oauth/v2/keys"
     jwks = PyJWKClient(jwks_url)
+    audiences = [
+        a
+        for a in (
+            settings.sift_zitadel_audience,
+            settings.sift_zitadel_web_client_id,
+            settings.sift_zitadel_cli_client_id,
+        )
+        if a
+    ]
     try:
         signing_key = jwks.get_signing_key_from_jwt(token)
-        claims = jwt.decode(
-            token,
-            signing_key.key,
-            algorithms=["RS256", "ES256"],
-            audience=settings.sift_zitadel_audience,
-            issuer=settings.sift_zitadel_issuer,
-            options={"require": ["exp", "iat", "sub"]},
-        )
+        decode_kwargs: dict = {
+            "algorithms": ["RS256", "ES256"],
+            "issuer": settings.sift_zitadel_issuer,
+            "options": {"require": ["exp", "iat", "sub"]},
+        }
+        if audiences:
+            decode_kwargs["audience"] = audiences if len(audiences) > 1 else audiences[0]
+        else:
+            decode_kwargs["options"]["verify_aud"] = False
+        claims = jwt.decode(token, signing_key.key, **decode_kwargs)
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -145,6 +156,7 @@ async def _auth_from_jwt(token: str, settings: Settings) -> AuthContext:
         ) from exc
 
     sub = str(claims["sub"])
+    email = str(claims.get("email") or f"{sub}@users.local")
     session = await begin_admin_session()
     try:
         membership = (
@@ -160,6 +172,26 @@ async def _auth_from_jwt(token: str, settings: Settings) -> AuthContext:
                 {"sub": sub},
             )
         ).mappings().one_or_none()
+        if membership is None and settings.sift_bootstrap_tenant_id:
+            await session.execute(
+                text(
+                    """
+                    INSERT INTO users_in_tenant (tenant_id, user_sub, email, role, created_at)
+                    VALUES (:tenant_id, :sub, :email, 'owner', now())
+                    ON CONFLICT DO NOTHING
+                    """
+                ),
+                {
+                    "tenant_id": settings.sift_bootstrap_tenant_id,
+                    "sub": sub,
+                    "email": email,
+                },
+            )
+            await session.commit()
+            membership = {
+                "tenant_id": settings.sift_bootstrap_tenant_id,
+                "role": "owner",
+            }
         if membership is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

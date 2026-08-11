@@ -61,6 +61,8 @@ known-first-party = ["sift", "sift_core", "sift_parse", "sift_api", "sift_worker
 "apps/cli/src/sift_cli/**/*.py" = ["B008"]
 "libs/sift-parse/src/sift/parse/smoke.py" = ["PLC0415"]
 "tools/db/seed/**/*.py" = ["E402"]
+"tools/auth/**/*.py" = ["PLR2004"]
+"tools/e2e/**/*.py" = ["PLR2004", "F401"]
 
 [tool.ruff.format]
 quote-style = "double"

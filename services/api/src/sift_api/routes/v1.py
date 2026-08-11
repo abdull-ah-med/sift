@@ -26,6 +26,8 @@ from sift_api.schemas import (
     OrganizationOut,
     TenantCreate,
     TenantOut,
+    TusUploadRequest,
+    TusUploadResponse,
     UploadUrlRequest,
     UploadUrlResponse,
     WhoAmIResponse,
@@ -421,6 +423,48 @@ async def create_upload_url(
         object_key=upload.object_key,
         bucket=upload.bucket,
         expires_in=upload.expires_in,
+        tus_endpoint=settings.sift_tus_url,
+        upload_protocol="s3-presigned",
+    )
+
+
+@router.post(
+    "/collections/{collection_id}/documents/tus",
+    response_model=TusUploadResponse,
+)
+async def create_tus_upload(
+    collection_id: str,
+    body: TusUploadRequest,
+    ctx: Annotated[AuthContext, Depends(require_scopes("documents:write"))],
+    session: Annotated[AsyncSession, Depends(tenant_db)],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> TusUploadResponse:
+    """Return a tus endpoint + reserved object key for resumable upload."""
+    exists = (
+        await session.execute(
+            text("SELECT 1 FROM collections WHERE id = :id AND deleted_at IS NULL"),
+            {"id": collection_id},
+        )
+    ).scalar_one_or_none()
+    if exists is None:
+        raise HTTPException(status_code=404, detail="collection not found")
+    doc_id = new_id(IdKind.DOCUMENT)
+    from sift_api.storage import object_key_for
+
+    key = object_key_for(ctx.tenant_id, doc_id, body.filename)
+    endpoint = settings.sift_tus_url.rstrip("/") + "/"
+    return TusUploadResponse(
+        tus_endpoint=endpoint,
+        upload_url=endpoint,
+        object_key=key,
+        doc_id=doc_id,
+        metadata={
+            "filename": body.filename,
+            "filetype": body.content_type,
+            "tenant_id": ctx.tenant_id,
+            "doc_id": doc_id,
+            "object_key": key,
+        },
     )
 
 

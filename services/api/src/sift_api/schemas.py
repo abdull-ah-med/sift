@@ -94,6 +94,22 @@ class UploadUrlResponse(StrictModel):
     object_key: str
     bucket: str
     expires_in: int = 3600
+    tus_endpoint: str | None = None
+    upload_protocol: str = "s3-presigned"
+
+
+class TusUploadRequest(StrictModel):
+    filename: str = Field(min_length=1, max_length=512)
+    content_type: str = Field(min_length=1, max_length=200)
+    content_length: int = Field(gt=0, le=100 * 1024 * 1024)
+
+
+class TusUploadResponse(StrictModel):
+    tus_endpoint: str
+    upload_url: str
+    object_key: str
+    doc_id: str
+    metadata: dict[str, str]
 
 
 class DocumentRegister(StrictModel):

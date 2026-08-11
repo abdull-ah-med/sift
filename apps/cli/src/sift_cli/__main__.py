@@ -13,6 +13,8 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from sift_cli.device_login import cli_client_id_from_env, device_login, issuer_from_env
+
 app = typer.Typer(name="sift", help="sift document intelligence CLI", no_args_is_help=True)
 console = Console()
 
@@ -31,43 +33,61 @@ def _save_config(data: dict[str, Any]) -> None:
     CONFIG_PATH.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
-def _client() -> httpx.Client:
-    cfg = _load_config()
-    headers: dict[str, str] = {}
-    if cfg.get("api_key"):
-        headers["X-Api-Key"] = str(cfg["api_key"])
-    base = str(cfg.get("api_url", "http://127.0.0.1:8000"))
-    return httpx.Client(base_url=base, headers=headers, timeout=60.0)
-
-
 @app.command()
 def login(
     api_key: str | None = typer.Option(None, "--api-key", help="Store an API key (local/dev)"),
     api_url: str = typer.Option("http://127.0.0.1:8000", "--api-url"),
+    bearer: bool = typer.Option(False, "--bearer", help="Prefer storing OAuth access token"),
 ) -> None:
-    """Authenticate. Phase 1: store API key; Zitadel device flow when issuer is configured."""
+    """Authenticate via API key or Zitadel device flow."""
     cfg = _load_config()
     cfg["api_url"] = api_url
     if api_key:
         cfg["api_key"] = api_key
+        cfg.pop("access_token", None)
         _save_config(cfg)
         console.print(f"[green]Saved API key to {CONFIG_PATH}[/green]")
         return
-    issuer = os.environ.get("SIFT_ZITADEL_ISSUER", "")
-    if not issuer:
+
+    issuer = issuer_from_env()
+    client_id = cli_client_id_from_env()
+    # Allow values from zitadel-dev.env without exporting.
+    env_file = Path(__file__).resolve().parents[4] / "deploy" / "compose" / "zitadel-dev.env"
+    if env_file.is_file():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k, v)
+        issuer = issuer_from_env() or issuer
+        client_id = cli_client_id_from_env() or client_id
+    if not issuer or not client_id:
         console.print(
-            "No --api-key and SIFT_ZITADEL_ISSUER unset.\n"
-            "Run: sift login --api-key <raw_key>\n"
-            "Bootstrap: uv run python tools/db/seed/dev_bootstrap.py",
+            "No --api-key and Zitadel not configured.\n"
+            "Run: tools/auth/bootstrap_zitadel.py then export zitadel-dev.env\n"
+            "Or: sift login --api-key <raw_key>",
             style="yellow",
         )
         raise typer.Exit(2)
-    console.print(
-        f"Zitadel issuer {issuer} — open device-login in browser (wire Phase 1.1).\n"
-        "For now use: sift login --api-key <raw_key>",
-        style="yellow",
-    )
-    raise typer.Exit(2)
+    tokens = device_login(issuer=issuer, client_id=client_id, console=console)
+    cfg["access_token"] = tokens["access_token"]
+    if tokens.get("refresh_token"):
+        cfg["refresh_token"] = tokens["refresh_token"]
+    if not bearer:
+        cfg.pop("api_key", None)
+    _save_config(cfg)
+    console.print(f"[green]Saved OAuth access token to {CONFIG_PATH}[/green]")
+
+
+def _client() -> httpx.Client:
+    cfg = _load_config()
+    headers: dict[str, str] = {}
+    if cfg.get("access_token"):
+        headers["Authorization"] = f"Bearer {cfg['access_token']}"
+    elif cfg.get("api_key"):
+        headers["X-Api-Key"] = str(cfg["api_key"])
+    base = str(cfg.get("api_url", "http://127.0.0.1:8000"))
+    return httpx.Client(base_url=base, headers=headers, timeout=60.0)
 
 
 @app.command("config")

@@ -16,11 +16,15 @@ Optional profiles:
 | Profile | Services |
 |---|---|
 | `ml` | TEI embed + rerank (large model download) |
-| `auth` | Zitadel |
+| `auth` | Zitadel + dedicated Postgres 16 (`zitadel-db`) |
 | `obs` | Langfuse + Tempo (OTLP :4318) |
 
+Auth bootstrap (after `--profile auth` is healthy):
+
 ```bash
-docker compose -f deploy/compose/dev.yml --profile ml up -d
+uv run python tools/auth/bootstrap_zitadel.py   # writes deploy/compose/zitadel-dev.env
+set -a && source deploy/compose/zitadel-dev.env && set +a
+# Device login: sift login   (admin: sift-admin@sift.localhost / SiftAdmin1!)
 ```
 
-Production single-node stack: `deploy/compose/prod-single.yml` (Caddy + resource limits).
+Uploads: `tusd` on host `:1080` (`/files/`). Resume E2E: `tools/e2e/test_tus_resume.py`.

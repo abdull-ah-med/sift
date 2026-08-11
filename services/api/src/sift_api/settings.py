@@ -43,6 +43,13 @@ class Settings(BaseSettings):
         alias="SIFT_OTLP_ENDPOINT",
     )
     sift_otel_enabled: bool = Field(default=False, alias="SIFT_OTEL_ENABLED")
+    sift_tus_url: str = Field(
+        default="http://127.0.0.1:1080/files/",
+        alias="SIFT_TUS_URL",
+    )
+    sift_bootstrap_tenant_id: str = Field(default="", alias="SIFT_BOOTSTRAP_TENANT_ID")
+    sift_zitadel_web_client_id: str = Field(default="", alias="SIFT_ZITADEL_WEB_CLIENT_ID")
+    sift_zitadel_cli_client_id: str = Field(default="", alias="SIFT_ZITADEL_CLI_CLIENT_ID")
 
 
 @lru_cache
