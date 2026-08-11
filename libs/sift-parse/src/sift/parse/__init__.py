@@ -10,6 +10,7 @@ from sift.parse.adapter import (
 from sift.parse.digital import DigitalPdfParser
 from sift.parse.errors import MissingModelWeightsError
 from sift.parse.smoke import ParseSmokeResult, run_parse_smoke
+from sift.parse.standard import StandardPdfParser
 
 __all__ = [
     "DigitalPdfParser",
@@ -20,6 +21,7 @@ __all__ = [
     "ParseResult",
     "ParseSmokeResult",
     "Parser",
+    "StandardPdfParser",
     "run_parse_smoke",
 ]
 __version__ = "0.0.0"

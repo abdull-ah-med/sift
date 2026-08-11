@@ -68,6 +68,9 @@ known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_api
 "services/api/src/sift_api/routes/review.py" = ["B008", "PLC0415", "PLR0913"]
 "apps/cli/src/sift_cli/**/*.py" = ["B008"]
 "libs/sift-parse/src/sift/parse/smoke.py" = ["PLC0415"]
+"libs/sift-parse/src/sift/parse/_mapping.py" = ["PLR0911", "PLR0913", "PLR2004"]
+"libs/sift-parse/tests/**/*.py" = ["PLC0415", "PLR2004", "E741"]
+"services/api/tests/**/*.py" = ["PLR2004"]
 "tools/db/seed/**/*.py" = ["E402"]
 "tools/auth/**/*.py" = ["PLR2004"]
 "tools/e2e/**/*.py" = ["PLR2004", "F401"]
@@ -87,7 +90,15 @@ disallow_untyped_defs = true
 exclude = ["vendor/"]
 
 [[tool.mypy.overrides]]
-module = ["boto3.*", "botocore.*", "botocore.client"]
+module = [
+    "boto3.*",
+    "botocore.*",
+    "botocore.client",
+    "sift_parse_core.*",
+    "sift_parse.*",
+    "sift_parse_pdf.*",
+    "sift_parse_models.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
@@ -97,4 +108,5 @@ pythonpath = ["."]
 addopts = "-q --ignore=vendor"
 markers = [
     "slow: tests that need Docker / external services",
+    "integration: needs external services or prefetched model weights",
 ]

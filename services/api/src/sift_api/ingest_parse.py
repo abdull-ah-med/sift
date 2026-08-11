@@ -11,6 +11,7 @@ from sqlalchemy import Connection, text
 from sqlalchemy.engine import Engine
 
 from sift.parse import DigitalPdfParser, ParseConfig, Parser, ParseResult
+from sift.parse._mapping import quality_score_from_confidences
 from sift_core.audit import write_audit_event
 from sift_core.models import ReviewState
 
@@ -19,6 +20,12 @@ class ObjectFetcher(Protocol):
     """Fetch a stored object to a local path for parsing."""
 
     def fetch_to_path(self, *, source_uri: str, dest: Path) -> Path: ...
+
+
+def document_quality_score(result: ParseResult) -> float | None:
+    """Roll up per-block confidences into ``documents.quality_score`` (ADR-0016)."""
+    confidences = [b.confidence for b in result.blocks if b.confidence is not None]
+    return quality_score_from_confidences(confidences)
 
 
 def document_status_after_parse(
@@ -161,13 +168,15 @@ def run_ingest_parse(
             )
             status = document_status_after_parse(result, require_review=require_review)
             finished = datetime.now(UTC)
+            quality = document_quality_score(result)
             conn.execute(
                 text(
                     """
                     UPDATE documents
                     SET status = :status,
                         page_count = :page_count,
-                        needs_review_count = :needs_review
+                        needs_review_count = :needs_review,
+                        quality_score = :quality_score
                     WHERE id = :document_id AND tenant_id = :tenant_id
                     """
                 ),
@@ -175,6 +184,7 @@ def run_ingest_parse(
                     "status": status,
                     "page_count": result.metadata.page_count,
                     "needs_review": needs_review,
+                    "quality_score": quality,
                     "document_id": document_id,
                     "tenant_id": tenant_id,
                 },

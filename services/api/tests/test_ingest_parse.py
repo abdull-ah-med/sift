@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from sift.parse.adapter import DocumentMetadata, Page, ParseResult
-from sift_api.ingest_parse import document_status_after_parse
+from sift_api.ingest_parse import document_quality_score, document_status_after_parse
 from sift_api.storage import parse_seaweed_uri
 from sift_core.ids import IdKind, new_id
 from sift_core.models import (
@@ -15,10 +15,10 @@ from sift_core.models import (
 )
 
 
-def _block(state: ReviewState) -> Block:
+def _block(state: ReviewState, *, confidence: float = 0.99, ordinal: int = 0) -> Block:
     return Block(
         id=new_id(IdKind.BLOCK),
-        ordinal=0,
+        ordinal=ordinal,
         block_type=BlockType.PARAGRAPH,
         text="hello",
         provenance=Provenance(
@@ -27,7 +27,7 @@ def _block(state: ReviewState) -> Block:
             extractor="digital-pdf",
             model_version="pypdfium2",
         ),
-        confidence=0.99,
+        confidence=confidence,
         review_state=state,
     )
 
@@ -73,6 +73,35 @@ def test_document_status_ready_for_review_when_policy_requires() -> None:
         pages=[Page(page_no=1, block_count=1)],
     )
     assert document_status_after_parse(result, require_review=True) == "ready_for_review"
+
+
+def test_document_quality_score_mean_for_small_n() -> None:
+    result = ParseResult(
+        blocks=[
+            _block(ReviewState.APPROVED, confidence=0.8, ordinal=0),
+            _block(ReviewState.APPROVED, confidence=1.0, ordinal=1),
+        ],
+        metadata=DocumentMetadata(source_path="/tmp/x.pdf", page_count=1),
+        pages=[Page(page_no=1, block_count=2)],
+    )
+    assert document_quality_score(result) == 0.9
+
+
+def test_document_quality_score_p10_for_n_ge_5() -> None:
+    confidences = [0.1, 0.5, 0.6, 0.7, 0.9]
+    blocks = [
+        _block(ReviewState.NEEDS_REVIEW, confidence=c, ordinal=i) for i, c in enumerate(confidences)
+    ]
+    result = ParseResult(
+        blocks=blocks,
+        metadata=DocumentMetadata(source_path="/tmp/x.pdf", page_count=1),
+        pages=[Page(page_no=1, block_count=5)],
+    )
+    score = document_quality_score(result)
+    assert score is not None
+    assert score == 0.1
+    needs = sum(1 for b in result.blocks if b.review_state is ReviewState.NEEDS_REVIEW)
+    assert needs == 5
 
 
 def test_parse_seaweed_uri_splits_bucket_and_key() -> None:
