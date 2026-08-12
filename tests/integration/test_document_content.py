@@ -24,7 +24,14 @@ _MINIMAL_PDF = b"%PDF-1.1\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n"
 
 
 @pytest.fixture
-def api_client(migrated_db: Engine, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
+def content_root(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    return tmp_path_factory.mktemp("content-root")
+
+
+@pytest.fixture
+def api_client(
+    migrated_db: Engine, monkeypatch: pytest.MonkeyPatch, content_root: Path
+) -> Iterator[TestClient]:
     raw = os.environ.get("SIFT_PG_DSN") or "postgresql+psycopg://sift:sift@127.0.0.1:5432/sift"
     if raw.startswith("postgresql+psycopg://"):
         async_dsn = "postgresql+asyncpg://" + raw.removeprefix("postgresql+psycopg://")
@@ -34,6 +41,8 @@ def api_client(migrated_db: Engine, monkeypatch: pytest.MonkeyPatch) -> Iterator
         async_dsn = raw
     monkeypatch.setenv("SIFT_API_KEY_PEPPER", PEPPER)
     monkeypatch.setenv("SIFT_PG_DSN", async_dsn)
+    monkeypatch.setenv("SIFT_ALLOW_FILE_CONTENT", "1")
+    monkeypatch.setenv("SIFT_FILE_CONTENT_ROOT", str(content_root))
     get_settings.cache_clear()
     db_mod._STATE.engine = None
     db_mod._STATE.session_factory = None
@@ -143,9 +152,9 @@ def _seed_doc_with_pdf(engine: Engine, pdf_path: Path) -> tuple[str, str, str]:
 
 @pytest.mark.integration
 def test_document_content_unauthenticated_returns_401(
-    api_client: TestClient, migrated_db: Engine, tmp_path: Path
+    api_client: TestClient, migrated_db: Engine, content_root: Path
 ) -> None:
-    pdf = tmp_path / "d.pdf"
+    pdf = content_root / "d.pdf"
     pdf.write_bytes(_MINIMAL_PDF)
     _w, _r, document_id = _seed_doc_with_pdf(migrated_db, pdf)
     response = api_client.get(f"/v1/documents/{document_id}/content")
@@ -154,9 +163,9 @@ def test_document_content_unauthenticated_returns_401(
 
 @pytest.mark.integration
 def test_document_content_wrong_scope_returns_403(
-    api_client: TestClient, migrated_db: Engine, tmp_path: Path
+    api_client: TestClient, migrated_db: Engine, content_root: Path
 ) -> None:
-    pdf = tmp_path / "d.pdf"
+    pdf = content_root / "d.pdf"
     pdf.write_bytes(_MINIMAL_PDF)
     _w, search_raw, document_id = _seed_doc_with_pdf(migrated_db, pdf)
     response = api_client.get(
@@ -168,9 +177,9 @@ def test_document_content_wrong_scope_returns_403(
 
 @pytest.mark.integration
 def test_document_content_wrong_tenant_returns_404(
-    api_client: TestClient, migrated_db: Engine, tmp_path: Path
+    api_client: TestClient, migrated_db: Engine, content_root: Path
 ) -> None:
-    pdf = tmp_path / "d.pdf"
+    pdf = content_root / "d.pdf"
     pdf.write_bytes(_MINIMAL_PDF)
     write_raw, _r, _document_id = _seed_doc_with_pdf(migrated_db, pdf)
     foreign = new_id(IdKind.DOCUMENT)
@@ -183,9 +192,9 @@ def test_document_content_wrong_tenant_returns_404(
 
 @pytest.mark.integration
 def test_document_content_streams_pdf(
-    api_client: TestClient, migrated_db: Engine, tmp_path: Path
+    api_client: TestClient, migrated_db: Engine, content_root: Path
 ) -> None:
-    pdf = tmp_path / "d.pdf"
+    pdf = content_root / "d.pdf"
     pdf.write_bytes(_MINIMAL_PDF)
     write_raw, _r, document_id = _seed_doc_with_pdf(migrated_db, pdf)
     response = api_client.get(

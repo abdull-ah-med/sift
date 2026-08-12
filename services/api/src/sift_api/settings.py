@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     sift_bootstrap_tenant_id: str = Field(default="", alias="SIFT_BOOTSTRAP_TENANT_ID")
     sift_zitadel_web_client_id: str = Field(default="", alias="SIFT_ZITADEL_WEB_CLIENT_ID")
     sift_zitadel_cli_client_id: str = Field(default="", alias="SIFT_ZITADEL_CLI_CLIENT_ID")
+    sift_allow_file_content: bool = Field(default=False, alias="SIFT_ALLOW_FILE_CONTENT")
 
 
 @lru_cache

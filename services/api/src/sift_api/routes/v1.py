@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import asyncio
+import os
+import tempfile
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.background import BackgroundTask
+from starlette.responses import FileResponse
 
 from sift_api.audit_emit import emit_audit
 from sift_api.auth import AuthContext, get_auth_context, require_scopes, tenant_db
@@ -33,12 +39,27 @@ from sift_api.schemas import (
     WhoAmIResponse,
 )
 from sift_api.settings import Settings, get_settings
-from sift_api.storage import create_presigned_put, seaweed_uri
+from sift_api.storage import create_presigned_put, download_object, parse_seaweed_uri, seaweed_uri
 from sift_api.tenant_session import begin_admin_session
 from sift_core.auth.api_keys import mint_api_key
 from sift_core.ids import IdKind, new_id
 
 router = APIRouter(prefix="/v1", tags=["v1"])
+
+
+def _file_content_allowed(path: Path, settings: Settings) -> bool:
+    """Return True when ``path`` is under an allow-listed root (tests/dev)."""
+    if not settings.sift_allow_file_content:
+        return False
+    try:
+        resolved = path.resolve()
+    except OSError:
+        return False
+    env_root = os.environ.get("SIFT_FILE_CONTENT_ROOT")
+    if not env_root:
+        return False
+    root = Path(env_root).resolve()
+    return resolved == root or root in resolved.parents
 
 
 @router.get("/whoami", response_model=WhoAmIResponse)
@@ -684,23 +705,75 @@ async def document_content(
     document_id: str,
     ctx: Annotated[AuthContext, Depends(require_scopes("documents:read"))],
     session: Annotated[AsyncSession, Depends(tenant_db)],
+    settings: Annotated[Settings, Depends(get_settings)],
 ) -> Response:
-    """Stream the source PDF for the review viewer (Phase 2 §4.4).
-
-    TDD stub — real stream lands in the impl commit.
-    """
-    _ = ctx
-    exists = (
-        await session.execute(
-            text("SELECT 1 FROM documents WHERE id = :id AND deleted_at IS NULL"),
-            {"id": document_id},
+    """Stream the source PDF for the review viewer (Phase 2 §4.4)."""
+    row = (
+        (
+            await session.execute(
+                text(
+                    """
+                    SELECT source_uri, source_mime
+                    FROM documents
+                    WHERE id = :id AND deleted_at IS NULL
+                    """
+                ),
+                {"id": document_id},
+            )
         )
-    ).scalar_one_or_none()
-    if exists is None:
+        .mappings()
+        .one_or_none()
+    )
+    if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not found")
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail=f"content stream not wired for {document_id}",
+
+    source_uri = str(row["source_uri"])
+    media_type = str(row["source_mime"] or "application/pdf")
+    cleanup: BackgroundTask | None = None
+
+    if source_uri.startswith("file://"):
+        path = Path(source_uri.removeprefix("file://"))
+        if not path.is_file() or not _file_content_allowed(path, settings):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="content missing")
+    elif source_uri.startswith("seaweed://"):
+        try:
+            _bucket, key = parse_seaweed_uri(source_uri)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="invalid source uri",
+            ) from exc
+        tenant_prefix = f"t/{ctx.tenant_id}/"
+        if not key.startswith(tenant_prefix):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="content missing")
+        fd, tmp_name = tempfile.mkstemp(suffix=".pdf")
+        os.close(fd)
+        tmp_path = Path(tmp_name)
+        try:
+            await asyncio.to_thread(download_object, source_uri=source_uri, dest=tmp_path)
+        except Exception as exc:
+            tmp_path.unlink(missing_ok=True)
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="failed to fetch document content",
+            ) from exc
+        path = tmp_path
+
+        def _cleanup(p: Path = tmp_path) -> None:
+            p.unlink(missing_ok=True)
+
+        cleanup = BackgroundTask(_cleanup)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="unsupported source uri",
+        )
+
+    return FileResponse(
+        path,
+        media_type=media_type,
+        filename=path.name,
+        background=cleanup,
     )
 
 
