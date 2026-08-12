@@ -17,6 +17,7 @@ from starlette.responses import FileResponse
 
 from sift_api.audit_emit import emit_audit
 from sift_api.auth import AuthContext, get_auth_context, require_scopes, tenant_db
+from sift_api.reindex import run_reindex_to_qdrant
 from sift_api.schemas import (
     ApiKeyCreate,
     ApiKeyCreated,
@@ -29,14 +30,19 @@ from sift_api.schemas import (
     JobOut,
     OrganizationCreate,
     OrganizationOut,
+    SearchRequest,
+    SearchResponse,
     TenantCreate,
     TenantOut,
     TusUploadRequest,
     TusUploadResponse,
     UploadUrlRequest,
     UploadUrlResponse,
+    VectorBackendOut,
+    VectorBackendRequest,
     WhoAmIResponse,
 )
+from sift_api.search import run_collection_search
 from sift_api.settings import Settings, get_settings
 from sift_api.storage import (
     create_presigned_put,
@@ -280,6 +286,74 @@ async def list_collections(
         )
         for r in rows
     ]
+
+
+@router.post(
+    "/collections/{collection_id}/search",
+    response_model=SearchResponse,
+)
+async def search_collection(
+    collection_id: str,
+    body: SearchRequest,
+    ctx: Annotated[AuthContext, Depends(require_scopes("search"))],
+) -> SearchResponse:
+    filt = body.filter
+    try:
+        return await asyncio.to_thread(
+            run_collection_search,
+            collection_id=collection_id,
+            tenant_id=ctx.tenant_id,
+            actor=ctx.actor,
+            query=body.query,
+            top_k=body.top_k,
+            document_ids=filt.document_ids if filt else None,
+            tags=filt.tags if filt else None,
+            include_text=body.include_text,
+            include_provenance=body.include_provenance,
+            rerank=body.rerank,
+        )
+    except LookupError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="not found",
+        ) from exc
+
+
+@router.post(
+    "/collections/{collection_id}/vector-backend",
+    response_model=VectorBackendOut,
+)
+async def set_vector_backend(
+    collection_id: str,
+    body: VectorBackendRequest,
+    ctx: Annotated[AuthContext, Depends(require_scopes("documents:write"))],
+) -> VectorBackendOut:
+    if body.backend != "qdrant":
+        # pgvector is the default; switching back is a no-op flag update for now.
+        return VectorBackendOut(
+            collection_id=collection_id,
+            backend="pgvector",
+            points=0,
+            status="ok",
+        )
+    try:
+        result = await asyncio.to_thread(
+            run_reindex_to_qdrant,
+            collection_id=collection_id,
+            tenant_id=ctx.tenant_id,
+            actor=ctx.actor,
+        )
+    except LookupError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="not found",
+        ) from exc
+    return VectorBackendOut(
+        collection_id=collection_id,
+        backend=str(result["backend"]),
+        points=int(result["points"]),
+        status="ok",
+    )
 
 
 @router.get("/collections/{collection_id}", response_model=CollectionOut)

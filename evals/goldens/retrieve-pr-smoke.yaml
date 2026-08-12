@@ -1,0 +1,14 @@
+# Offline retrieve golden (PR-fast subset). ranked_ids are fixture rankings
+# that a correct hybrid stack should approximate; CI scores metrics only.
+collection: policies
+subset: pr
+queries:
+  - query: refund policy for EU customers
+    expected_chunk_ids: [chunk_refund_eu]
+    expected_document_ids: [doc_eu_tc]
+    # Simulated hybrid+rerank ranking for offline gate
+    ranked_ids: [chunk_refund_eu, chunk_other, chunk_noise]
+  - query: late fee schedule
+    expected_chunk_ids: [chunk_late_fee]
+    expected_document_ids: [doc_fees]
+    ranked_ids: [chunk_noise, chunk_late_fee, chunk_other]

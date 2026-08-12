@@ -1,0 +1,37 @@
+name: Evals
+
+on:
+  pull_request:
+    paths:
+      - "libs/sift-retrieve/**"
+      - "libs/sift-eval/**"
+      - "libs/sift-ingest/src/sift_ingest/chunker.py"
+      - "evals/goldens/**"
+      - "evals/retrieve/**"
+      - ".github/workflows/evals.yml"
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evals-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  retrieve-pr:
+    name: Retrieve PR gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Sync
+        run: uv sync --all-packages --group dev
+      - name: Retrieve metrics unit tests
+        run: uv run pytest -q libs/sift-eval/tests evals/retrieve/test_run_offline.py
+      - name: Offline golden score
+        run: uv run python evals/retrieve/run_offline.py --json

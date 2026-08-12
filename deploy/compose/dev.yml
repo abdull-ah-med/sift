@@ -12,8 +12,11 @@ x-sift-env: &sift-env
   SIFT_TUS_URL: http://tusd:8080/files/
   SIFT_ZITADEL_ISSUER: http://localhost:8085
   SIFT_ZITADEL_AUDIENCE: sift-web
-  SIFT_EMBED_URL: http://tei:80
-  SIFT_RERANK_URL: http://tei-rerank:80
+  SIFT_TEI_URL: http://tei:80
+  SIFT_TEI_RERANK_URL: http://tei-rerank:80
+  SIFT_TEI_MODEL: BAAI/bge-m3
+  SIFT_VECTOR_BACKEND: pgvector
+  SIFT_QDRANT_URL: http://qdrant:6333
 
 services:
   postgres:
@@ -120,19 +123,67 @@ services:
         condition: service_healthy
 
   # Optional ML / auth / tracing — enable with: --profile ml / --profile auth / --profile obs
+  # TEI CPU images are large; keep under profile `ml` so default `up` stays light.
+  # Default image is digest-pinned linux/amd64 cpu-1.9. On Apple Silicon / aarch64 override
+  # SIFT_TEI_IMAGE with the arm64 digest in deploy/compose/README.md (never *-latest).
   tei:
     profiles: ["ml"]
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.6
-    command: ["--model-id", "BAAI/bge-m3"]
+    image: ${SIFT_TEI_IMAGE:-ghcr.io/huggingface/text-embeddings-inference@sha256:c26a226262ad4ff3330fb30b76653c1bb65da2fcf413b92284545a010e0a8a48}
+    # Laptop-safe batching; start_period covers first-time model download.
+    command:
+      - "--model-id"
+      - "BAAI/bge-m3"
+      - "--max-batch-tokens"
+      - "16384"
     ports:
       - "8080:80"
+    volumes:
+      - sift-tei:/data
+    environment:
+      HF_HUB_CACHE: /data
+      HUGGINGFACE_HUB_CACHE: /data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:80/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 300s
 
   tei-rerank:
     profiles: ["ml"]
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.6
-    command: ["--model-id", "BAAI/bge-reranker-v2-m3"]
+    image: ${SIFT_TEI_IMAGE:-ghcr.io/huggingface/text-embeddings-inference@sha256:c26a226262ad4ff3330fb30b76653c1bb65da2fcf413b92284545a010e0a8a48}
+    command:
+      - "--model-id"
+      - "BAAI/bge-reranker-v2-m3"
+      - "--max-batch-tokens"
+      - "8192"
     ports:
       - "8081:80"
+    volumes:
+      - sift-tei-rerank:/data
+    environment:
+      HF_HUB_CACHE: /data
+      HUGGINGFACE_HUB_CACHE: /data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://127.0.0.1:80/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 300s
+
+  qdrant:
+    profiles: ["ml"]
+    image: qdrant/qdrant:v1.13.2
+    ports:
+      # Loopback-only: Qdrant has no API auth by default in this compose.
+      - "127.0.0.1:6333:6333"
+    volumes:
+      - sift-qdrant:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/6333'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   zitadel-db:
     profiles: ["auth"]
@@ -223,3 +274,6 @@ volumes:
   sift-seaweed:
   sift-tusd:
   sift-zitadel-pg:
+  sift-tei:
+  sift-tei-rerank:
+  sift-qdrant:

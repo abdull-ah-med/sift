@@ -18,6 +18,7 @@ members = [
     "sift-api",
     "sift-cli",
     "sift-core",
+    "sift-eval",
     "sift-ingest",
     "sift-obs",
     "sift-parse",
@@ -25,6 +26,7 @@ members = [
     "sift-parse-engine",
     "sift-parse-models-engine",
     "sift-parse-pdf-engine",
+    "sift-retrieve",
     "sift-worker",
 ]
 
@@ -3750,6 +3752,7 @@ dependencies = [
     { name = "sift-ingest" },
     { name = "sift-obs" },
     { name = "sift-parse" },
+    { name = "sift-retrieve" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "taskiq" },
     { name = "taskiq-redis" },
@@ -3779,6 +3782,7 @@ requires-dist = [
     { name = "sift-ingest", editable = "libs/sift-ingest" },
     { name = "sift-obs", editable = "libs/sift-obs" },
     { name = "sift-parse", editable = "libs/sift-parse" },
+    { name = "sift-retrieve", editable = "libs/sift-retrieve" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0" },
     { name = "taskiq", specifier = ">=0.11" },
     { name = "taskiq-redis", specifier = ">=1.0" },
@@ -3825,6 +3829,17 @@ requires-dist = [
     { name = "rfc8785", specifier = ">=0.1.4" },
     { name = "sqlalchemy", specifier = ">=2.0" },
 ]
+
+[[package]]
+name = "sift-eval"
+version = "0.0.0"
+source = { editable = "libs/sift-eval" }
+dependencies = [
+    { name = "pyyaml" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pyyaml", specifier = ">=6.0" }]
 
 [[package]]
 name = "sift-ingest"
@@ -4367,6 +4382,23 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pywin32", marker = "sys_platform == 'win32'", specifier = ">=305" },
     { name = "sift-parse-core-engine", editable = "vendor/sift-parse/sift-parse-core" },
+]
+
+[[package]]
+name = "sift-retrieve"
+version = "0.0.0"
+source = { editable = "libs/sift-retrieve" }
+dependencies = [
+    { name = "httpx" },
+    { name = "sift-core" },
+    { name = "sqlalchemy" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx", specifier = ">=0.28" },
+    { name = "sift-core", editable = "libs/sift-core" },
+    { name = "sqlalchemy", specifier = ">=2.0" },
 ]
 
 [[package]]

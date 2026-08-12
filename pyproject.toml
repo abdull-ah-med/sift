@@ -30,6 +30,8 @@ members = [
     "libs/sift-parse",
     "libs/sift-ingest",
     "libs/sift-obs",
+    "libs/sift-retrieve",
+    "libs/sift-eval",
     "services/api",
     "services/worker",
     "apps/cli",
@@ -45,6 +47,8 @@ package = false
 [tool.uv.sources]
 sift-core = { workspace = true }
 sift-parse = { workspace = true }
+sift-retrieve = { workspace = true }
+sift-eval = { workspace = true }
 
 [tool.ruff]
 line-length = 100
@@ -55,7 +59,7 @@ extend-exclude = ["vendor"]
 select = ["E", "F", "I", "UP", "B", "SIM", "PL", "C4", "PT", "RUF"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_api", "sift_worker", "sift_cli"]
+known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_retrieve", "sift_api", "sift_worker", "sift_cli"]
 
 [tool.ruff.lint.per-file-ignores]
 "services/api/src/sift_api/routes/*.py" = ["B008", "PLC0415"]
@@ -63,14 +67,20 @@ known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_api
 "services/api/src/sift_api/main.py" = ["PLC0415"]
 "services/api/src/sift_api/audit_emit.py" = ["PLR0913"]
 "services/api/src/sift_api/storage.py" = ["PLR0913"]
+"services/api/src/sift_api/embed.py" = ["PLR0913", "PLR0915"]
 "services/api/src/sift_api/ingest.py" = ["PLR0913"]
 "services/api/src/sift_api/ingest_parse.py" = ["PLR0913"]
+"services/api/src/sift_api/search.py" = ["PLR0913"]
+"services/api/src/sift_api/reindex.py" = ["PLR0913"]
 "services/api/src/sift_api/routes/review.py" = ["B008", "PLC0415", "PLR0913"]
 "services/api/src/sift_api/checkpointer.py" = ["PLC0415"]
-"apps/cli/src/sift_cli/**/*.py" = ["B008"]
+"apps/cli/src/sift_cli/**/*.py" = ["B008", "PLR0913", "PLR0917"]
+"apps/cli/tests/**/*.py" = ["PLR2004"]
 "libs/sift-parse/src/sift/parse/smoke.py" = ["PLC0415"]
 "libs/sift-parse/src/sift/parse/_mapping.py" = ["PLR0911", "PLR0913", "PLR2004"]
 "libs/sift-parse/tests/**/*.py" = ["PLC0415", "PLR2004", "E741"]
+"tests/integration/**/*.py" = ["PLR2004"]
+"libs/sift-retrieve/tests/**/*.py" = ["PLR2004"]
 "services/api/tests/**/*.py" = ["PLR2004"]
 "tools/db/seed/**/*.py" = ["E402"]
 "tools/auth/**/*.py" = ["PLR2004"]
@@ -78,6 +88,7 @@ known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_api
 "tools/models/prefetch.py" = ["B008"]
 "tools/db/backfill_reparse.py" = ["PLR0913"]
 "evals/**/*.py" = ["PLR2004"]
+"libs/sift-eval/tests/**/*.py" = ["PLR2004"]
 "tests/integration/test_review_api.py" = ["PLR2004"]
 "tests/integration/test_review_langgraph.py" = ["PLR2004"]
 "tests/integration/test_document_content.py" = ["PLR2004"]
@@ -127,6 +138,7 @@ module = [
     "sift_parse_models.*",
     "fast_langdetect.*",
     "sentence_transformers.*",
+    "yaml",
 ]
 ignore_missing_imports = true
 

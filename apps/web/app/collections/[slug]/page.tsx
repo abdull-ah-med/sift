@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 
@@ -12,8 +12,10 @@ type Doc = {
 };
 
 function CollectionDetail() {
+  const route = useParams<{ slug: string }>();
   const params = useSearchParams();
   const collectionId = params.get("id") || "";
+  const slug = route.slug || "detail";
   const [docs, setDocs] = useState<Doc[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [err, setErr] = useState("");
@@ -86,8 +88,17 @@ function CollectionDetail() {
 
   return (
     <>
-      <h1>Collection</h1>
-      <p className="muted">{collectionId || "missing ?id="}</p>
+      <div className="review-header">
+        <div>
+          <h1>Collection</h1>
+          <p className="muted">{collectionId || "missing ?id="}</p>
+        </div>
+        {collectionId ? (
+          <Link href={`/collections/${encodeURIComponent(slug)}/search?id=${encodeURIComponent(collectionId)}`}>
+            Search
+          </Link>
+        ) : null}
+      </div>
       {err ? <p className="err">{err}</p> : null}
       <form className="panel" onSubmit={onUpload}>
         <label>

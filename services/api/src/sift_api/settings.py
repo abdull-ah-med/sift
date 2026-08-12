@@ -49,6 +49,30 @@ class Settings(BaseSettings):
     sift_zitadel_web_client_id: str = Field(default="", alias="SIFT_ZITADEL_WEB_CLIENT_ID")
     sift_zitadel_cli_client_id: str = Field(default="", alias="SIFT_ZITADEL_CLI_CLIENT_ID")
     sift_allow_file_content: bool = Field(default=False, alias="SIFT_ALLOW_FILE_CONTENT")
+    sift_tei_url: str = Field(
+        default="http://127.0.0.1:8080",
+        alias="SIFT_TEI_URL",
+    )
+    sift_tei_rerank_url: str = Field(
+        default="http://127.0.0.1:8081",
+        alias="SIFT_TEI_RERANK_URL",
+    )
+    sift_tei_model: str = Field(
+        default="BAAI/bge-m3",
+        alias="SIFT_TEI_MODEL",
+    )
+    sift_vector_backend: str = Field(
+        default="pgvector",
+        alias="SIFT_VECTOR_BACKEND",
+    )
+    sift_qdrant_url: str = Field(
+        default="http://127.0.0.1:6333",
+        alias="SIFT_QDRANT_URL",
+    )
+    sift_qdrant_api_key: str = Field(
+        default="",
+        alias="SIFT_QDRANT_API_KEY",
+    )
 
 
 @lru_cache
