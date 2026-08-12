@@ -99,8 +99,7 @@ def test_hybrid_retrieve_skips_rerank_when_disabled() -> None:
 def test_hybrid_candidate_limit_grows_with_top_k() -> None:
     dense = MagicMock()
     dense.search.return_value = [
-        RetrieveHit(chunk_id=f"c{i}", document_id="d", score=1.0 - i * 0.001)
-        for i in range(60)
+        RetrieveHit(chunk_id=f"c{i}", document_id="d", score=1.0 - i * 0.001) for i in range(60)
     ]
     bm25 = MagicMock()
     bm25.search.return_value = []
