@@ -223,3 +223,14 @@ class SearchHitOut(StrictModel):
 class SearchResponse(StrictModel):
     results: list[SearchHitOut]
     trace_id: str
+
+
+class VectorBackendRequest(StrictModel):
+    backend: str = Field(pattern="^(pgvector|qdrant)$")
+
+
+class VectorBackendOut(StrictModel):
+    collection_id: str
+    backend: str
+    points: int = 0
+    status: str = "ok"

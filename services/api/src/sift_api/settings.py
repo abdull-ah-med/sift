@@ -61,6 +61,14 @@ class Settings(BaseSettings):
         default="BAAI/bge-m3",
         alias="SIFT_TEI_MODEL",
     )
+    sift_vector_backend: str = Field(
+        default="pgvector",
+        alias="SIFT_VECTOR_BACKEND",
+    )
+    sift_qdrant_url: str = Field(
+        default="http://127.0.0.1:6333",
+        alias="SIFT_QDRANT_URL",
+    )
 
 
 @lru_cache

@@ -21,6 +21,7 @@ from sift_retrieve.rerank import TeiReranker
 from sift_retrieve.rrf import RRF_K, rrf_fuse_scored
 from sift_retrieve.store.bm25 import ParadeBm25Store
 from sift_retrieve.store.pgvector import PgvectorDenseStore
+from sift_retrieve.store.qdrant import QdrantDenseStore
 
 AuditFn = Callable[..., None]
 CANDIDATE_LIMIT = 50
@@ -124,16 +125,21 @@ def _store_search(
     collection_id: str,
     top_k: int,
     document_ids: Sequence[str] | None,
+    dense_hits: list[RetrieveHit] | None = None,
 ) -> tuple[list[RetrieveHit], dict[str, dict[str, Any]]]:
-    """Dense + BM25 + RRF inside an open tenant transaction (no TEI calls)."""
+    """Dense + BM25 + RRF inside an open tenant transaction (no TEI calls).
+
+    When ``dense_hits`` is provided (Qdrant path), skip pgvector and fuse with BM25 only.
+    """
     candidate_limit = max(CANDIDATE_LIMIT, top_k)
-    dense_hits = PgvectorDenseStore(conn).search(
-        query_vector=query_vector,
-        tenant_id=tenant_id,
-        collection_id=collection_id,
-        limit=candidate_limit,
-        document_ids=document_ids,
-    )
+    if dense_hits is None:
+        dense_hits = PgvectorDenseStore(conn).search(
+            query_vector=query_vector,
+            tenant_id=tenant_id,
+            collection_id=collection_id,
+            limit=candidate_limit,
+            document_ids=document_ids,
+        )
     bm25_hits = ParadeBm25Store(conn).search(
         query=query,
         tenant_id=tenant_id,
@@ -185,6 +191,17 @@ def _hybrid_retrieve(
         return [], {}
     q_dense = vectors[0]
 
+    dense_hits: list[RetrieveHit] | None = None
+    if settings.sift_vector_backend == "qdrant":
+        candidate_limit = max(CANDIDATE_LIMIT, top_k)
+        dense_hits = QdrantDenseStore(base_url=settings.sift_qdrant_url).search(
+            query_vector=q_dense,
+            tenant_id=tenant_id,
+            collection_id=collection_id,
+            limit=candidate_limit,
+            document_ids=document_ids,
+        )
+
     with engine.begin() as conn:
         _with_tenant(conn, tenant_id)
         fused, meta = _store_search(
@@ -195,6 +212,7 @@ def _hybrid_retrieve(
             collection_id=collection_id,
             top_k=top_k,
             document_ids=document_ids,
+            dense_hits=dense_hits,
         )
 
     if not rerank or not fused:
