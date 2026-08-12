@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Toaster } from "@sift/ui";
+import { LenisProvider } from "../components/motion/LenisProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
-        {children}
+        <LenisProvider>{children}</LenisProvider>
         <Toaster />
       </body>
     </html>
