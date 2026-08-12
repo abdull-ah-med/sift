@@ -3,58 +3,47 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@sift/ui";
-import { SiteFooter } from "@/components/marketing/SiteFooter";
-import { SiteHeader } from "@/components/marketing/SiteHeader";
+import { toast } from "sonner";
+import { Button, Input, Label } from "@sift/ui";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { INVITE_STORAGE_KEY } from "@/lib/invite";
 
-/** Invite-accept chrome — token field wired to login for MVP. */
+/** Invite-accept chrome — token field wired to login. */
 export default function InvitePage() {
   const router = useRouter();
   const [token, setToken] = useState("");
-  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
     if (!token.trim()) {
-      setMsg("Enter an invite token.");
+      setErr("Enter the invite token from your administrator.");
       return;
     }
     sessionStorage.setItem(INVITE_STORAGE_KEY, token.trim());
-    setMsg("Invite stored. Continue to sign in.");
+    toast.success("Invite stored. Continue to sign in.");
     router.push("/login");
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader />
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-6 px-6 py-16">
-        <Card>
-          <CardHeader>
-            <CardTitle>Accept invite</CardTitle>
-            <CardDescription>Paste the invite token from your administrator.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form className="flex flex-col gap-3" onSubmit={onSubmit}>
-              <label className="flex flex-col gap-1 text-sm">
-                Invite token
-                <Input
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                  placeholder="inv_…"
-                  autoComplete="off"
-                />
-              </label>
-              <Button type="submit">Continue</Button>
-              {msg ? <p className="text-sm text-[rgb(var(--sift-text-muted))]">{msg}</p> : null}
-              <Button variant="ghost" asChild>
-                <Link href="/login">Back to sign in</Link>
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </main>
-      <SiteFooter />
-    </div>
+    <AuthShell title="Accept invite" description="Paste the invite token from your administrator.">
+      <form className="flex flex-col gap-3" onSubmit={onSubmit}>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="invite-token">Invite token</Label>
+          <Input
+            id="invite-token"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+            placeholder="inv_…"
+            autoComplete="off"
+          />
+        </div>
+        {err ? <p className="text-sm text-[rgb(var(--sift-danger))]">{err}</p> : null}
+        <Button type="submit">Continue</Button>
+        <Button variant="ghost" asChild>
+          <Link href="/login">Back to sign in</Link>
+        </Button>
+      </form>
+    </AuthShell>
   );
 }
