@@ -47,6 +47,45 @@ test("landing sections and skip link render", async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByRole("heading", { name: "How it works" })).toBeVisible();
   await expect(page.getByRole("heading", { name: /Open a collection/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Upload", exact: true })).toBeVisible();
+});
+
+test("landing canvas is pure black with a pill navbar", async ({ page }) => {
+  await page.goto("/");
+  const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  expect(background).toBe("rgb(0, 0, 0)");
+  const radius = await page.locator("header > div").first().evaluate((el) => {
+    return getComputedStyle(el).borderRadius;
+  });
+  expect(Number.parseFloat(radius)).toBeGreaterThan(20);
+});
+
+test("landing does not load watermelon CDN, Google auth, or fake uptime", async ({ page }) => {
+  await page.goto("/");
+  const srcs = await page.locator("img").evaluateAll((els) =>
+    els.map((el) => el.getAttribute("src") ?? ""),
+  );
+  expect(srcs.join("\n")).not.toMatch(/watermelon\.sh/i);
+  await expect(page.getByText("99.99%")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /google/i })).toHaveCount(0);
+});
+
+test("Lenis attaches on marketing and not on the app shell", async ({ page }) => {
+  await page.goto("/");
+  await expect.poll(async () => page.locator("html").getAttribute("class")).toMatch(/lenis/);
+  await seedApiKey(page);
+  await mockWorkspace(page);
+  await page.goto("/home");
+  await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
+  await expect(page.locator("html")).not.toHaveClass(/lenis/);
+});
+
+test("Lenis is stopped when the user prefers reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect
+    .poll(async () => page.locator("html").getAttribute("class") ?? "")
+    .toMatch(/lenis-stopped/);
 });
 
 test("login and signup chrome render", async ({ page }) => {
@@ -54,9 +93,12 @@ test("login and signup chrome render", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Save API key" })).toBeVisible();
   await expect(page.getByLabel("API key")).toBeVisible();
+  await expect(page.getByRole("button", { name: /google/i })).toHaveCount(0);
+  await expect(page.locator("img[src*='watermelon']")).toHaveCount(0);
 
   await page.goto("/signup");
   await expect(page.getByRole("heading", { name: "Get started" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Continue to sign in" })).toBeVisible();
 });
 
 test("unauthenticated /home redirects to login", async ({ page }) => {

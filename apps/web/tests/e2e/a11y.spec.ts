@@ -32,6 +32,7 @@ async function mockWorkspace(page: Page) {
 }
 
 async function expectNoSeriousAxe(page: Page) {
+  await page.locator("h1").first().waitFor();
   const results = await new AxeBuilder({ page }).analyze();
   const serious = results.violations.filter(
     (v) => v.impact === "serious" || v.impact === "critical",
@@ -47,6 +48,12 @@ test("landing has no serious a11y violations", async ({ page }) => {
 test("login has no serious a11y violations", async ({ page }) => {
   await page.goto("/login");
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await expectNoSeriousAxe(page);
+});
+
+test("signup has no serious a11y violations", async ({ page }) => {
+  await page.goto("/signup");
+  await expect(page.getByRole("heading", { name: "Get started" })).toBeVisible();
   await expectNoSeriousAxe(page);
 });
 
