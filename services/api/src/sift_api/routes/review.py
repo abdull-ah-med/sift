@@ -10,7 +10,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sift_api.audit_emit import emit_audit
 from sift_api.auth import AuthContext, require_scopes, tenant_db
-from sift_api.schemas import BlockOut, BlockPatch, FinalizeOut
+from sift_api.schemas import (
+    BlockOut,
+    BlockPatch,
+    FinalizeOut,
+    ReviewGraphOut,
+    ReviewResumeIn,
+)
 from sift_core.ids import IdKind, new_id
 from sift_core.models import (
     Block,
@@ -488,4 +494,55 @@ async def finalize_document(
         block_count=len(domain_blocks),
         chunk_count=len(chunks),
         needs_review_count=needs,
+    )
+
+
+@router.post("/documents/{document_id}/review/start", response_model=ReviewGraphOut)
+async def review_start(
+    document_id: str,
+    ctx: Annotated[AuthContext, Depends(require_scopes("documents:write"))],
+    session: Annotated[AsyncSession, Depends(tenant_db)],
+) -> ReviewGraphOut:
+    """Start LangGraph document review (interrupt when blocks need review).
+
+    TDD stub — real checkpointer wiring lands in the impl commit.
+    """
+    _ = ctx
+    exists = (
+        await session.execute(
+            text("SELECT 1 FROM documents WHERE id = :id AND deleted_at IS NULL"),
+            {"id": document_id},
+        )
+    ).scalar_one_or_none()
+    if exists is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="document not found")
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail=f"review graph not wired for {document_id}",
+    )
+
+
+@router.post("/documents/{document_id}/review/resume", response_model=ReviewGraphOut)
+async def review_resume(
+    document_id: str,
+    body: ReviewResumeIn,
+    ctx: Annotated[AuthContext, Depends(require_scopes("documents:write"))],
+    session: Annotated[AsyncSession, Depends(tenant_db)],
+) -> ReviewGraphOut:
+    """Resume interrupted LangGraph review with a decision batch.
+
+    TDD stub — real checkpointer wiring lands in the impl commit.
+    """
+    _ = body, ctx
+    exists = (
+        await session.execute(
+            text("SELECT 1 FROM documents WHERE id = :id AND deleted_at IS NULL"),
+            {"id": document_id},
+        )
+    ).scalar_one_or_none()
+    if exists is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="document not found")
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail=f"review graph not wired for {document_id}",
     )

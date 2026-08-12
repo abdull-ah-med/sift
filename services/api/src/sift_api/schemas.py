@@ -174,3 +174,21 @@ class FinalizeOut(StrictModel):
     block_count: int
     chunk_count: int
     needs_review_count: int
+
+
+class ReviewDecision(StrictModel):
+    block_id: str = Field(min_length=1, max_length=64)
+    action: str = Field(min_length=1, max_length=32)
+    text: str | None = Field(default=None, max_length=200_000)
+
+
+class ReviewResumeIn(StrictModel):
+    decisions: list[ReviewDecision] = Field(min_length=1, max_length=500)
+
+
+class ReviewGraphOut(StrictModel):
+    thread_id: str
+    document_id: str
+    status: str
+    pending_block_ids: list[str]
+    block_batch: list[dict[str, Any]] | None = None
