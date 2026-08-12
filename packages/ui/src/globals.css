@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+/* sift design tokens — rules/design-philosophy.mdc §1 / §2 */
+:root {
+  --sift-bg: 34 40 49;
+  --sift-surface: 57 62 70;
+  --sift-accent: 0 173 181;
+  --sift-text: 238 238 238;
+  --sift-text-muted: 238 238 238 / 0.65;
+  --sift-text-disabled: 238 238 238 / 0.35;
+  --sift-border: 238 238 238 / 0.08;
+  --sift-border-strong: 238 238 238 / 0.16;
+  --sift-overlay: 34 40 49 / 0.72;
+  --sift-danger: 244 63 94;
+  --sift-warning: 234 179 8;
+  --sift-success: 34 197 94;
+  --font-sans: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", system-ui, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+
+@theme inline {
+  --color-sift-bg: rgb(var(--sift-bg));
+  --color-sift-surface: rgb(var(--sift-surface));
+  --color-sift-accent: rgb(var(--sift-accent));
+  --color-sift-text: rgb(var(--sift-text));
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}

@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" className="dark">
+      <body className="min-h-screen bg-[rgb(var(--sift-bg))] font-sans text-[rgb(var(--sift-text))] antialiased">
         <nav>
           <Link href="/">sift</Link>
           <Link href="/login">Login</Link>
