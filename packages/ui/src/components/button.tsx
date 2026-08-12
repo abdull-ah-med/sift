@@ -15,6 +15,8 @@ const buttonVariants = cva(
           "bg-[rgb(var(--sift-surface))] text-[rgb(var(--sift-text))] border border-[rgb(var(--sift-border-strong))]",
         ghost: "hover:bg-[rgb(var(--sift-surface))] text-[rgb(var(--sift-text))]",
         link: "text-[rgb(var(--sift-accent))] underline-offset-4 hover:underline",
+        destructive:
+          "border border-[rgb(var(--sift-danger))] bg-transparent text-[rgb(var(--sift-danger))] hover:bg-[rgb(var(--sift-danger))]/10",
       },
       size: {
         default: "h-10 px-4 py-2",

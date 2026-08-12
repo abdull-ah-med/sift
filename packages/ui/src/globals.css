@@ -17,6 +17,28 @@
   --font-sans: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont,
     "Segoe UI", system-ui, sans-serif;
   --font-mono: "SF Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* shadcn semantic aliases. --accent is hover surface, NOT brand teal. */
+  --background: var(--sift-bg);
+  --foreground: var(--sift-text);
+  --card: var(--sift-surface);
+  --card-foreground: var(--sift-text);
+  --popover: var(--sift-surface);
+  --popover-foreground: var(--sift-text);
+  --primary: var(--sift-accent);
+  --primary-foreground: var(--sift-bg);
+  --secondary: var(--sift-surface);
+  --secondary-foreground: var(--sift-text);
+  --muted: var(--sift-surface);
+  --muted-foreground: 238 238 238;
+  --destructive: var(--sift-danger);
+  --border: var(--sift-border);
+  --input: var(--sift-border-strong);
+  --ring: var(--sift-accent);
+  --sidebar: var(--sift-surface);
+  --sidebar-foreground: var(--sift-text);
+  --sidebar-border: var(--sift-border);
+  --sidebar-ring: var(--sift-accent);
 }
 
 @theme inline {
@@ -24,6 +46,23 @@
   --color-sift-surface: rgb(var(--sift-surface));
   --color-sift-accent: rgb(var(--sift-accent));
   --color-sift-text: rgb(var(--sift-text));
+  --color-background: rgb(var(--background));
+  --color-foreground: rgb(var(--foreground));
+  --color-card: rgb(var(--card));
+  --color-primary: rgb(var(--primary));
+  --color-destructive: rgb(var(--destructive));
+  --color-border: rgb(var(--sift-border));
+  --color-ring: rgb(var(--ring));
+  --color-sidebar: rgb(var(--sidebar));
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
