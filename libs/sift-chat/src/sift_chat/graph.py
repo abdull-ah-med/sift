@@ -20,6 +20,7 @@ from sift_chat.deps import (
 from sift_chat.memory import turns_for_verbatim_window
 from sift_chat.prompts import SYSTEM_PROMPT, build_user_prompt
 from sift_chat.schemas import LLMAnswer
+from sift_chat.tracing import timed_node
 
 
 def chat_thread_id(session_id: str) -> str:
@@ -283,15 +284,15 @@ def build_chat_graph(checkpointer: Any, *, deps: ChatGraphDeps) -> Any:
     graph: StateGraph[ChatGraphState, None, ChatGraphState, ChatGraphState] = StateGraph(
         ChatGraphState
     )
-    graph.add_node("hydrate_session", hydrate)
-    graph.add_node("maybe_query_rewrite", rewrite)
-    graph.add_node("retrieve_hybrid", retrieve)
-    graph.add_node("rerank", rerank)
-    graph.add_node("budget_trim_context", budget)
-    graph.add_node("generate_structured", generate)
-    graph.add_node("validate_citations", validate)
-    graph.add_node("interrupt_for_review", review)
-    graph.add_node("persist_turn", persist)
+    graph.add_node("hydrate_session", timed_node("hydrate_session", hydrate))
+    graph.add_node("maybe_query_rewrite", timed_node("maybe_query_rewrite", rewrite))
+    graph.add_node("retrieve_hybrid", timed_node("retrieve_hybrid", retrieve))
+    graph.add_node("rerank", timed_node("rerank", rerank))
+    graph.add_node("budget_trim_context", timed_node("budget_trim_context", budget))
+    graph.add_node("generate_structured", timed_node("generate_structured", generate))
+    graph.add_node("validate_citations", timed_node("validate_citations", validate))
+    graph.add_node("interrupt_for_review", timed_node("interrupt_for_review", review))
+    graph.add_node("persist_turn", timed_node("persist_turn", persist))
 
     graph.add_edge(START, "hydrate_session")
     graph.add_edge("hydrate_session", "maybe_query_rewrite")

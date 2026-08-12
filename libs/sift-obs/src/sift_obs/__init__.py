@@ -11,6 +11,20 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
+from sift_obs.chat_metrics import record_insufficient, record_phase_latency
+from sift_obs.langfuse_chat import chat_turn_trace
+from sift_obs.langfuse_chat import span as langfuse_span
+
+__all__ = [
+    "chat_turn_trace",
+    "get_logger",
+    "langfuse_span",
+    "record_insufficient",
+    "record_phase_latency",
+    "setup_logging",
+    "setup_tracing",
+]
+
 
 def setup_tracing(*, service_name: str, otlp_endpoint: str) -> None:
     """Configure a TracerProvider exporting OTLP/HTTP to Tempo (or compatible)."""

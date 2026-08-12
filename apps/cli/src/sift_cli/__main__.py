@@ -13,6 +13,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from sift_cli.chat import parse_sse_chunk
 from sift_cli.device_login import cli_client_id_from_env, device_login, issuer_from_env
 from sift_cli.search import (
     format_search_json,
@@ -299,6 +300,89 @@ def search(
         )
     console.print(table)
     console.print(f"[dim]trace_id={payload.get('trace_id', '')}[/dim]")
+
+
+@app.command()
+def chat(  # noqa: PLR0912,PLR0915 — CLI REPL surface
+    collection: str = typer.Argument(..., help="Collection slug or id"),
+    question: str | None = typer.Argument(None, help="One-shot question"),
+    interactive: bool = typer.Option(False, "--interactive", "-i", help="REPL mode"),
+) -> None:
+    """Collection-scoped RAG chat (SSE). Use --interactive for a REPL."""
+    if not interactive and not question:
+        console.print("Provide a question or pass --interactive", style="red")
+        raise typer.Exit(2)
+
+    def _resolve_id(client: httpx.Client) -> str:
+        if looks_like_collection_id(collection):
+            return collection
+        listed = client.get("/v1/collections")
+        listed.raise_for_status()
+        return resolve_collection_id(listed.json(), collection)
+
+    def _run_once(client: httpx.Client, collection_id: str, message: str) -> list[str]:
+        cites: list[str] = []
+        with client.stream(
+            "POST",
+            f"/v1/collections/{collection_id}/chat",
+            json={"message": message},
+            timeout=120.0,
+        ) as response:
+            response.raise_for_status()
+            buf = ""
+            for raw in response.iter_text():
+                buf += raw
+                while "\n\n" in buf:
+                    block, buf = buf.split("\n\n", 1)
+                    event, data = parse_sse_chunk(block)
+                    if not data:
+                        continue
+                    if event == "token":
+                        console.print(str(data.get("delta") or ""), end="")
+                    elif event == "citation":
+                        cid = str(data.get("chunk_id") or "")
+                        if cid:
+                            cites.append(cid)
+                    elif event == "done":
+                        console.print()
+                        if data.get("insufficient"):
+                            console.print("[yellow]insufficient[/yellow]")
+        return cites
+
+    with _client() as client:
+        try:
+            collection_id = _resolve_id(client)
+        except LookupError as exc:
+            console.print(str(exc), style="red")
+            raise typer.Exit(1) from exc
+        if interactive:
+            console.print(f"[dim]chat · {collection} (type /cite or /quit)[/dim]")
+            last_cites: list[str] = []
+            while True:
+                try:
+                    line = console.input("[bold]>[/bold] ").strip()
+                except (EOFError, KeyboardInterrupt):
+                    console.print()
+                    break
+                if not line:
+                    continue
+                if line in {"/q", "/quit", "quit", "exit"}:
+                    break
+                if line == "/cite":
+                    if not last_cites:
+                        console.print("[dim]no citations yet[/dim]")
+                    else:
+                        for cid in last_cites:
+                            console.print(f"- {cid}")
+                    continue
+                last_cites = _run_once(client, collection_id, line)
+        else:
+            assert question is not None
+            cites = _run_once(client, collection_id, question)
+            if cites:
+                console.print("[dim]/cite[/dim]")
+                for cid in cites:
+                    console.print(f"- {cid}")
 
 
 def main() -> None:
