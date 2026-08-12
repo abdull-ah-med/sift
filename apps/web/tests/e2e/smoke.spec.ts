@@ -100,6 +100,25 @@ test("login and signup chrome render", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Continue to sign in" })).toBeVisible();
 });
 
+test("login and signup stylesheets return 200", async ({ page, request }) => {
+  for (const path of ["/login", "/signup"] as const) {
+    const nav = await page.goto(path);
+    expect(nav?.ok(), path).toBeTruthy();
+    const hrefs = await page.evaluate(() =>
+      [...document.querySelectorAll('link[rel="stylesheet"], link[rel="preload"][as="style"]')]
+        .map((el) => (el as HTMLLinkElement).href)
+        .filter((href) => href.includes("/_next/")),
+    );
+    expect(hrefs.length, `${path} stylesheet links`).toBeGreaterThan(0);
+    for (const href of hrefs) {
+      const res = await request.get(href);
+      expect(res.status(), `${path} ${href}`).toBe(200);
+    }
+    const color = await page.locator("h1").first().evaluate((el) => getComputedStyle(el).color);
+    expect(color, path).toBe("rgb(238, 238, 238)");
+  }
+});
+
 test("unauthenticated /home redirects to login", async ({ page }) => {
   await page.goto("/home");
   await page.waitForURL("**/login");
