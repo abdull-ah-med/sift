@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -676,6 +676,31 @@ async def delete_document(
             """
         ),
         {"id": document_id, "now": datetime.now(UTC)},
+    )
+
+
+@router.get("/documents/{document_id}/content")
+async def document_content(
+    document_id: str,
+    ctx: Annotated[AuthContext, Depends(require_scopes("documents:read"))],
+    session: Annotated[AsyncSession, Depends(tenant_db)],
+) -> Response:
+    """Stream the source PDF for the review viewer (Phase 2 §4.4).
+
+    TDD stub — real stream lands in the impl commit.
+    """
+    _ = ctx
+    exists = (
+        await session.execute(
+            text("SELECT 1 FROM documents WHERE id = :id AND deleted_at IS NULL"),
+            {"id": document_id},
+        )
+    ).scalar_one_or_none()
+    if exists is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not found")
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail=f"content stream not wired for {document_id}",
     )
 
 

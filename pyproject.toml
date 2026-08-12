@@ -80,6 +80,7 @@ known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_api
 "evals/**/*.py" = ["PLR2004"]
 "tests/integration/test_review_api.py" = ["PLR2004"]
 "tests/integration/test_review_langgraph.py" = ["PLR2004"]
+"tests/integration/test_document_content.py" = ["PLR2004"]
 "services/api/tests/test_review_graph_unit.py" = ["PLR2004"]
 "libs/sift-ingest/src/sift_ingest/chunker.py" = ["PLR0913"]
 "libs/sift-ingest/tests/**/*.py" = ["PLR2004"]
