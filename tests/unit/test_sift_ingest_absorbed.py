@@ -50,9 +50,7 @@ def test_no_longparser_package_imports_in_product_code() -> None:
     pattern = re.compile(r"(?m)^\s*(?:from|import)\s+longparser\b")
     for path in ROOT.rglob("*.py"):
         rel = path.relative_to(ROOT).as_posix()
-        if rel.startswith(
-            ("vendor/", ".venv/", "node_modules/", ".sift-local/", "tests/unit/")
-        ):
+        if rel.startswith(("vendor/", ".venv/", "node_modules/", ".sift-local/", "tests/unit/")):
             continue
         if rel.startswith("docs/") or rel.startswith("LICENSES/"):
             continue

@@ -31,8 +31,8 @@ logger = logging.getLogger(__name__)
 # Pattern to detect math symbols and simple equations in text.
 # Matches Unicode math symbols and simple algebraic patterns like "x = 5".
 _MATH_RE = re.compile(
-    r'[\u2211\u220F\u222B\u221A\u00B1\u2264\u2265\u2248\u2260\u03B1-\u03C9\u03A3]'
-    r'|[a-z]\s*=\s*[a-z0-9]',
+    r"[\u2211\u220F\u222B\u221A\u00B1\u2264\u2265\u2248\u2260\u03B1-\u03C9\u03A3]"
+    r"|[a-z]\s*=\s*[a-z0-9]",
     re.IGNORECASE,
 )
 

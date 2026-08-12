@@ -116,9 +116,7 @@ def resolve_cross_references(
                     continue
                 direction_word = dir_match.group(1).lower()
                 direction = "before" if direction_word in _BEFORE_WORDS else "after"
-                target_id = _find_nearest(
-                    prox_index[kind], chunk.block_ids, blocks, direction
-                )
+                target_id = _find_nearest(prox_index[kind], chunk.block_ids, blocks, direction)
                 if target_id and not any(r.get("target_block_id") == target_id for r in refs):
                     refs.append(
                         {

@@ -18,36 +18,33 @@ RTL_RANGES = [
 
 # Compile regex pattern for RTL detection
 RTL_PATTERN = re.compile(
-    '[' + ''.join(
-        f'\\u{start:04x}-\\u{end:04x}'
-        for start, end in RTL_RANGES
-    ) + ']'
+    "[" + "".join(f"\\u{start:04x}-\\u{end:04x}" for start, end in RTL_RANGES) + "]"
 )
 
 
 def detect_rtl_language(text: str, threshold: float = 0.1) -> bool:
     """
     Detect if text contains significant RTL content.
-    
+
     Args:
         text: Text to analyze
         threshold: Minimum ratio of RTL characters to consider text as RTL
-        
+
     Returns:
         True if text is predominantly RTL
     """
     if not text:
         return False
-    
+
     # Count RTL characters
     rtl_chars = len(RTL_PATTERN.findall(text))
-    
+
     # Count total alphabetic characters (excluding spaces, numbers, punctuation)
     alpha_chars = sum(1 for c in text if c.isalpha())
-    
+
     if alpha_chars == 0:
         return False
-    
+
     rtl_ratio = rtl_chars / alpha_chars
     return rtl_ratio >= threshold
 
@@ -55,37 +52,39 @@ def detect_rtl_language(text: str, threshold: float = 0.1) -> bool:
 def detect_rtl_script(text: str) -> str | None:
     """
     Detect the specific RTL script in text.
-    
+
     Args:
         text: Text to analyze
-        
+
     Returns:
         Script name ('arabic', 'hebrew', 'urdu', etc.) or None
     """
     if not text:
         return None
-    
+
     # Arabic/Urdu detection (same script, different languages)
-    arabic_pattern = re.compile(r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]')
+    arabic_pattern = re.compile(r"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]")
     arabic_count = len(arabic_pattern.findall(text))
-    
+
     # Hebrew detection
-    hebrew_pattern = re.compile(r'[\u0590-\u05FF]')
+    hebrew_pattern = re.compile(r"[\u0590-\u05FF]")
     hebrew_count = len(hebrew_pattern.findall(text))
-    
+
     if arabic_count > hebrew_count and arabic_count > 0:
         # Check for Urdu-specific characters (some unique to Urdu)
-        urdu_specific = re.compile(r'[\u0679\u067E\u0686\u0688\u0691\u0698\u06A9\u06AF\u06BA\u06BE\u06C1\u06C3\u06CC\u06D2]')
+        urdu_specific = re.compile(
+            r"[\u0679\u067E\u0686\u0688\u0691\u0698\u06A9\u06AF\u06BA\u06BE\u06C1\u06C3\u06CC\u06D2]"
+        )
         if urdu_specific.search(text):
-            return 'urdu'
-        return 'arabic'
-    
+            return "urdu"
+        return "arabic"
+
     if hebrew_count > 0:
-        return 'hebrew'
-    
+        return "hebrew"
+
     return None
 
 
 def get_rtl_languages() -> list[str]:
     """Get list of supported RTL language codes."""
-    return ['ar', 'he', 'ur', 'fa', 'ps', 'sd', 'yi', 'dv']
+    return ["ar", "he", "ur", "fa", "ps", "sd", "yi", "dv"]

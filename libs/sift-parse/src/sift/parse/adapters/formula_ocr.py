@@ -31,6 +31,7 @@ def formula_ocr_enabled() -> bool:
 # LaTeX validation utilities
 # ---------------------------------------------------------------------------
 
+
 def validate_latex(s: str) -> bool:
     """Check if a LaTeX string is well-formed enough to use."""
     if not s or not s.strip():
@@ -45,9 +46,9 @@ def validate_latex(s: str) -> bool:
     # Balanced braces
     depth = 0
     for ch in s:
-        if ch == '{':
+        if ch == "{":
             depth += 1
-        elif ch == '}':
+        elif ch == "}":
             depth -= 1
         if depth < 0:
             return False
@@ -56,16 +57,17 @@ def validate_latex(s: str) -> bool:
         return False
 
     # \left / \right parity
-    lefts = len(re.findall(r'\\left[^a-zA-Z]', s))
-    rights = len(re.findall(r'\\right[^a-zA-Z]', s))
+    lefts = len(re.findall(r"\\left[^a-zA-Z]", s))
+    rights = len(re.findall(r"\\right[^a-zA-Z]", s))
     if lefts != rights:
         logger.debug(f"LaTeX \\left/{lefts} != \\right/{rights}")
         return False
 
     # Repeated token check (e.g., "\frac\frac\frac" junk)
-    tokens = re.findall(r'\\[a-zA-Z]+', s)
+    tokens = re.findall(r"\\[a-zA-Z]+", s)
     if len(tokens) > 5:
         from collections import Counter
+
         counts = Counter(tokens)
         most_common_count = counts.most_common(1)[0][1]
         if most_common_count > len(tokens) * 0.6:
@@ -95,6 +97,7 @@ def strip_delimiters(s: str) -> str:
 # Backend ABC
 # ---------------------------------------------------------------------------
 
+
 class LaTeXOCRBackend(ABC):
     """Abstract base for LaTeX OCR backends."""
 
@@ -113,6 +116,7 @@ class LaTeXOCRBackend(ABC):
 # pix2tex backend (CC BY-NC-SA weights — non-commercial only)
 # ---------------------------------------------------------------------------
 
+
 class Pix2TexBackend(LaTeXOCRBackend):
     """pix2tex / LaTeX-OCR backend (~30MB, ~20ms/eq on CPU)."""
 
@@ -122,14 +126,17 @@ class Pix2TexBackend(LaTeXOCRBackend):
     def load(self) -> bool:
         try:
             import torch
+
             torch.set_num_threads(int(os.getenv("SIFT_LATEX_OCR_THREADS", "2")))
 
             from pix2tex.cli import LatexOCR
+
             self._model = LatexOCR()
 
             try:
                 # Pre-warm with dummy inference (safe to fail)
                 from PIL import Image
+
                 dummy = Image.new("RGB", (64, 64), color="white")
                 self._model(dummy)
             except Exception as e:
@@ -159,6 +166,7 @@ class Pix2TexBackend(LaTeXOCRBackend):
 # UniMERNet backend (Apache 2.0 — commercial safe)
 # ---------------------------------------------------------------------------
 
+
 class UniMERNetBackend(LaTeXOCRBackend):
     """UniMERNet-tiny backend (~441MB, Apache 2.0)."""
 
@@ -168,6 +176,7 @@ class UniMERNetBackend(LaTeXOCRBackend):
     def load(self) -> bool:
         try:
             import torch
+
             torch.set_num_threads(int(os.getenv("SIFT_LATEX_OCR_THREADS", "2")))
 
             from unimernet.common.config import Config
@@ -210,6 +219,7 @@ class UniMERNetBackend(LaTeXOCRBackend):
 # ---------------------------------------------------------------------------
 # Main singleton
 # ---------------------------------------------------------------------------
+
 
 class LaTeXOCR:
     """Thread-safe singleton LaTeX OCR with pluggable backend.
@@ -297,6 +307,7 @@ class LaTeXOCR:
 # MFD: Math Formula Detector (page-level, pix2text YOLO-based)
 # ---------------------------------------------------------------------------
 
+
 class MFDBackend:
     """Thread-safe singleton for page-level math formula detection.
 
@@ -338,6 +349,7 @@ class MFDBackend:
             return inst
 
         from pathlib import Path as _Path
+
         model_dir_path = _Path(model_dir)
         if not model_dir_path.exists():
             logger.warning(f"MFD model dir not found: {model_dir}. MFD disabled.")
@@ -355,6 +367,7 @@ class MFDBackend:
         model_path = candidates[0]
         try:
             from pix2text.formula_detector import MathFormulaDetector
+
             # Pass model_path directly → prepare_model_files() is never called
             inst._mfd = MathFormulaDetector(
                 model_path=model_path,
@@ -395,6 +408,7 @@ class MFDBackend:
             return []
         try:
             import numpy as np
+
             raw = self._mfd.detect(page_img, threshold=threshold)
             boxes = []
             for r in raw:
@@ -406,17 +420,24 @@ class MFDBackend:
                 area = (x1 - x0) * (y1 - y0)
                 if area < min_area_px:
                     continue
-                boxes.append({
-                    "x0": x0, "y0": y0, "x1": x1, "y1": y1,
-                    "type": r.get("type", "isolated"),
-                    "score": float(r.get("score", 1.0)),
-                })
+                boxes.append(
+                    {
+                        "x0": x0,
+                        "y0": y0,
+                        "x1": x1,
+                        "y1": y1,
+                        "type": r.get("type", "isolated"),
+                        "score": float(r.get("score", 1.0)),
+                    }
+                )
             # Priority: isolated > larger area > higher confidence
-            boxes.sort(key=lambda b: (
-                0 if b["type"] == "isolated" else 1,
-                -((b["x1"] - b["x0"]) * (b["y1"] - b["y0"])),
-                -b["score"],
-            ))
+            boxes.sort(
+                key=lambda b: (
+                    0 if b["type"] == "isolated" else 1,
+                    -((b["x1"] - b["x0"]) * (b["y1"] - b["y0"])),
+                    -b["score"],
+                )
+            )
             return boxes[:max_boxes]
         except Exception as e:
             logger.warning(f"MFD detect error: {e}")

@@ -61,7 +61,7 @@ def score_chunks(chunks: list[Chunk], blocks: list[Block]) -> list[Chunk]:
         base_score = weighted_sum / total_weight if total_weight > 0 else 0.5
 
         text = chunk.text_raw
-        noise_chars = sum(1 for c in text if not (c.isalnum() or c in ' .,;:!?()-"\'\n\t'))
+        noise_chars = sum(1 for c in text if not (c.isalnum() or c in " .,;:!?()-\"'\n\t"))
         noise_ratio = noise_chars / max(len(text), 1)
         penalty = min(noise_ratio * 2.0, 0.5)
 

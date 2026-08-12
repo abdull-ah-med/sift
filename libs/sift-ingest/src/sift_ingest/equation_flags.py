@@ -11,10 +11,7 @@ logger = logging.getLogger(__name__)
 
 _GREEK = set("αβγδεζηθικλμνξοπρστυφχψωΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ")
 _MATH_SYMBOLS = set("∑∏∫∂∇±×÷≤≥≠≈∞∈∉⊂⊃⊆⊇∪∩∧∨¬⊕⊗→←↔⇒⇐⇔∀∃∅⟨⟩⟦⟧")
-_SUB_SUPER = set(
-    "₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₔₕₖₗₘₙₚₛₜ"
-    "⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱ"
-)
+_SUB_SUPER = set("₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₔₕₖₗₘₙₚₛₜ⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱ")
 _MATH_CHARS = _GREEK | _MATH_SYMBOLS | _SUB_SUPER
 
 _EQ_PATTERNS = [

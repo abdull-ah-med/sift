@@ -14,6 +14,7 @@ def _get_model(model_name: str = "all-MiniLM-L6-v2") -> object | None:
     if model_name not in _models:
         try:
             from sentence_transformers import SentenceTransformer
+
             _models[model_name] = SentenceTransformer(model_name)
             logger.info("Loaded semantic chunking model: %s", model_name)
         except ImportError:
@@ -28,11 +29,11 @@ def find_semantic_boundaries(
     model_name: str = "all-MiniLM-L6-v2",
 ) -> list[int]:
     """Find semantic boundaries in a list of texts.
-    
+
     Args:
         texts: List of block texts in reading order.
         threshold: Cosine similarity threshold. Drops below this indicate a shift.
-        
+
     Returns:
         List of block indices where a semantic shift occurs (the boundary is *before* the index).
     """
@@ -56,9 +57,9 @@ def find_semantic_boundaries(
         return float(np.dot(a, b) / (norm_a * norm_b))
 
     boundaries = []
-    
+
     for i in range(len(embeddings) - 1):
-        sim = cosine_sim(embeddings[i], embeddings[i+1])
+        sim = cosine_sim(embeddings[i], embeddings[i + 1])
         if sim < threshold:
             # Shift occurs before block i+1
             boundaries.append(i + 1)
