@@ -17,6 +17,7 @@ _ALLOW_HYPHEN = re.compile(
     r"services/api/pyproject\.toml$|\.gitleaks\.toml$|"
     r"uv\.lock$|tests/unit/test_sift_ingest_absorbed\.py$|"
     r"tests/unit/test_vendor_parse_pins\.py$|"
+    r"tests/unit/test_phase2_exit_gates\.py$|"
     r"vendor/sift-parse/VENDOR\.md$)"
 )
 
