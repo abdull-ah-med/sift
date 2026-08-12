@@ -28,6 +28,7 @@ def test_all_citations_dropped_marks_insufficient() -> None:
     out = validate_citations(answer, retrieved_chunk_ids=["chunk_a"])
     assert out.cited_chunk_ids == []
     assert out.insufficient is True
+    assert out.text == ""
 
 
 def test_grounded_claim_without_citations_insufficient() -> None:
@@ -39,6 +40,7 @@ def test_grounded_claim_without_citations_insufficient() -> None:
     )
     out = validate_citations(answer, retrieved_chunk_ids=["chunk_a"])
     assert out.insufficient is True
+    assert out.text == ""
 
 
 def test_empty_retrieval_preserves_explicit_insufficient() -> None:

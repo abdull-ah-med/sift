@@ -155,3 +155,82 @@ def test_chat_session_create_list_delete_happy(
         headers={"X-Api-Key": chat_raw},
     )
     assert deleted.status_code in (HTTPStatus.OK, HTTPStatus.NO_CONTENT)
+
+
+def test_chat_session_other_user_key_cannot_get_or_delete(
+    api_client: TestClient, migrated_db: Engine
+) -> None:
+    """Within-tenant IDOR guard: session access requires matching user_sub/actor."""
+    org_id = new_id(IdKind.ORGANIZATION)
+    tenant_id = new_id(IdKind.TENANT)
+    collection_id = new_id(IdKind.COLLECTION)
+    key_a = mint_api_key(PEPPER.encode())
+    key_b = mint_api_key(PEPPER.encode())
+    now = datetime.now(UTC)
+    with migrated_db.begin() as conn:
+        conn.execute(text("SET LOCAL ROLE sift_admin"))
+        conn.execute(
+            text("INSERT INTO organizations (id, name, slug, created_at) VALUES (:id,'O',:s,:n)"),
+            {"id": org_id, "s": f"o-{org_id[-8:].lower()}", "n": now},
+        )
+        conn.execute(
+            text(
+                "INSERT INTO tenants (id, organization_id, name, slug, created_at) "
+                "VALUES (:id,:org,'T',:s,:n)"
+            ),
+            {"id": tenant_id, "org": org_id, "s": f"t-{tenant_id[-8:].lower()}", "n": now},
+        )
+        conn.execute(
+            text(
+                "INSERT INTO collections (id, tenant_id, name, slug, created_at) "
+                "VALUES (:id,:tid,'C',:s,:n)"
+            ),
+            {
+                "id": collection_id,
+                "tid": tenant_id,
+                "s": f"c-{collection_id[-8:].lower()}",
+                "n": now,
+            },
+        )
+        for name, minted in (("chat-a", key_a), ("chat-b", key_b)):
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO api_keys (
+                      id, tenant_id, name, hash, hash_version, prefix, scopes,
+                      created_by, created_at
+                    ) VALUES (
+                      :id, :tenant_id, :name, :hash, 1, :prefix, :scopes, 'test', :now
+                    )
+                    """
+                ),
+                {
+                    "id": new_id(IdKind.API_KEY),
+                    "tenant_id": tenant_id,
+                    "name": name,
+                    "hash": minted.hash,
+                    "prefix": minted.prefix,
+                    "scopes": ["chat"],
+                    "now": now,
+                },
+            )
+
+    created = api_client.post(
+        f"/v1/collections/{collection_id}/chat/sessions",
+        headers={"X-Api-Key": key_a.raw},
+        json={"title": "A only"},
+    )
+    assert created.status_code in (HTTPStatus.OK, HTTPStatus.CREATED)
+    session_id = created.json()["id"]
+
+    denied_get = api_client.get(
+        f"/v1/chat/sessions/{session_id}",
+        headers={"X-Api-Key": key_b.raw},
+    )
+    assert denied_get.status_code == HTTPStatus.NOT_FOUND
+
+    denied_del = api_client.delete(
+        f"/v1/chat/sessions/{session_id}",
+        headers={"X-Api-Key": key_b.raw},
+    )
+    assert denied_del.status_code == HTTPStatus.NOT_FOUND

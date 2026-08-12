@@ -16,7 +16,7 @@ type KeyRow = {
 export default function ApiKeysPage() {
   const [rows, setRows] = useState<KeyRow[] | null>(null);
   const [name, setName] = useState("");
-  const [scopes, setScopes] = useState("documents:read,documents:write");
+  const [scopes, setScopes] = useState("documents:read,documents:write,search,chat");
   const [created, setCreated] = useState("");
   const [err, setErr] = useState("");
 

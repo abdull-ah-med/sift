@@ -88,7 +88,7 @@ export default function CollectionsPage() {
                 <td>{c.name}</td>
                 <td className="muted">{c.slug}</td>
                 <td>
-                  <Link href={`/collections/${c.slug}?id=${c.id}`}>Open</Link>
+                  <Link href={`/collections/${encodeURIComponent(c.slug)}?id=${c.id}`}>Open</Link>
                 </td>
               </tr>
             ))}

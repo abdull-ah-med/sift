@@ -14,16 +14,17 @@ def validate_citations(
 ) -> LLMAnswer:
     """Keep only ``cited_chunk_ids`` present in the retrieval set.
 
-    If all citations are dropped, mark ``insufficient=True``. An answer that
-    cites nothing while claiming a grounded reply is also marked insufficient
-    when the retrieval set was non-empty and the model did not already refuse.
+    If all citations are dropped, mark ``insufficient=True`` and clear ``text``
+    so unsupported claims are never persisted or streamed.
     """
     allowed = set(retrieved_chunk_ids)
     kept = [cid for cid in answer.cited_chunk_ids if cid in allowed]
     insufficient = bool(answer.insufficient)
+    text = answer.text
 
     if answer.cited_chunk_ids and not kept:
         insufficient = True
+        text = ""
     elif (
         not kept
         and allowed
@@ -33,5 +34,8 @@ def validate_citations(
     ):
         # Grounded claim without citations when chunks were available.
         insufficient = True
+        text = ""
 
-    return answer.model_copy(update={"cited_chunk_ids": kept, "insufficient": insufficient})
+    return answer.model_copy(
+        update={"cited_chunk_ids": kept, "insufficient": insufficient, "text": text}
+    )

@@ -351,6 +351,11 @@ def _token_deltas(text: str) -> Iterator[str]:
         yield buf
 
 
+def _actor_sub(ctx: AuthContext) -> str:
+    """Stable per-user key for session ownership (OIDC sub or API-key actor)."""
+    return ctx.user_sub or ctx.actor
+
+
 async def _ensure_collection(
     session: AsyncSession,
     collection_id: str,
@@ -379,7 +384,7 @@ async def create_chat_session(
     await _ensure_collection(session, collection_id)
     session_id = new_id(IdKind.SESSION)
     now = datetime.now(UTC)
-    user_sub = ctx.user_sub or ctx.actor
+    user_sub = _actor_sub(ctx)
     await session.execute(
         text(
             """
@@ -427,7 +432,7 @@ async def list_chat_sessions(
     session: Annotated[AsyncSession, Depends(tenant_db)],
 ) -> list[ChatSessionOut]:
     await _ensure_collection(session, collection_id)
-    user_sub = ctx.user_sub or ctx.actor
+    user_sub = _actor_sub(ctx)
     rows = (
         (
             await session.execute(
@@ -465,6 +470,7 @@ async def get_chat_session(
     ctx: Annotated[AuthContext, Depends(require_scopes("chat"))],
     session: Annotated[AsyncSession, Depends(tenant_db)],
 ) -> ChatSessionDetail:
+    user_sub = _actor_sub(ctx)
     row = (
         (
             await session.execute(
@@ -472,10 +478,10 @@ async def get_chat_session(
                     """
                     SELECT id, collection_id, title, rolling_summary, created_at, last_message_at
                     FROM chat_sessions
-                    WHERE id = :id AND deleted_at IS NULL
+                    WHERE id = :id AND user_sub = :user_sub AND deleted_at IS NULL
                     """
                 ),
-                {"id": session_id},
+                {"id": session_id, "user_sub": user_sub},
             )
         )
         .mappings()
@@ -527,15 +533,16 @@ async def delete_chat_session(
     ctx: Annotated[AuthContext, Depends(require_scopes("chat"))],
     session: Annotated[AsyncSession, Depends(tenant_db)],
 ) -> None:
+    user_sub = _actor_sub(ctx)
     result = await session.execute(
         text(
             """
             UPDATE chat_sessions
             SET deleted_at = :ts
-            WHERE id = :id AND deleted_at IS NULL
+            WHERE id = :id AND user_sub = :user_sub AND deleted_at IS NULL
             """
         ),
-        {"id": session_id, "ts": datetime.now(UTC)},
+        {"id": session_id, "user_sub": user_sub, "ts": datetime.now(UTC)},
     )
     if result.rowcount == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="session not found")
@@ -581,10 +588,13 @@ async def chat_ask(  # noqa: PLR0915 — SSE orchestration
             text(
                 """
                 SELECT 1 FROM chat_sessions
-                WHERE id = :id AND collection_id = :cid AND deleted_at IS NULL
+                WHERE id = :id
+                  AND collection_id = :cid
+                  AND user_sub = :user_sub
+                  AND deleted_at IS NULL
                 """
             ),
-            {"id": session_id, "cid": collection_id},
+            {"id": session_id, "cid": collection_id, "user_sub": _actor_sub(ctx)},
         ).first()
         if owned is None:
             eng.dispose()
@@ -624,7 +634,7 @@ async def chat_ask(  # noqa: PLR0915 — SSE orchestration
                     "tenant_id": ctx.tenant_id,
                     "collection_id": collection_id,
                     "session_id": session_id,
-                    "user_sub": ctx.user_sub or ctx.actor,
+                    "user_sub": _actor_sub(ctx),
                     "user_message": body.message,
                     "require_review": require_review,
                     "top_k": body.top_k,
@@ -692,6 +702,21 @@ async def chat_resume(
     settings = get_settings()
     eng = _sync_engine(settings)
     try:
+        with eng.begin() as conn:
+            _with_tenant(conn, ctx.tenant_id)
+            owned = conn.execute(
+                text(
+                    """
+                    SELECT 1 FROM chat_sessions
+                    WHERE id = :id AND user_sub = :user_sub AND deleted_at IS NULL
+                    """
+                ),
+                {"id": body.session_id, "user_sub": _actor_sub(ctx)},
+            ).first()
+            if owned is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail="session not found"
+                )
         persister = _PgTurnPersister(engine=eng)
         deps = ChatGraphDeps(
             sessions=_PgSessionStore(engine=eng, turn_limit=settings.sift_chat_turn_limit),
@@ -737,10 +762,15 @@ async def chat_turn_citations(
             await session.execute(
                 text(
                     """
-                    SELECT cited_chunk_ids FROM chat_turns WHERE id = :id
+                    SELECT t.cited_chunk_ids
+                    FROM chat_turns t
+                    JOIN chat_sessions s ON s.id = t.session_id
+                    WHERE t.id = :id
+                      AND s.user_sub = :user_sub
+                      AND s.deleted_at IS NULL
                     """
                 ),
-                {"id": turn_id},
+                {"id": turn_id, "user_sub": _actor_sub(ctx)},
             )
         )
         .mappings()
