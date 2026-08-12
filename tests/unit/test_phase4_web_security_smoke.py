@@ -6,31 +6,64 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
 WEB = REPO / "apps" / "web"
+UI = REPO / "packages" / "ui"
+
+SCAN_ROOTS = [
+    WEB / "app",
+    WEB / "components",
+    WEB / "lib",
+    UI / "src",
+]
 
 
-def test_no_dangerously_set_inner_html_in_chat_or_shell() -> None:
-    roots = [
-        WEB / "components" / "chat",
-        WEB / "components" / "shell",
-        WEB / "components" / "marketing",
-    ]
-    offenders: list[str] = []
-    for root in roots:
-        if not root.is_dir():
+def _iter_source() -> list[Path]:
+    files: list[Path] = []
+    for root in SCAN_ROOTS:
+        if not root.exists():
             continue
-        for path in root.rglob("*.tsx"):
-            text = path.read_text(encoding="utf-8")
-            if "dangerouslySetInnerHTML" in text:
-                offenders.append(str(path.relative_to(REPO)))
+        files.extend(root.rglob("*.tsx"))
+        files.extend(root.rglob("*.ts"))
+    return [p for p in files if "node_modules" not in p.parts]
+
+
+def test_no_dangerously_set_inner_html_in_web_or_ui() -> None:
+    offenders: list[str] = []
+    for path in _iter_source():
+        text = path.read_text(encoding="utf-8")
+        if "dangerouslySetInnerHTML" in text:
+            offenders.append(str(path.relative_to(REPO)))
     assert offenders == []
 
 
-def test_chat_client_does_not_log_raw_message() -> None:
-    client = (WEB / "lib" / "chat" / "client.ts").read_text(encoding="utf-8")
-    runtime = (WEB / "components" / "chat" / "ChatRuntimeProvider.tsx").read_text(encoding="utf-8")
-    for blob in (client, runtime):
+def test_chat_and_ui_helpers_do_not_log_raw_payloads() -> None:
+    watched = [
+        WEB / "lib" / "chat" / "client.ts",
+        WEB / "lib" / "ui-error.ts",
+        WEB / "components" / "chat" / "ChatRuntimeProvider.tsx",
+        WEB / "components" / "chat" / "ChatThread.tsx",
+        WEB / "components" / "chat" / "CitationPanel.tsx",
+        WEB / "components" / "chat" / "SessionList.tsx",
+    ]
+    for path in watched:
+        blob = path.read_text(encoding="utf-8")
         assert "console.log" not in blob
         assert "console.debug" not in blob
+        assert "console.info" not in blob
+
+
+def test_ui_error_helper_does_not_read_response_bodies() -> None:
+    text = (WEB / "lib" / "ui-error.ts").read_text(encoding="utf-8")
+    assert "r.text()" not in text
+    assert ".json()" not in text
+
+
+def test_no_target_blank_without_noopener() -> None:
+    offenders: list[str] = []
+    for path in _iter_source():
+        text = path.read_text(encoding="utf-8")
+        if 'target="_blank"' in text and "noopener" not in text:
+            offenders.append(str(path.relative_to(REPO)))
+    assert offenders == []
 
 
 def test_built_bundle_has_no_secretish_next_public_keys() -> None:
