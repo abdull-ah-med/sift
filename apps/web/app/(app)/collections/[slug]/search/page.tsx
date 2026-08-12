@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { FormEvent, Suspense, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
+import { Button, Input } from "@sift/ui";
 import { apiFetch } from "@/lib/api";
+import { EmptyState, ErrorBanner, LoadingState, PageHeader } from "@/components/shell/PageStates";
 
 type SearchHit = {
   chunk_id: string;
@@ -85,24 +87,26 @@ function SearchPageInner() {
 
   return (
     <>
-      <div className="review-header">
-        <div>
-          <h1>Search · {slug}</h1>
-          <p className="muted">{collectionId || "missing ?id="}</p>
-        </div>
-        <Link
-          href={`/collections/${encodeURIComponent(slug)}?id=${encodeURIComponent(collectionId)}`}
-        >
-          Back to collection
-        </Link>
-      </div>
+      <PageHeader
+        title={`Search · ${slug}`}
+        description={collectionId || "missing ?id="}
+        actions={
+          <Button variant="secondary" size="sm" asChild>
+            <Link
+              href={`/collections/${encodeURIComponent(slug)}?id=${encodeURIComponent(collectionId)}`}
+            >
+              Back
+            </Link>
+          </Button>
+        }
+      />
 
-      {err ? <p className="err">{err}</p> : null}
+      {err ? <ErrorBanner message={err} /> : null}
 
       <form className="panel search-form" onSubmit={onSearch}>
-        <label>
+        <label className="flex flex-col gap-1 text-sm">
           Query
-          <input
+          <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="refund policy for EU customers"
@@ -110,17 +114,13 @@ function SearchPageInner() {
           />
         </label>
         <div className="search-filters">
-          <label>
+          <label className="flex flex-col gap-1 text-sm">
             Tags (comma-separated)
-            <input
-              value={tag}
-              onChange={(e) => setTag(e.target.value)}
-              placeholder="policy"
-            />
+            <Input value={tag} onChange={(e) => setTag(e.target.value)} placeholder="policy" />
           </label>
-          <label>
+          <label className="flex flex-col gap-1 text-sm">
             Top K
-            <input
+            <Input
               type="number"
               min={1}
               max={100}
@@ -129,9 +129,9 @@ function SearchPageInner() {
             />
           </label>
         </div>
-        <button type="submit" disabled={busy || !collectionId || !query.trim()}>
+        <Button type="submit" disabled={busy || !collectionId || !query.trim()}>
           {busy ? "Searching…" : "Search"}
-        </button>
+        </Button>
       </form>
 
       <div className="search-results" role="list">
@@ -178,17 +178,17 @@ function SearchPageInner() {
           );
         })}
         {!busy && searched && hits.length === 0 && !err ? (
-          <p className="muted">No matching chunks.</p>
+          <EmptyState title="No matching chunks" body="Try a broader query or different tags." />
         ) : null}
       </div>
-      {traceId ? <p className="muted">trace_id={traceId}</p> : null}
+      {traceId ? <p className="muted text-xs">trace_id={traceId}</p> : null}
     </>
   );
 }
 
 export default function CollectionSearchPage() {
   return (
-    <Suspense fallback={<p className="muted">Loading…</p>}>
+    <Suspense fallback={<LoadingState />}>
       <SearchPageInner />
     </Suspense>
   );

@@ -26,26 +26,165 @@ a:hover {
   opacity: 0.85;
 }
 
-main {
+/* App shell owns content width; marketing pages size themselves. */
+main:not(.sift-app-main) {
   max-width: 960px;
   margin: 0 auto;
   padding: 2rem 1.25rem 4rem;
 }
 
-main:has(.review-split-pdf) {
+main:not(.sift-app-main):has(.review-split-pdf) {
   max-width: 1280px;
 }
 
-nav {
-  display: flex;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgb(var(--sift-border));
-  background: rgb(var(--sift-surface));
-  font-size: 0.9rem;
+.sift-app-main:has(.review-split-pdf) {
+  max-width: none;
 }
 
-nav a {
+/* Legacy journey helpers until full Tailwind migration of review/search. */
+.muted {
+  color: rgb(var(--sift-text-muted));
+}
+
+.err {
+  color: rgb(var(--sift-danger));
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid rgb(var(--sift-border));
+  border-radius: 0.5rem;
+  background: rgb(var(--sift-surface));
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+th,
+td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgb(var(--sift-border));
+  text-align: left;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+textarea,
+select {
+  border: 1px solid rgb(var(--sift-border-strong));
+  border-radius: 0.375rem;
+  background: rgb(var(--sift-bg));
   color: rgb(var(--sift-text));
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+}
+
+button:not([class]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  border: none;
+  background: rgb(var(--sift-accent));
+  color: rgb(var(--sift-bg));
+  padding: 0.5rem 1rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:not([class]):disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.review-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.search-form {
+  gap: 1rem;
+}
+
+.search-filters {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.search-hit {
+  border: 1px solid rgb(var(--sift-border));
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgb(var(--sift-surface));
+}
+
+.search-hit-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: transparent;
+  border: none;
+  color: inherit;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.search-hit-title {
+  font-weight: 500;
+}
+
+.search-hit-preview {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+}
+
+.search-hit-detail {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgb(var(--sift-border));
+  font-size: 0.875rem;
+}
+
+.search-provenance {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.search-provenance dt {
+  font-size: 0.75rem;
+  color: rgb(var(--sift-text-muted));
+}
+
+.search-provenance dd {
+  margin: 0;
 }
