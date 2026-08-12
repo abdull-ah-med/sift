@@ -31,6 +31,7 @@ members = [
     "libs/sift-ingest",
     "libs/sift-obs",
     "libs/sift-retrieve",
+    "libs/sift-chat",
     "libs/sift-eval",
     "services/api",
     "services/worker",
@@ -48,6 +49,7 @@ package = false
 sift-core = { workspace = true }
 sift-parse = { workspace = true }
 sift-retrieve = { workspace = true }
+sift-chat = { workspace = true }
 sift-eval = { workspace = true }
 
 [tool.ruff]
@@ -59,7 +61,7 @@ extend-exclude = ["vendor"]
 select = ["E", "F", "I", "UP", "B", "SIM", "PL", "C4", "PT", "RUF"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_retrieve", "sift_api", "sift_worker", "sift_cli"]
+known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_retrieve", "sift_chat", "sift_api", "sift_worker", "sift_cli"]
 
 [tool.ruff.lint.per-file-ignores]
 "services/api/src/sift_api/routes/*.py" = ["B008", "PLC0415"]
