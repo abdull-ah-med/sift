@@ -29,6 +29,6 @@ test("app shell collections with API key from env", async ({ page }) => {
 test("chat route shell mounts", async ({ page }) => {
   await page.goto("/collections/demo/chat?id=col_demo");
   await expect(page.getByRole("heading", { name: /Chat/i })).toBeVisible();
-  await expect(page.getByText("Sessions")).toBeVisible();
-  await expect(page.getByText("Citations")).toBeVisible();
+  await expect(page.getByText("Sessions", { exact: true })).toBeVisible();
+  await expect(page.getByText("Citations", { exact: true })).toBeVisible();
 });

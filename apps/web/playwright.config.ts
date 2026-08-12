@@ -7,9 +7,14 @@ export default defineConfig({
     baseURL: "http://127.0.0.1:3000",
   },
   webServer: {
-    command: "pnpm exec next dev -H 127.0.0.1 -p 3000",
+    // apps/web uses output: "standalone" — next start is unsupported.
+    command: "node .next/standalone/apps/web/server.js",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    env: {
+      PORT: "3000",
+      HOSTNAME: "127.0.0.1",
+    },
   },
 });
