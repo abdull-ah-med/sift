@@ -54,11 +54,16 @@ export function AuthShell({
           </motion.div>
         </div>
         <div className="hidden p-4 lg:block">
-          <aside className="relative flex h-full min-h-[32rem] flex-col justify-end overflow-hidden rounded-[2rem] border border-[rgb(var(--sift-border))] bg-[rgb(var(--sift-surface))] p-12">
-            <p className="max-w-md text-3xl font-semibold tracking-tight text-[rgb(var(--sift-text))]">
+          <aside className="relative flex h-full min-h-[32rem] flex-col justify-end overflow-hidden rounded-[2rem] border border-[rgb(var(--sift-border))] p-12">
+            <img
+              src="/noise-gradient.png"
+              alt=""
+              className="absolute inset-0 size-full object-cover"
+            />
+            <p className="relative max-w-md text-3xl font-semibold tracking-tight text-[rgb(var(--sift-text))]">
               Document intelligence you can trust with a sealed contract.
             </p>
-            <p className="mt-4 max-w-md text-sm text-[rgb(var(--sift-text-muted))]">
+            <p className="relative mt-4 max-w-md text-sm text-[rgb(var(--sift-text-muted))]">
               Zitadel for people. API keys for machines. Citations for every answer.
             </p>
           </aside>
