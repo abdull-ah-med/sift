@@ -17,7 +17,7 @@ export function AuthShell({
   children: React.ReactNode;
 }) {
   const reduce = useReducedMotion();
-  const hidden = reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 };
+  const hidden = reduce ? { opacity: 1, y: 0 } : { opacity: 1, y: 16 };
   const visible = { opacity: 1, y: 0 };
 
   return (

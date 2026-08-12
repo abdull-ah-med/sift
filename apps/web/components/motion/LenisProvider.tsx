@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { ReactLenis, type LenisRef } from "lenis/react";
+import { ReactLenis, useLenis } from "lenis/react";
 import "lenis/dist/lenis.css";
 
 const MARKETING_PATHS = new Set(["/", "/privacy", "/terms", "/login", "/signup", "/invite"]);
@@ -32,19 +32,10 @@ function usePrefersReducedMotion(): boolean {
   return reduced;
 }
 
-/**
- * Smooth-scrolls public marketing/auth routes with Lenis.
- * The wrapper is pathname-stable (no remount). Reduced-motion users get
- * `lenis.stop()` so scrolling stays native.
- */
-export function LenisProvider({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
-  const reduced = usePrefersReducedMotion();
-  const lenisRef = useRef<LenisRef>(null);
-  const marketing = isMarketingPath(pathname);
+function LenisReducedMotionGate({ reduced }: { reduced: boolean }) {
+  const lenis = useLenis();
 
   useEffect(() => {
-    const lenis = lenisRef.current?.lenis;
     if (!lenis) {
       return;
     }
@@ -53,14 +44,28 @@ export function LenisProvider({ children }: { children: ReactNode }) {
     } else {
       lenis.start();
     }
-  }, [reduced, marketing]);
+  }, [lenis, reduced]);
+
+  return null;
+}
+
+/**
+ * Smooth-scrolls public marketing/auth routes with Lenis.
+ * The wrapper is pathname-stable (no remount). Reduced-motion users get
+ * `lenis.stop()` once the instance exists.
+ */
+export function LenisProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const reduced = usePrefersReducedMotion();
+  const marketing = isMarketingPath(pathname);
 
   if (!marketing) {
     return children;
   }
 
   return (
-    <ReactLenis root ref={lenisRef} options={{ autoRaf: true, lerp: 0.1 }}>
+    <ReactLenis root options={{ autoRaf: true, lerp: 0.1 }}>
+      <LenisReducedMotionGate reduced={reduced} />
       {children}
     </ReactLenis>
   );

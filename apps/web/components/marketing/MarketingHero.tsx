@@ -10,7 +10,7 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 /** Full-viewport hero — watermelon hero-1 structure, sift copy, no remote image. */
 export function MarketingHero() {
   const reduce = useReducedMotion();
-  const hidden = reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 };
+  const hidden = reduce ? { opacity: 1, y: 0 } : { opacity: 1, y: 24 };
   const visible = { opacity: 1, y: 0 };
 
   return (
