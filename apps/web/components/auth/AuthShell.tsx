@@ -54,12 +54,10 @@ export function AuthShell({
           </motion.div>
         </div>
         <div className="hidden p-4 lg:block">
-          <aside className="relative flex h-full min-h-[32rem] flex-col justify-end overflow-hidden rounded-[2rem] border border-[rgb(var(--sift-border))] p-12">
-            <img
-              src="/noise-gradient.png"
-              alt=""
-              className="absolute inset-0 size-full object-cover"
-            />
+          <aside
+            className="relative flex h-full min-h-[32rem] flex-col justify-end overflow-hidden rounded-[2rem] border border-[rgb(var(--sift-border))] bg-cover bg-center p-12"
+            style={{ backgroundImage: "url('/noise-gradient.png')" }}
+          >
             <p className="relative max-w-md text-3xl font-semibold tracking-tight text-[rgb(var(--sift-text))]">
               Document intelligence you can trust with a sealed contract.
             </p>
