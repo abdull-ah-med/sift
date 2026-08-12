@@ -73,6 +73,14 @@ class Settings(BaseSettings):
         default="",
         alias="SIFT_QDRANT_API_KEY",
     )
+    sift_chat_memory_enabled: bool = Field(
+        default=True,
+        alias="SIFT_CHAT_MEMORY_ENABLED",
+    )
+    sift_chat_turn_limit: int = Field(
+        default=12,
+        alias="SIFT_CHAT_TURN_LIMIT",
+    )
 
 
 @lru_cache

@@ -17,6 +17,7 @@ from sift_chat.deps import (
     hits_to_chunks,
     hits_to_dicts,
 )
+from sift_chat.memory import turns_for_verbatim_window
 from sift_chat.prompts import SYSTEM_PROMPT, build_user_prompt
 from sift_chat.schemas import LLMAnswer
 
@@ -32,7 +33,10 @@ def _hydrate_session(state: ChatGraphState, *, deps: ChatGraphDeps) -> ChatGraph
         tenant_id=state["tenant_id"],
         turn_limit=deps.turn_limit,
     )
-    turns = list(loaded.get("turns") or [])
+    turns = turns_for_verbatim_window(
+        list(loaded.get("turns") or []),
+        limit=deps.turn_limit,
+    )
     history = [
         (str(t.get("role", "user")), str(t.get("content", ""))) for t in turns if t.get("content")
     ]
