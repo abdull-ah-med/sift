@@ -17,7 +17,7 @@ export function Toaster({ theme = "dark", position = "bottom-right", ...props }:
           title: "!text-[rgb(var(--sift-text))]",
           description: "!text-[rgb(var(--sift-text-muted))]",
           actionButton:
-            "!bg-[rgb(var(--sift-accent))] !text-[rgb(var(--sift-bg))]",
+            "!bg-[rgb(var(--sift-accent))] !text-[rgb(34_40_49)]",
           cancelButton:
             "!bg-[rgb(var(--sift-bg))] !text-[rgb(var(--sift-text))]",
         },

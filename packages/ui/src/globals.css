@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "../**/*.{ts,tsx}";
 
 /* sift design tokens — rules/design-philosophy.mdc §1 / §2 */
 :root {

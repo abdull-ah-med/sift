@@ -109,7 +109,7 @@ export default function LoginPage() {
       </form>
       <p className="text-sm text-[rgb(var(--sift-text-muted))]">
         New here?{" "}
-        <Link href="/signup" className="text-[rgb(var(--sift-accent))]">
+        <Link href="/signup" className="underline underline-offset-4">
           Create an account
         </Link>
       </p>
