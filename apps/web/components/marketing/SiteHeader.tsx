@@ -16,11 +16,15 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 px-4 pt-4">
-      <div className="mx-auto flex h-12 max-w-5xl items-center justify-between gap-3 rounded-full border border-[rgb(var(--sift-border-strong))] bg-[rgb(var(--sift-bg))]/80 px-2 pl-5 backdrop-blur-sm">
+      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 rounded-full border border-[rgb(var(--sift-accent))]/35 bg-[rgb(var(--sift-bg))]/80 px-2 pl-5 backdrop-blur-sm">
         <Link
           href="/"
-          className="text-sm font-semibold tracking-tight text-[rgb(var(--sift-text))]"
+          className="inline-flex items-center gap-2 text-sm font-semibold tracking-tight text-[rgb(var(--sift-text))]"
         >
+          <span
+            aria-hidden
+            className="size-1.5 shrink-0 rounded-full bg-[rgb(var(--sift-accent))]"
+          />
           sift
         </Link>
         <nav className="hidden items-center gap-6 text-sm text-[rgb(var(--sift-text-muted))] md:flex">
@@ -56,13 +60,13 @@ export function SiteHeader() {
       {open ? (
         <div
           id="marketing-nav"
-          className="mx-auto mt-2 flex max-w-5xl flex-col gap-1 rounded-lg border border-[rgb(var(--sift-border))] bg-[rgb(var(--sift-surface))] p-3 md:hidden"
+          className="mx-auto mt-2 flex max-w-5xl flex-col gap-1 rounded-2xl border border-[rgb(var(--sift-accent))]/35 bg-[rgb(var(--sift-surface))] p-3 md:hidden"
         >
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-md px-3 py-2 text-sm text-[rgb(var(--sift-text))]"
+              className="rounded-full px-3 py-2 text-sm text-[rgb(var(--sift-text))]"
               onClick={() => setOpen(false)}
             >
               {item.label}
@@ -70,7 +74,7 @@ export function SiteHeader() {
           ))}
           <Link
             href="/login"
-            className="rounded-md px-3 py-2 text-sm text-[rgb(var(--sift-text-muted))] sm:hidden"
+            className="rounded-full px-3 py-2 text-sm text-[rgb(var(--sift-text-muted))] sm:hidden"
             onClick={() => setOpen(false)}
           >
             Sign in
