@@ -9,6 +9,7 @@ dependencies = [
     "sift-parse",
     "sift-ingest",
     "sift-obs",
+    "sift-retrieve",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.34",
     "python-multipart>=0.0.20",
@@ -44,6 +45,7 @@ sift-core = { workspace = true }
 sift-parse = { workspace = true }
 sift-ingest = { workspace = true }
 sift-obs = { workspace = true }
+sift-retrieve = { workspace = true }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

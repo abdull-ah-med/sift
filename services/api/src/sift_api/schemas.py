@@ -192,3 +192,34 @@ class ReviewGraphOut(StrictModel):
     status: str
     pending_block_ids: list[str]
     block_batch: list[dict[str, Any]] | None = None
+
+
+class SearchFilter(StrictModel):
+    tags: list[str] | None = Field(default=None, max_length=50)
+    document_ids: list[str] | None = Field(default=None, max_length=200)
+
+
+class SearchRequest(StrictModel):
+    query: str = Field(min_length=1, max_length=4000)
+    top_k: int = Field(default=10, ge=1, le=100)
+    filter: SearchFilter | None = None
+    include_text: bool = True
+    include_provenance: bool = True
+    rerank: bool = True
+
+
+class SearchHitOut(StrictModel):
+    chunk_id: str
+    document_id: str
+    document_title: str | None = None
+    score: float
+    rerank_score: float | None = None
+    text: str | None = None
+    section_path: list[str] | None = None
+    page_numbers: list[int] | None = None
+    block_ids: list[str] | None = None
+
+
+class SearchResponse(StrictModel):
+    results: list[SearchHitOut]
+    trace_id: str

@@ -67,6 +67,7 @@ known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_ret
 "services/api/src/sift_api/storage.py" = ["PLR0913"]
 "services/api/src/sift_api/ingest.py" = ["PLR0913"]
 "services/api/src/sift_api/ingest_parse.py" = ["PLR0913"]
+"services/api/src/sift_api/search.py" = ["PLR0913"]
 "services/api/src/sift_api/routes/review.py" = ["B008", "PLC0415", "PLR0913"]
 "services/api/src/sift_api/checkpointer.py" = ["PLC0415"]
 "apps/cli/src/sift_cli/**/*.py" = ["B008"]

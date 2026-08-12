@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -13,8 +14,6 @@ from sift_api.search import query_hash, run_collection_search
 
 
 def test_query_hash_is_sha256_hex_not_raw() -> None:
-    import hashlib
-
     digest = query_hash("refund policy SECRET")
     assert digest == hashlib.sha256(b"refund policy SECRET", usedforsecurity=False).hexdigest()
     assert "SECRET" not in digest
@@ -65,11 +64,15 @@ def test_run_collection_search_audits_query_hash_never_raw_query() -> None:
             "text": "refund policy",
         }
     }
+    mock_eng = MagicMock()
+    mock_conn = MagicMock()
+    mock_eng.begin.return_value.__enter__.return_value = mock_conn
+    mock_eng.begin.return_value.__exit__.return_value = None
 
     with (
         patch("sift_api.search._collection_exists", return_value=True),
-        patch("sift_api.search._hybrid_retrieve", return_value=hits),
-        patch("sift_api.search._load_hit_meta", return_value=meta),
+        patch("sift_api.search._hybrid_retrieve", return_value=(hits, meta)),
+        patch("sift_api.search._resolve_document_ids", return_value=None),
     ):
         result = run_collection_search(
             collection_id="col_1",
@@ -82,6 +85,7 @@ def test_run_collection_search_audits_query_hash_never_raw_query() -> None:
             include_text=True,
             include_provenance=True,
             rerank=False,
+            engine=mock_eng,
             audit=fake_audit,
         )
 

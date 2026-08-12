@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Protocol
 
-from sift_retrieve.rrf import RRF_K, rrf_fuse
+from sift_retrieve.rrf import RRF_K, rrf_fuse_scored
 
 CANDIDATE_LIMIT = 50
 
@@ -20,12 +20,32 @@ class RetrieveHit:
     text: str | None = None
 
 
-class _Searcher(Protocol):
-    def search(self, **kwargs: Any) -> list[RetrieveHit]: ...
+class _DenseSearcher(Protocol):
+    def search(
+        self,
+        *,
+        query_vector: Sequence[float],
+        tenant_id: str,
+        collection_id: str,
+        limit: int = 50,
+        document_ids: Sequence[str] | None = None,
+    ) -> list[RetrieveHit]: ...
+
+
+class _Bm25Searcher(Protocol):
+    def search(
+        self,
+        *,
+        query: str,
+        tenant_id: str,
+        collection_id: str,
+        limit: int = 50,
+        document_ids: Sequence[str] | None = None,
+    ) -> list[RetrieveHit]: ...
 
 
 class _Embedder(Protocol):
-    def embed(self, texts: list[str], **kwargs: Any) -> list[list[float]]: ...
+    def embed(self, texts: list[str], *, batch_size: int = 64) -> list[list[float]]: ...
 
 
 class _Reranker(Protocol):
@@ -43,8 +63,8 @@ class HybridRetriever:
     def __init__(
         self,
         *,
-        dense: _Searcher,
-        bm25: _Searcher,
+        dense: _DenseSearcher,
+        bm25: _Bm25Searcher,
         tei: _Embedder,
         reranker: _Reranker | None = None,
         load_texts: Callable[[list[str]], dict[str, str]] | None = None,
@@ -93,7 +113,7 @@ class HybridRetriever:
             if prev is None or hit.score > prev.score:
                 by_id[hit.chunk_id] = hit
 
-        fused_ids = rrf_fuse(
+        fused_scored = rrf_fuse_scored(
             [
                 [h.chunk_id for h in dense_hits],
                 [h.chunk_id for h in bm25_hits],
@@ -101,7 +121,16 @@ class HybridRetriever:
             k=RRF_K,
             limit=candidate_limit,
         )
-        fused = [by_id[cid] for cid in fused_ids if cid in by_id]
+        fused = [
+            RetrieveHit(
+                chunk_id=cid,
+                document_id=by_id[cid].document_id,
+                score=rrf_score,
+                text=by_id[cid].text,
+            )
+            for cid, rrf_score in fused_scored
+            if cid in by_id
+        ]
 
         if not rerank or self._reranker is None or not fused:
             return fused[:top_k]
