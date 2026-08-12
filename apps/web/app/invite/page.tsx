@@ -39,8 +39,10 @@ export default function InvitePage() {
           />
         </div>
         {err ? <p className="text-sm text-[rgb(var(--sift-danger))]">{err}</p> : null}
-        <Button type="submit">Continue</Button>
-        <Button variant="ghost" asChild>
+        <Button type="submit" className="w-full">
+          Continue
+        </Button>
+        <Button variant="ghost" asChild className="w-full">
           <Link href="/login">Back to sign in</Link>
         </Button>
       </form>

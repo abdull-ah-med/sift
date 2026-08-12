@@ -74,7 +74,7 @@ export default function LoginPage() {
       description="Prefer Zitadel for people. API keys remain for CLI and local bootstrap."
     >
       {canOidc ? (
-        <Button type="button" onClick={() => void startOidc()}>
+        <Button type="button" className="w-full" onClick={() => void startOidc()}>
           Continue with Zitadel
         </Button>
       ) : (
@@ -82,6 +82,14 @@ export default function LoginPage() {
           Set NEXT_PUBLIC_SIFT_ZITADEL_WEB_CLIENT_ID to enable OIDC.
         </p>
       )}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center" aria-hidden>
+          <span className="w-full border-t border-[rgb(var(--sift-border))]" />
+        </div>
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-[rgb(var(--sift-bg))] px-3 text-[rgb(var(--sift-text-muted))]">or</span>
+        </div>
+      </div>
       <form className="flex flex-col gap-3" onSubmit={onApiKey}>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="api-url">API URL</Label>
@@ -103,7 +111,7 @@ export default function LoginPage() {
           />
         </div>
         {err ? <p className="text-sm text-[rgb(var(--sift-danger))]">{err}</p> : null}
-        <Button type="submit" variant="secondary">
+        <Button type="submit" variant="secondary" className="w-full">
           Save API key
         </Button>
       </form>

@@ -9,10 +9,10 @@ export default function SignupPage() {
       title="Get started"
       description="Create a sift account via Zitadel, then open your first collection."
     >
-      <Button asChild>
+      <Button asChild className="w-full">
         <Link href="/login">Continue to sign in</Link>
       </Button>
-      <Button variant="secondary" asChild>
+      <Button variant="secondary" asChild className="w-full">
         <Link href="/invite">Have an invite?</Link>
       </Button>
     </AuthShell>
