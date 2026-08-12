@@ -30,8 +30,13 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         setup_logging(json_logs=True)
         FastAPIInstrumentor.instrument_app(_app)
     get_engine()
-    yield
-    await dispose_engine()
+    try:
+        yield
+    finally:
+        from sift_api.checkpointer import close_postgres_checkpointer
+
+        await close_postgres_checkpointer()
+        await dispose_engine()
 
 
 app = FastAPI(title="sift-api", version="0.1.0", lifespan=lifespan)

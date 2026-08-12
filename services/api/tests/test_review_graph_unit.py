@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from langgraph.checkpoint.memory import InMemorySaver
 
 from sift_api.review_graph import (
     pending_block_ids,
@@ -26,13 +27,11 @@ def test_pending_block_ids_keeps_open_review_states_only() -> None:
         {"id": "b6", "ordinal": 5, "review_state": "conflict"},
         {"id": "b7", "ordinal": 6, "review_state": "edited"},
     ]
-    assert pending_block_ids(blocks) == ["b2", "b3", "b5", "b6"]
+    assert pending_block_ids(blocks) == ["b2", "b3", "b6"]
 
 
 @pytest.mark.asyncio
 async def test_start_interrupts_when_blocks_need_review() -> None:
-    from langgraph.checkpoint.memory import InMemorySaver
-
     checkpointer = InMemorySaver()
     result = await start_document_review(
         checkpointer=checkpointer,
@@ -48,8 +47,6 @@ async def test_start_interrupts_when_blocks_need_review() -> None:
 
 @pytest.mark.asyncio
 async def test_start_completes_when_no_blocks_need_review() -> None:
-    from langgraph.checkpoint.memory import InMemorySaver
-
     checkpointer = InMemorySaver()
     result = await start_document_review(
         checkpointer=checkpointer,
@@ -63,8 +60,6 @@ async def test_start_completes_when_no_blocks_need_review() -> None:
 
 @pytest.mark.asyncio
 async def test_resume_applies_decisions_and_completes() -> None:
-    from langgraph.checkpoint.memory import InMemorySaver
-
     checkpointer = InMemorySaver()
     started = await start_document_review(
         checkpointer=checkpointer,

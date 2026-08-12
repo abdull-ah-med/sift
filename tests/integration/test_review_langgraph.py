@@ -14,6 +14,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
 from sift_api import db as db_mod
+from sift_api.checkpointer import close_postgres_checkpointer
 from sift_api.main import app
 from sift_api.settings import get_settings
 from sift_core.auth.api_keys import mint_api_key
@@ -175,9 +176,7 @@ def test_review_start_unauthenticated_returns_401(
 
 
 @pytest.mark.integration
-def test_review_start_wrong_scope_returns_403(
-    api_client: TestClient, migrated_db: Engine
-) -> None:
+def test_review_start_wrong_scope_returns_403(api_client: TestClient, migrated_db: Engine) -> None:
     _write, read_raw, document_id, _bid = _seed_doc_with_needs_review(migrated_db)
     response = api_client.post(
         f"/v1/documents/{document_id}/review/start",
@@ -187,9 +186,7 @@ def test_review_start_wrong_scope_returns_403(
 
 
 @pytest.mark.integration
-def test_review_start_wrong_tenant_returns_404(
-    api_client: TestClient, migrated_db: Engine
-) -> None:
+def test_review_start_wrong_tenant_returns_404(api_client: TestClient, migrated_db: Engine) -> None:
     write_raw, _read, _document_id, _bid = _seed_doc_with_needs_review(migrated_db)
     foreign_doc = new_id(IdKind.DOCUMENT)
     response = api_client.post(
@@ -200,9 +197,44 @@ def test_review_start_wrong_tenant_returns_404(
 
 
 @pytest.mark.integration
-def test_review_interrupt_survives_api_restart(
-    api_client: TestClient, migrated_db: Engine, monkeypatch: pytest.MonkeyPatch
+def test_review_resume_unauthenticated_returns_401(
+    api_client: TestClient, migrated_db: Engine
 ) -> None:
+    _write, _read, document_id, needs_id = _seed_doc_with_needs_review(migrated_db)
+    response = api_client.post(
+        f"/v1/documents/{document_id}/review/resume",
+        json={"decisions": [{"block_id": needs_id, "action": "approve"}]},
+    )
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.integration
+def test_review_resume_wrong_scope_returns_403(api_client: TestClient, migrated_db: Engine) -> None:
+    _write, read_raw, document_id, needs_id = _seed_doc_with_needs_review(migrated_db)
+    response = api_client.post(
+        f"/v1/documents/{document_id}/review/resume",
+        headers={"X-Api-Key": read_raw},
+        json={"decisions": [{"block_id": needs_id, "action": "approve"}]},
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+@pytest.mark.integration
+def test_review_resume_wrong_tenant_returns_404(
+    api_client: TestClient, migrated_db: Engine
+) -> None:
+    write_raw, _read, _document_id, needs_id = _seed_doc_with_needs_review(migrated_db)
+    foreign_doc = new_id(IdKind.DOCUMENT)
+    response = api_client.post(
+        f"/v1/documents/{foreign_doc}/review/resume",
+        headers={"X-Api-Key": write_raw},
+        json={"decisions": [{"block_id": needs_id, "action": "approve"}]},
+    )
+    assert response.status_code == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.integration
+def test_review_interrupt_survives_api_restart(api_client: TestClient, migrated_db: Engine) -> None:
     """Start → interrupt, drop in-process state, resume via Postgres checkpointer."""
     write_raw, _read, document_id, needs_id = _seed_doc_with_needs_review(migrated_db)
     headers = {"X-Api-Key": write_raw}
@@ -214,14 +246,9 @@ def test_review_interrupt_survives_api_restart(
     assert needs_id in body["pending_block_ids"]
     assert body["thread_id"] == f"doc-review:{document_id}"
 
-    # Simulate API process restart: dispose SQLAlchemy engine + clear checkpointer cache.
-    import asyncio
-
-    from sift_api import checkpointer as cp_mod
-
-    asyncio.get_event_loop().run_until_complete(db_mod.dispose_engine())
-    if hasattr(cp_mod, "reset_checkpointer_cache"):
-        cp_mod.reset_checkpointer_cache()
+    # Simulate API process restart: close pooled checkpointer + SQLAlchemy engine.
+    api_client.portal.call(close_postgres_checkpointer)
+    api_client.portal.call(db_mod.dispose_engine)
     get_settings.cache_clear()
 
     resumed = api_client.post(
