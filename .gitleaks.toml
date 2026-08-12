@@ -8,7 +8,7 @@ useDefault = true
 
 # Global allowlist (gitleaks v8 uses singular [allowlist]).
 [allowlist]
-description = "Vendored upstream trees (Docling → sift-parse, LongParser → sift-ingest)"
+description = "Vendored upstream trees (Docling → sift-parse; LongParser absorbed into libs/sift-ingest)"
 paths = [
   '''vendor/.*''',
 ]

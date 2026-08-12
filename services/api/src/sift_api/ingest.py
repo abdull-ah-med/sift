@@ -120,7 +120,7 @@ def run_ingest_document(
 
             suffix = Path(str(source_uri)).suffix or ".bin"
             try:
-                with tempfile.TemporaryDirectory(prefix="sift-ingest-") as tmp:
+                with tempfile.TemporaryDirectory(prefix="sift_ingest_") as tmp:
                     dest = Path(tmp) / f"original{suffix}"
                     download_object(source_uri=source_uri, dest=dest, settings=cfg)
                     return run_ingest_parse(

@@ -45,18 +45,21 @@ def test_absorbed_modules_importable() -> None:
         importlib.import_module(name)
 
 
-def test_no_longparser_imports_outside_docs_and_licenses() -> None:
+def test_no_longparser_package_imports_in_product_code() -> None:
     offenders: list[str] = []
+    pattern = re.compile(r"(?m)^\s*(?:from|import)\s+longparser\b")
     for path in ROOT.rglob("*.py"):
         rel = path.relative_to(ROOT).as_posix()
-        if rel.startswith(("vendor/", ".venv/", "node_modules/", ".sift-local/")):
+        if rel.startswith(
+            ("vendor/", ".venv/", "node_modules/", ".sift-local/", "tests/unit/")
+        ):
             continue
         if rel.startswith("docs/") or rel.startswith("LICENSES/"):
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
-        if "longparser" in text or "from sift_ingest_vendor" in text:
+        if pattern.search(text):
             offenders.append(rel)
-    assert not offenders, "longparser residue:\n" + "\n".join(offenders[:40])
+    assert not offenders, "longparser imports remain:\n" + "\n".join(offenders[:40])
 
 
 def test_hyphen_sift_ingest_only_in_allowed_paths() -> None:
@@ -72,14 +75,24 @@ def test_hyphen_sift_ingest_only_in_allowed_paths() -> None:
                 ".venv/",
                 "node_modules/",
                 ".sift-local/",
+                ".ruff_cache/",
+                ".pytest_cache/",
                 "vendor/sift-parse/",
                 "evals/reports/",
             )
         ):
             continue
-        if path.suffix not in {".py", ".md", ".toml", ".yml", ".yaml", ".txt", ".lock", ""}:
-            if path.name not in {"Dockerfile", "Makefile"}:
-                continue
+        if path.suffix not in {
+            ".py",
+            ".md",
+            ".toml",
+            ".yml",
+            ".yaml",
+            ".txt",
+            ".lock",
+            "",
+        } and path.name not in {"Dockerfile", "Makefile"}:
+            continue
         try:
             text = path.read_text(encoding="utf-8", errors="ignore")
         except OSError:

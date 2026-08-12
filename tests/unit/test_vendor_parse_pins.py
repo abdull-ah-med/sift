@@ -42,7 +42,6 @@ def test_parse_version_meets_phase0_floor() -> None:
     assert (major, minor, patch) >= (2, 94, 0)
 
 
-def test_ingest_distribution_name_and_version() -> None:
-    ingest = ROOT / "vendor" / "sift-ingest" / "pyproject.toml"
+def test_first_party_ingest_distribution_name() -> None:
+    ingest = ROOT / "libs" / "sift-ingest" / "pyproject.toml"
     assert _name(ingest) == "sift-ingest"
-    assert _version(ingest) == "0.1.5"

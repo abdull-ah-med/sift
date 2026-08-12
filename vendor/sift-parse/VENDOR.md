@@ -75,7 +75,7 @@ Verification (2026-08-10) against shallow clones of the pins above:
 | Upstream | Result |
 |---|---|
 | `docling-core` `v2.91.0` | **589 passed**, 6 skipped |
-| `LongParser` `v0.1.5` (`tests/unit`) | **58 passed** (see `../sift-ingest/VENDOR.md`) |
+| `LongParser` `v0.1.5` (absorbed) | Patterns live in `libs/sift-ingest/` / `libs/sift-parse/` |
 | `docling` / `docling-parse` / `docling-ibm-models` | Packages built at pin; full engine pytest deferred (optional extras / ML) — sift parse-smoke + core suite cover Phase 0 |
 
 ## Refresh procedure

@@ -15,7 +15,6 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 VENDOR_ROOTS = [
     ROOT / "vendor" / "sift-parse",
-    ROOT / "vendor" / "sift-ingest",
 ]
 
 # Import forms that prove the tree still teaches engineers to use upstream names.
