@@ -7,7 +7,7 @@ import { SiteHeader } from "@/components/marketing/SiteHeader";
 
 export default function HomePage() {
   return (
-    <div className="flex min-h-[100dvh] flex-col">
+    <div className="flex min-h-[100dvh] flex-col bg-[rgb(var(--sift-bg))]">
       <SiteHeader />
       <main id="main" className="sift-app-main flex-1">
         <MarketingHero />

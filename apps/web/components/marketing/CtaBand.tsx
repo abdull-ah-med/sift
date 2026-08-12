@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@sift/ui";
 
-/** Closing CTA band — shadcn cta-01, sift tokens. */
+/** Closing CTA — watermelon cta structure without blur orbs. */
 export function CtaBand() {
   return (
     <section className="mx-auto max-w-6xl px-6 py-24">
