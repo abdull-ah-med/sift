@@ -56,6 +56,7 @@ export function ChatRuntimeProvider({
   const [isRunning, setIsRunning] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const sessionRef = useRef(sessionId);
+  const skipHydrateRef = useRef(false);
   sessionRef.current = sessionId;
 
   useEffect(() => {
@@ -66,6 +67,10 @@ export function ChatRuntimeProvider({
       if (!sessionId) {
         setMessages([]);
         onCitations([]);
+        return;
+      }
+      if (skipHydrateRef.current) {
+        skipHydrateRef.current = false;
         return;
       }
       setMessages([]);
@@ -135,6 +140,7 @@ export function ChatRuntimeProvider({
               (startedFor == null &&
                 (sessionRef.current == null || sessionRef.current === ev.done.session_id));
             if (ev.done.session_id && stillThisSession) {
+              skipHydrateRef.current = true;
               onSessionId(ev.done.session_id);
             }
             if (ev.done.status === "pending_review" && !text.trim()) {
@@ -156,11 +162,12 @@ export function ChatRuntimeProvider({
             }
           }
         }
-      } catch (err) {
+      } catch {
         if (ac.signal.aborted) return;
-        const msg = err instanceof Error ? err.message : "Chat request failed.";
         setMessages((prev) =>
-          prev.map((m) => (m.id === assistantId ? { ...m, content: msg } : m)),
+          prev.map((m) =>
+            m.id === assistantId ? { ...m, content: "Chat request failed." } : m,
+          ),
         );
       } finally {
         setIsRunning(false);

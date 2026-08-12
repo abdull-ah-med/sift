@@ -30,7 +30,7 @@ import {
   Skeleton,
 } from "@sift/ui";
 import { getAccessToken, getApiKey } from "@/lib/api";
-import { consumeStoredInvite } from "@/lib/invite";
+import { consumeStoredInvite, INVITE_STORAGE_KEY } from "@/lib/invite";
 import { CommandPalette } from "./CommandPalette";
 
 const NAV = [
@@ -52,6 +52,7 @@ function crumb(pathname: string): string {
 function signOut() {
   localStorage.removeItem("sift_access_token");
   localStorage.removeItem("sift_api_key");
+  sessionStorage.removeItem(INVITE_STORAGE_KEY);
 }
 
 /** Authenticated product chrome — shadcn sidebar-07. */

@@ -51,6 +51,16 @@ def test_chat_and_ui_helpers_do_not_log_raw_payloads() -> None:
         assert "console.info" not in blob
 
 
+def test_chat_chrome_does_not_render_error_message_bodies() -> None:
+    runtime = (WEB / "components" / "chat" / "ChatRuntimeProvider.tsx").read_text(encoding="utf-8")
+    page = (WEB / "app" / "(app)" / "collections" / "[slug]" / "chat" / "page.tsx").read_text(
+        encoding="utf-8",
+    )
+    assert "err.message" not in runtime
+    assert "e.message" not in page
+    assert "Chat request failed." in runtime
+
+
 def test_ui_error_helper_does_not_read_response_bodies() -> None:
     text = (WEB / "lib" / "ui-error.ts").read_text(encoding="utf-8")
     assert "r.text()" not in text

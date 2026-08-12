@@ -39,8 +39,8 @@ function ChatPageInner() {
       if (!collectionId) return;
       try {
         await refreshSessions();
-      } catch (e) {
-        setErr(e instanceof Error ? e.message : "Failed to load sessions");
+      } catch {
+        setErr("Failed to load sessions");
       }
     })();
   }, [collectionId, refreshSessions]);
@@ -54,8 +54,8 @@ function ChatPageInner() {
       await refreshSessions();
       setSessionId(s.id);
       setCitations([]);
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Create failed");
+    } catch {
+      setErr("Create failed");
     } finally {
       setBusy(false);
     }
@@ -70,8 +70,8 @@ function ChatPageInner() {
         setCitations([]);
       }
       await refreshSessions();
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "Delete failed");
+    } catch {
+      setErr("Delete failed");
     } finally {
       setBusy(false);
     }
