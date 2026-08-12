@@ -58,6 +58,18 @@ test("landing canvas is pure black with a pill navbar", async ({ page }) => {
     return getComputedStyle(el).borderRadius;
   });
   expect(Number.parseFloat(radius)).toBeGreaterThan(20);
+  await expect(page.getByText("© 2026 sift")).toBeVisible();
+});
+
+test("primary fill is #1b6986 with light text", async ({ page }) => {
+  await page.goto("/");
+  const cta = page.getByRole("link", { name: "Get started" }).first();
+  const styles = await cta.evaluate((el) => {
+    const computed = getComputedStyle(el);
+    return { background: computed.backgroundColor, color: computed.color };
+  });
+  expect(styles.background).toBe("rgb(27, 105, 134)");
+  expect(styles.color).toBe("rgb(238, 238, 238)");
 });
 
 test("landing does not load watermelon CDN, Google auth, or fake uptime", async ({ page }) => {
@@ -94,6 +106,9 @@ test("login and signup chrome render", async ({ page }) => {
   await expect(page.getByLabel("API key")).toBeVisible();
   await expect(page.getByRole("button", { name: /google/i })).toHaveCount(0);
   await expect(page.locator("img[src*='watermelon']")).toHaveCount(0);
+  const panel = page.locator("aside").first();
+  await expect(panel).toBeVisible();
+  await expect(panel).toHaveCSS("background-image", /noise-gradient\.png/);
 
   await page.goto("/signup");
   await expect(page.getByRole("heading", { name: "Get started" })).toBeVisible();
