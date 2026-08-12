@@ -19,9 +19,9 @@ body {
 }
 
 /* Unlayered so primary fill text wins over missing Tailwind utilities.
-   Canvas is #000 (ADR 0001); navy on teal stays AA. */
+   Canvas is #000 (ADR 0001); #EEEEEE on #1b6986 stays AA. */
 [class*="bg-[rgb(var(--sift-accent))]"] {
-  color: rgb(34 40 49);
+  color: rgb(238 238 238);
 }
 
 a {

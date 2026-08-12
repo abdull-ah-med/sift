@@ -43,7 +43,7 @@ export function MarketingHero() {
           <motion.div variants={{ hidden, visible }} transition={{ duration: reduce ? 0 : 0.5, ease: EASE }}>
             <Link
               href="/signup"
-              className="group inline-flex w-fit items-center gap-4 rounded-full bg-[rgb(var(--sift-accent))] p-1 pl-5 text-sm font-medium text-[rgb(34_40_49)]"
+              className="group inline-flex w-fit items-center gap-4 rounded-full bg-[rgb(var(--sift-accent))] p-1 pl-5 text-sm font-medium text-[rgb(var(--sift-text))]"
             >
               <span>Get started</span>
               <span className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[rgb(34_40_49)]">

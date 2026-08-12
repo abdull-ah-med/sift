@@ -5,7 +5,7 @@
 :root {
   --sift-bg: 0 0 0;
   --sift-surface: 57 62 70;
-  --sift-accent: 0 173 181;
+  --sift-accent: 27 105 134;
   --sift-text: 238 238 238;
   --sift-text-muted: 238 238 238 / 0.65;
   --sift-text-disabled: 238 238 238 / 0.35;
@@ -19,7 +19,7 @@
     "Segoe UI", system-ui, sans-serif;
   --font-mono: "SF Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
-  /* shadcn semantic aliases. --accent is hover surface, NOT brand teal. */
+  /* shadcn semantic aliases. --accent is hover surface, NOT brand accent. */
   --background: var(--sift-bg);
   --foreground: var(--sift-text);
   --card: var(--sift-surface);
@@ -27,7 +27,7 @@
   --popover: var(--sift-surface);
   --popover-foreground: var(--sift-text);
   --primary: var(--sift-accent);
-  --primary-foreground: 34 40 49;
+  --primary-foreground: 238 238 238;
   --secondary: var(--sift-surface);
   --secondary-foreground: var(--sift-text);
   --muted: var(--sift-surface);

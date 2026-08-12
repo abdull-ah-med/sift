@@ -11,7 +11,7 @@ const badgeVariants = cva(
         default:
           "border-[rgb(var(--sift-border))] bg-[rgb(var(--sift-surface))] text-[rgb(var(--sift-text))]",
         accent:
-          "border-transparent bg-[rgb(var(--sift-accent))] text-[rgb(34_40_49)]",
+          "border-transparent bg-[rgb(var(--sift-accent))] text-[rgb(var(--sift-text))]",
         outline: "border-[rgb(var(--sift-border-strong))] text-[rgb(var(--sift-text))]",
         danger:
           "border-[rgb(var(--sift-danger))]/40 bg-[rgb(var(--sift-danger))]/10 text-[rgb(var(--sift-danger))]",
