@@ -40,7 +40,7 @@ function CallbackInner() {
         body,
       });
       if (!r.ok) {
-        setErr(await r.text());
+        setErr("Token exchange failed. Return to sign in and try again.");
         return;
       }
       const tokens = await r.json();
@@ -54,7 +54,7 @@ function CallbackInner() {
       } catch {
         /* invite accept is best-effort after OIDC */
       }
-      router.replace("/collections");
+      router.replace("/home");
     })();
   }, [params, router]);
 
