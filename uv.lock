@@ -25,6 +25,7 @@ members = [
     "sift-parse-engine",
     "sift-parse-models-engine",
     "sift-parse-pdf-engine",
+    "sift-retrieve",
     "sift-worker",
 ]
 
@@ -4367,6 +4368,23 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pywin32", marker = "sys_platform == 'win32'", specifier = ">=305" },
     { name = "sift-parse-core-engine", editable = "vendor/sift-parse/sift-parse-core" },
+]
+
+[[package]]
+name = "sift-retrieve"
+version = "0.0.0"
+source = { editable = "libs/sift-retrieve" }
+dependencies = [
+    { name = "httpx" },
+    { name = "sift-core" },
+    { name = "sqlalchemy" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "httpx", specifier = ">=0.28" },
+    { name = "sift-core", editable = "libs/sift-core" },
+    { name = "sqlalchemy", specifier = ">=2.0" },
 ]
 
 [[package]]
