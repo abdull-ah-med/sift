@@ -7,8 +7,16 @@ from pathlib import Path
 
 import pytest
 
+from sift.parse import DigitalPdfParser, ParseConfig
+from sift_core.chunk import Chunk, ChunkType
+from sift_ingest.chunker import chunk_blocks
+from sift_ingest.contextual_prefix import PrefixCostRecord, apply_contextual_prefixes
+
 ROOT = Path(__file__).resolve().parents[2]
 CORPUS = ROOT / "evals" / "corpus"
+_MIN_DIGITAL_CORPUS = 5
+_TTF_BUDGET_S = 45.0
+_PREFIX_COST_BUDGET_USD = 0.05
 
 
 def test_vendor_sift_ingest_deleted() -> None:
@@ -16,10 +24,8 @@ def test_vendor_sift_ingest_deleted() -> None:
 
 
 def test_golden_digital_corpus_parses_with_provenance() -> None:
-    from sift.parse import DigitalPdfParser, ParseConfig
-
     pdfs = sorted(CORPUS.glob("digital-*.pdf"))
-    assert len(pdfs) >= 5
+    assert len(pdfs) >= _MIN_DIGITAL_CORPUS
     parser = DigitalPdfParser()
     cfg = ParseConfig()
     for pdf in pdfs:
@@ -33,9 +39,6 @@ def test_golden_digital_corpus_parses_with_provenance() -> None:
 
 
 def test_chunk_path_yields_contextualized_chunks() -> None:
-    from sift.parse import DigitalPdfParser, ParseConfig
-    from sift_ingest.chunker import chunk_blocks
-
     pdf = CORPUS / "digital-02-with-heading.pdf"
     result = DigitalPdfParser().parse(pdf, ParseConfig())
     chunks = chunk_blocks(result.blocks, document_title="Exit Gate Doc")
@@ -45,9 +48,6 @@ def test_chunk_path_yields_contextualized_chunks() -> None:
 
 def test_time_to_first_chunk_proxy_under_45s() -> None:
     """Parse + chunk a multi-page digital PDF; budget from Phase 2 §10."""
-    from sift.parse import DigitalPdfParser, ParseConfig
-    from sift_ingest.chunker import chunk_blocks
-
     pdf = CORPUS / "pdf" / "prompt_injection_liu_2023.pdf"
     if not pdf.is_file():
         pytest.skip("multi-page corpus PDF missing")
@@ -56,13 +56,10 @@ def test_time_to_first_chunk_proxy_under_45s() -> None:
     chunks = chunk_blocks(result.blocks, document_title="TTF probe")
     elapsed = time.perf_counter() - t0
     assert len(chunks) > 0
-    assert elapsed < 45.0, f"time-to-first-chunk proxy {elapsed:.3f}s exceeds 45s"
+    assert elapsed < _TTF_BUDGET_S, f"time-to-first-chunk proxy {elapsed:.3f}s exceeds 45s"
 
 
 def test_prefix_cost_record_under_budget() -> None:
-    from sift_core.chunk import Chunk, ChunkType
-    from sift_ingest.contextual_prefix import PrefixCostRecord, apply_contextual_prefixes
-
     class _Cheap:
         def generate(self, *, document_text: str, chunk_text: str) -> tuple[str, float]:
             del document_text, chunk_text
@@ -86,4 +83,5 @@ def test_prefix_cost_record_under_budget() -> None:
         cost_log=cost_log,
     )
     assert out[0].text_contextualized != out[0].text_raw
-    assert cost_log and cost_log[0].total_usd < 0.05
+    assert cost_log
+    assert cost_log[0].total_usd < _PREFIX_COST_BUDGET_USD
