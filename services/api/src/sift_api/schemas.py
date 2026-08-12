@@ -234,3 +234,52 @@ class VectorBackendOut(StrictModel):
     backend: str
     points: int = 0
     status: str = "ok"
+
+
+class ChatSessionCreate(StrictModel):
+    title: str | None = Field(default=None, max_length=200)
+
+
+class ChatSessionOut(StrictModel):
+    id: str
+    collection_id: str
+    title: str | None
+    created_at: datetime
+    last_message_at: datetime | None = None
+
+
+class ChatTurnOut(StrictModel):
+    id: str
+    role: str
+    content: str
+    cited_chunk_ids: list[str] = Field(default_factory=list)
+    cited_documents: list[str] = Field(default_factory=list)
+    created_at: datetime
+
+
+class ChatSessionDetail(ChatSessionOut):
+    turns: list[ChatTurnOut] = Field(default_factory=list)
+    rolling_summary: str | None = None
+
+
+class ChatAskRequest(StrictModel):
+    message: str = Field(min_length=1, max_length=8000)
+    session_id: str | None = None
+    top_k: int = Field(default=10, ge=1, le=50)
+
+
+class ChatResumeRequest(StrictModel):
+    session_id: str
+    approve: bool = True
+    text: str | None = Field(default=None, max_length=200_000)
+    cited_chunk_ids: list[str] | None = None
+    reject: bool = False
+    reason: str | None = Field(default=None, max_length=2000)
+
+
+class ChatCitationOut(StrictModel):
+    chunk_id: str
+    document_id: str
+    text: str | None = None
+    page_numbers: list[int] | None = None
+    section_path: list[str] | None = None
