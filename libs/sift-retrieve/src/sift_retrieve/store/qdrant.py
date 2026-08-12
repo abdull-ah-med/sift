@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from collections.abc import Sequence
 from typing import Any
 from urllib.parse import urlparse
@@ -11,11 +12,17 @@ import httpx
 from sift_retrieve.hybrid import RetrieveHit
 
 _MAX_BODY = 16 * 1024 * 1024
+_POINT_NS = uuid.UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")  # URL namespace
 
 
 def collection_name(tenant_id: str, collection_id: str) -> str:
     """Qdrant collection name scoped by tenant + collection."""
     return f"{tenant_id}__{collection_id}"
+
+
+def point_id_for_chunk(chunk_id: str) -> str:
+    """Deterministic UUID point id (Qdrant rejects typed ULID strings)."""
+    return str(uuid.uuid5(_POINT_NS, f"sift:chunk:{chunk_id}"))
 
 
 class QdrantDenseStore:
@@ -25,6 +32,7 @@ class QdrantDenseStore:
         self,
         *,
         base_url: str,
+        api_key: str | None = None,
         timeout: float = 60.0,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
@@ -33,17 +41,27 @@ class QdrantDenseStore:
             msg = "SIFT_QDRANT_URL must be an http(s) URL with a host"
             raise ValueError(msg)
         self._base_url = base_url.rstrip("/")
+        self._api_key = api_key or None
         self._timeout = timeout
         self._transport = transport
+
+    def _headers(self) -> dict[str, str]:
+        if not self._api_key:
+            return {}
+        return {"api-key": self._api_key}
 
     def ensure_collection(self, *, tenant_id: str, collection_id: str, dim: int = 1024) -> None:
         name = collection_name(tenant_id, collection_id)
         with httpx.Client(timeout=self._timeout, transport=self._transport) as client:
-            exists = client.get(f"{self._base_url}/collections/{name}")
+            exists = client.get(
+                f"{self._base_url}/collections/{name}",
+                headers=self._headers(),
+            )
             if exists.status_code == httpx.codes.OK:
                 return
             response = client.put(
                 f"{self._base_url}/collections/{name}",
+                headers=self._headers(),
                 json={
                     "vectors": {"size": dim, "distance": "Cosine"},
                 },
@@ -61,6 +79,7 @@ class QdrantDenseStore:
         with httpx.Client(timeout=self._timeout, transport=self._transport) as client:
             response = client.put(
                 f"{self._base_url}/collections/{name}/points",
+                headers=self._headers(),
                 json={"points": points},
             )
             response.raise_for_status()
@@ -92,6 +111,7 @@ class QdrantDenseStore:
         with httpx.Client(timeout=self._timeout, transport=self._transport) as client:
             response = client.post(
                 f"{self._base_url}/collections/{name}/points/search",
+                headers=self._headers(),
                 json=body,
             )
             response.raise_for_status()

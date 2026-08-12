@@ -12,6 +12,7 @@ from sift_api.db import sync_dsn
 from sift_api.settings import Settings, get_settings
 from sift_api.tei import TeiClient
 from sift_core.audit import write_audit_event
+from sift_retrieve.store.qdrant import QdrantDenseStore, point_id_for_chunk
 
 EMBED_BATCH = 64
 EMBED_DIM = 1024
@@ -59,7 +60,7 @@ def load_chunks_needing_embed(
     return [dict(r) for r in rows]
 
 
-def upsert_chunk_embeddings(  # noqa: PLR0913 — upsert columns are the public contract
+def upsert_chunk_embeddings(
     conn: Connection,
     *,
     tenant_id: str,
@@ -202,7 +203,42 @@ def audit_embed_failed(
     )
 
 
-def run_embed_document(  # noqa: PLR0913 — explicit injectable seams for TDD
+def _sync_embeddings_to_qdrant(
+    *,
+    settings: Settings,
+    tenant_id: str,
+    collection_id: str,
+    document_id: str,
+    chunk_ids: list[str],
+    vectors: list[list[float]],
+) -> None:
+    store = QdrantDenseStore(
+        base_url=settings.sift_qdrant_url,
+        api_key=settings.sift_qdrant_api_key or None,
+    )
+    store.ensure_collection(tenant_id=tenant_id, collection_id=collection_id, dim=EMBED_DIM)
+    points = [
+        {
+            "id": point_id_for_chunk(cid),
+            "vector": vec,
+            "payload": {
+                "chunk_id": cid,
+                "document_id": document_id,
+                "tenant_id": tenant_id,
+                "collection_id": collection_id,
+            },
+        }
+        for cid, vec in zip(chunk_ids, vectors, strict=True)
+    ]
+    for i in range(0, len(points), 64):
+        store.upsert_points(
+            tenant_id=tenant_id,
+            collection_id=collection_id,
+            points=points[i : i + 64],
+        )
+
+
+def run_embed_document(
     *,
     document_id: str,
     tenant_id: str,
@@ -305,13 +341,40 @@ def run_embed_document(  # noqa: PLR0913 — explicit injectable seams for TDD
                 chunk_count=len(chunks),
                 model=cfg.sift_tei_model,
             )
-            return "embedded"
+            backend_row = (
+                conn.execute(
+                    text(
+                        """
+                        SELECT coalesce(vector_backend, 'pgvector') AS vector_backend
+                        FROM collections WHERE id = :id
+                        """
+                    ),
+                    {"id": collection_id},
+                )
+                .mappings()
+                .one_or_none()
+            )
+            use_qdrant = (
+                backend_row is not None
+                and str(backend_row["vector_backend"]) == "qdrant"
+            ) or cfg.sift_vector_backend == "qdrant"
+
+        if use_qdrant:
+            _sync_embeddings_to_qdrant(
+                settings=cfg,
+                tenant_id=tenant_id,
+                collection_id=collection_id,
+                document_id=document_id,
+                chunk_ids=chunk_ids,
+                vectors=vectors,
+            )
+        return "embedded"
     finally:
         if owns_engine:
             eng.dispose()
 
 
-def _run_injected(  # noqa: PLR0913 — mirrors injectable seams for unit tests
+def _run_injected(
     *,
     document_id: str,
     tenant_id: str,

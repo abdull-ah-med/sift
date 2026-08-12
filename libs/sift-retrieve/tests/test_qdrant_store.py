@@ -6,11 +6,18 @@ import json
 
 import httpx
 
-from sift_retrieve.store.qdrant import QdrantDenseStore, collection_name
+from sift_retrieve.store.qdrant import QdrantDenseStore, collection_name, point_id_for_chunk
 
 
 def test_collection_name_is_tenant_scoped() -> None:
     assert collection_name("ten_1", "col_2") == "ten_1__col_2"
+
+
+def test_point_id_for_chunk_is_uuid() -> None:
+    pid = point_id_for_chunk("chunk_01ABCDEF")
+    assert len(pid) == 36
+    assert pid == point_id_for_chunk("chunk_01ABCDEF")
+
 
 
 def test_qdrant_search_maps_hits() -> None:

@@ -173,6 +173,22 @@ def _store_search(
     return fused, meta
 
 
+def _collection_vector_backend(conn: Connection, *, collection_id: str) -> str:
+    row = conn.execute(
+        text(
+            """
+            SELECT coalesce(vector_backend, 'pgvector') AS vector_backend
+            FROM collections
+            WHERE id = :id AND deleted_at IS NULL
+            """
+        ),
+        {"id": collection_id},
+    ).mappings().one_or_none()
+    if row is None:
+        return "pgvector"
+    return str(row["vector_backend"] or "pgvector")
+
+
 def _hybrid_retrieve(
     *,
     query: str,
@@ -191,10 +207,19 @@ def _hybrid_retrieve(
         return [], {}
     q_dense = vectors[0]
 
+    with engine.begin() as conn:
+        _with_tenant(conn, tenant_id)
+        backend = _collection_vector_backend(conn, collection_id=collection_id)
+        if backend == "qdrant" or settings.sift_vector_backend == "qdrant":
+            backend = "qdrant"
+
     dense_hits: list[RetrieveHit] | None = None
-    if settings.sift_vector_backend == "qdrant":
+    if backend == "qdrant":
         candidate_limit = max(CANDIDATE_LIMIT, top_k)
-        dense_hits = QdrantDenseStore(base_url=settings.sift_qdrant_url).search(
+        dense_hits = QdrantDenseStore(
+            base_url=settings.sift_qdrant_url,
+            api_key=settings.sift_qdrant_api_key or None,
+        ).search(
             query_vector=q_dense,
             tenant_id=tenant_id,
             collection_id=collection_id,

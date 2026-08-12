@@ -69,6 +69,10 @@ class Settings(BaseSettings):
         default="http://127.0.0.1:6333",
         alias="SIFT_QDRANT_URL",
     )
+    sift_qdrant_api_key: str = Field(
+        default="",
+        alias="SIFT_QDRANT_API_KEY",
+    )
 
 
 @lru_cache

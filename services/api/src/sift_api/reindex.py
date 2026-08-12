@@ -12,7 +12,7 @@ from sift_api.audit_emit import emit_audit
 from sift_api.db import sync_dsn
 from sift_api.settings import Settings, get_settings
 from sift_core.db import tenant_guc_statements
-from sift_retrieve.store.qdrant import QdrantDenseStore
+from sift_retrieve.store.qdrant import QdrantDenseStore, point_id_for_chunk
 
 AuditFn = Callable[..., None]
 
@@ -38,7 +38,10 @@ def run_reindex_to_qdrant(
     """Copy dense embeddings for a collection into Qdrant and set vector_backend."""
     cfg = settings or get_settings()
     audit_fn = audit or emit_audit
-    store = qdrant or QdrantDenseStore(base_url=cfg.sift_qdrant_url)
+    store = qdrant or QdrantDenseStore(
+        base_url=cfg.sift_qdrant_url,
+        api_key=cfg.sift_qdrant_api_key or None,
+    )
     own_engine = engine is None
     eng = engine or create_engine(sync_dsn(cfg))
     try:
@@ -77,7 +80,7 @@ def run_reindex_to_qdrant(
                 emb = [float(x) for x in emb]
             points.append(
                 {
-                    "id": r["chunk_id"],
+                    "id": point_id_for_chunk(str(r["chunk_id"])),
                     "vector": emb,
                     "payload": {
                         "chunk_id": r["chunk_id"],
