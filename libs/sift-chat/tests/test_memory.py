@@ -15,29 +15,31 @@ from sift_core.models import LongTermFact
 
 
 def test_verbatim_window_keeps_tail() -> None:
-    turns = [{"role": "user", "content": str(i)} for i in range(15)]
+    turns: list[dict[str, object]] = [{"role": "user", "content": str(i)} for i in range(15)]
     kept = turns_for_verbatim_window(turns, limit=12)
     assert len(kept) == 12
     assert kept[0]["content"] == "3"
 
 
 def test_turns_needing_summary() -> None:
-    turns = [{"role": "user", "content": str(i)} for i in range(14)]
+    turns: list[dict[str, object]] = [{"role": "user", "content": str(i)} for i in range(14)]
     older = turns_needing_summary(turns, limit=12)
     assert len(older) == 2
     assert older[0]["content"] == "0"
 
 
 def test_should_summarize() -> None:
-    assert should_summarize(12) is False
-    assert should_summarize(13) is True
+    window = 12
+    assert should_summarize(window) is False
+    assert should_summarize(window + 1) is True
 
 
 def test_condense_and_merge() -> None:
     block = condense_turns_extractive([{"role": "user", "content": "Hello world from user"}])
     assert "user:" in block
     merged = merge_rolling_summary("prior", block)
-    assert "prior" in merged and "---" in merged
+    assert "prior" in merged
+    assert "---" in merged
 
 
 def test_dedupe_facts() -> None:
@@ -52,7 +54,12 @@ def test_dedupe_facts() -> None:
 
 
 def test_extract_facts_requires_citations() -> None:
-    assert extract_facts_from_answer(answer_text="A long enough sentence here.", cited_chunk_ids=[], confidence=0.9) == []
+    empty = extract_facts_from_answer(
+        answer_text="A long enough sentence here.",
+        cited_chunk_ids=[],
+        confidence=0.9,
+    )
+    assert empty == []
     facts = extract_facts_from_answer(
         answer_text="Retention is thirty days. Deletion follows notice.",
         cited_chunk_ids=["chunk_1"],

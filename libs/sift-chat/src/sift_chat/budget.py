@@ -1,4 +1,4 @@
-"""Token-budget context trimming (sift-ingest priority order)."""
+"""Token-budget context trimming (system > question > chunks > history > summary > facts)."""
 
 from __future__ import annotations
 

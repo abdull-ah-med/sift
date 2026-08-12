@@ -112,9 +112,7 @@ def test_chat_sessions_unauthenticated_returns_401(
     assert response.status_code == HTTPStatus.UNAUTHORIZED
 
 
-def test_chat_sessions_wrong_scope_returns_403(
-    api_client: TestClient, migrated_db: Engine
-) -> None:
+def test_chat_sessions_wrong_scope_returns_403(api_client: TestClient, migrated_db: Engine) -> None:
     _t, collection_id, _chat, search_raw = _seed(migrated_db)
     response = api_client.get(
         f"/v1/collections/{collection_id}/chat/sessions",
@@ -123,9 +121,7 @@ def test_chat_sessions_wrong_scope_returns_403(
     assert response.status_code == HTTPStatus.FORBIDDEN
 
 
-def test_chat_session_create_list_delete_happy(
-    api_client: TestClient, migrated_db: Engine
-) -> None:
+def test_chat_session_create_list_delete_happy(api_client: TestClient, migrated_db: Engine) -> None:
     _t, collection_id, chat_raw, _s = _seed(migrated_db)
     created = api_client.post(
         f"/v1/collections/{collection_id}/chat/sessions",
@@ -234,3 +230,40 @@ def test_chat_session_other_user_key_cannot_get_or_delete(
         headers={"X-Api-Key": key_b.raw},
     )
     assert denied_del.status_code == HTTPStatus.NOT_FOUND
+
+
+def test_chat_ask_unauthenticated_returns_401(api_client: TestClient, migrated_db: Engine) -> None:
+    _t, collection_id, _c, _s = _seed(migrated_db)
+    response = api_client.post(
+        f"/v1/collections/{collection_id}/chat",
+        json={"message": "hello"},
+    )
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_chat_ask_wrong_scope_returns_403(api_client: TestClient, migrated_db: Engine) -> None:
+    _t, collection_id, _chat, search_raw = _seed(migrated_db)
+    response = api_client.post(
+        f"/v1/collections/{collection_id}/chat",
+        headers={"X-Api-Key": search_raw},
+        json={"message": "hello"},
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+def test_chat_resume_unauthenticated_returns_401(
+    api_client: TestClient, migrated_db: Engine
+) -> None:
+    _seed(migrated_db)
+    response = api_client.post("/v1/chat/resume", json={"session_id": "sess_x"})
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+
+def test_chat_resume_wrong_scope_returns_403(api_client: TestClient, migrated_db: Engine) -> None:
+    _t, _c, chat_raw, _s = _seed(migrated_db)
+    response = api_client.post(
+        "/v1/chat/resume",
+        headers={"X-Api-Key": chat_raw},
+        json={"session_id": "sess_x"},
+    )
+    assert response.status_code == HTTPStatus.FORBIDDEN

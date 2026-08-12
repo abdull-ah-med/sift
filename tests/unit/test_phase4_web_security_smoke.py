@@ -9,7 +9,11 @@ WEB = REPO / "apps" / "web"
 
 
 def test_no_dangerously_set_inner_html_in_chat_or_shell() -> None:
-    roots = [WEB / "components" / "chat", WEB / "components" / "shell", WEB / "components" / "marketing"]
+    roots = [
+        WEB / "components" / "chat",
+        WEB / "components" / "shell",
+        WEB / "components" / "marketing",
+    ]
     offenders: list[str] = []
     for root in roots:
         if not root.is_dir():

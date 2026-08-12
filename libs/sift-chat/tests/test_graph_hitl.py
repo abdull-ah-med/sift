@@ -70,8 +70,8 @@ def test_chat_graph_interrupts_when_require_review() -> None:
             },
             thread,
         )
-        # Interrupted graphs leave pending state; resume with approve.
-        assert first.get("status") in (None, "reviewed", "hydrated", "validated") or True
+        assert first.get("__interrupt__"), "require_review must interrupt before persist"
+        assert first.get("status") != "persisted"
         resumed = await graph.ainvoke(Command(resume={"approve": True}), thread)
         answer = LLMAnswer.model_validate(resumed.get("answer") or {})
         assert answer.cited_chunk_ids == ["chunk_1"]

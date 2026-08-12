@@ -24,9 +24,7 @@ P95_MS_CEILING = 2_000.0
 
 class _MemRetriever:
     def retrieve_fused(self, **kwargs: object) -> list[RetrieveHit]:
-        return [
-            RetrieveHit(chunk_id="c1", document_id="d1", score=1.0, text="alpha beta gamma")
-        ]
+        return [RetrieveHit(chunk_id="c1", document_id="d1", score=1.0, text="alpha beta gamma")]
 
     def rerank_hits(self, *, query: str, hits: list[RetrieveHit], top_k: int) -> list[RetrieveHit]:
         return hits[:top_k]

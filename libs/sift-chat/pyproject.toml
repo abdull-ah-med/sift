@@ -7,8 +7,8 @@ license = { text = "Apache-2.0" }
 dependencies = [
     "sift-core",
     "sift-retrieve",
-    "langgraph>=0.2",
-    "instructor>=1.7",
+    "langgraph>=1.2,<2",
+    "instructor>=1.15,<2",
     "pydantic>=2.0",
 ]
 

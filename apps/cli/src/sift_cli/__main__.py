@@ -13,7 +13,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from sift_cli.chat import parse_sse_chunk
+from sift_cli.chat import stream_chat_turn
 from sift_cli.device_login import cli_client_id_from_env, device_login, issuer_from_env
 from sift_cli.search import (
     format_search_json,
@@ -32,7 +32,7 @@ CONFIG_PATH = CONFIG_DIR / "config.json"
 def _load_config() -> dict[str, Any]:
     if not CONFIG_PATH.is_file():
         return {"api_url": "http://127.0.0.1:8000", "api_key": ""}
-    return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))  # type: ignore[no-any-return]
 
 
 def _save_config(data: dict[str, Any]) -> None:
@@ -303,7 +303,7 @@ def search(
 
 
 @app.command()
-def chat(  # noqa: PLR0912,PLR0915 — CLI REPL surface
+def chat(  # noqa: PLR0912 — CLI REPL surface
     collection: str = typer.Argument(..., help="Collection slug or id"),
     question: str | None = typer.Argument(None, help="One-shot question"),
     interactive: bool = typer.Option(False, "--interactive", "-i", help="REPL mode"),
@@ -320,34 +320,25 @@ def chat(  # noqa: PLR0912,PLR0915 — CLI REPL surface
         listed.raise_for_status()
         return resolve_collection_id(listed.json(), collection)
 
-    def _run_once(client: httpx.Client, collection_id: str, message: str) -> list[str]:
-        cites: list[str] = []
-        with client.stream(
-            "POST",
-            f"/v1/collections/{collection_id}/chat",
-            json={"message": message},
-            timeout=120.0,
-        ) as response:
-            response.raise_for_status()
-            buf = ""
-            for raw in response.iter_text():
-                buf += raw
-                while "\n\n" in buf:
-                    block, buf = buf.split("\n\n", 1)
-                    event, data = parse_sse_chunk(block)
-                    if not data:
-                        continue
-                    if event == "token":
-                        console.print(str(data.get("delta") or ""), end="")
-                    elif event == "citation":
-                        cid = str(data.get("chunk_id") or "")
-                        if cid:
-                            cites.append(cid)
-                    elif event == "done":
-                        console.print()
-                        if data.get("insufficient"):
-                            console.print("[yellow]insufficient[/yellow]")
-        return cites
+    def _run_once(
+        client: httpx.Client,
+        collection_id: str,
+        message: str,
+        session_id: str | None,
+    ) -> tuple[list[str], str | None]:
+        cites, next_session, status, insufficient = stream_chat_turn(
+            client,
+            collection_id=collection_id,
+            message=message,
+            session_id=session_id,
+            on_token=lambda delta: console.print(delta, end=""),
+        )
+        console.print()
+        if status == "pending_review":
+            console.print("[yellow]pending review[/yellow]")
+        elif insufficient:
+            console.print("[yellow]insufficient[/yellow]")
+        return cites, next_session
 
     with _client() as client:
         try:
@@ -358,6 +349,7 @@ def chat(  # noqa: PLR0912,PLR0915 — CLI REPL surface
         if interactive:
             console.print(f"[dim]chat · {collection} (type /cite or /quit)[/dim]")
             last_cites: list[str] = []
+            session_id: str | None = None
             while True:
                 try:
                     line = console.input("[bold]>[/bold] ").strip()
@@ -375,10 +367,10 @@ def chat(  # noqa: PLR0912,PLR0915 — CLI REPL surface
                         for cid in last_cites:
                             console.print(f"- {cid}")
                     continue
-                last_cites = _run_once(client, collection_id, line)
+                last_cites, session_id = _run_once(client, collection_id, line, session_id)
         else:
             assert question is not None
-            cites = _run_once(client, collection_id, question)
+            cites, _session = _run_once(client, collection_id, question, None)
             if cites:
                 console.print("[dim]/cite[/dim]")
                 for cid in cites:

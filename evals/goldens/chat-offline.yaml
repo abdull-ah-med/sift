@@ -30,3 +30,17 @@ cases:
     context_chunk_ids: [chunk_policy]
     expected_chunk_ids: []
     insufficient: true
+  - id: out-of-scope-weather
+    question: What is the weather in Paris today?
+    answer: ""
+    cited_chunk_ids: []
+    context_chunk_ids: [chunk_refund_policy]
+    expected_chunk_ids: []
+    insufficient: true
+  - id: multi-hop-refund-retention
+    question: How do refunds and retention interact?
+    answer: Refunds complete within thirty days of request. Retention is thirty days after account closure.
+    cited_chunk_ids: [chunk_refund_policy, chunk_retention]
+    context_chunk_ids: [chunk_refund_policy, chunk_retention]
+    expected_chunk_ids: [chunk_refund_policy, chunk_retention]
+    insufficient: false

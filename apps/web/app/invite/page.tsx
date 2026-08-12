@@ -2,12 +2,15 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from "@sift/ui";
 import { SiteFooter } from "@/components/marketing/SiteFooter";
 import { SiteHeader } from "@/components/marketing/SiteHeader";
+import { INVITE_STORAGE_KEY } from "@/lib/invite";
 
 /** Invite-accept chrome — token field wired to login for MVP. */
 export default function InvitePage() {
+  const router = useRouter();
   const [token, setToken] = useState("");
   const [msg, setMsg] = useState("");
 
@@ -17,8 +20,9 @@ export default function InvitePage() {
       setMsg("Enter an invite token.");
       return;
     }
-    sessionStorage.setItem("sift_invite_token", token.trim());
+    sessionStorage.setItem(INVITE_STORAGE_KEY, token.trim());
     setMsg("Invite stored. Continue to sign in.");
+    router.push("/login");
   }
 
   return (

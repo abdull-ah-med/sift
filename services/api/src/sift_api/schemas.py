@@ -277,6 +277,20 @@ class ChatResumeRequest(StrictModel):
     reason: str | None = Field(default=None, max_length=2000)
 
 
+class InviteAcceptIn(StrictModel):
+    token: str = Field(min_length=8, max_length=500)
+
+
+class InviteOut(StrictModel):
+    token: str
+    tenant_id: str
+
+
+class InviteAcceptOut(StrictModel):
+    tenant_id: str
+    accepted: bool
+
+
 class ChatCitationOut(StrictModel):
     chunk_id: str
     document_id: str

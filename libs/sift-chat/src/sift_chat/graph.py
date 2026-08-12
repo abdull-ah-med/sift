@@ -281,9 +281,7 @@ def build_chat_graph(checkpointer: Any, *, deps: ChatGraphDeps) -> Any:
     def persist(state: ChatGraphState) -> ChatGraphState:
         return _persist_turn(state, deps=deps)
 
-    graph: StateGraph[ChatGraphState, None, ChatGraphState, ChatGraphState] = StateGraph(
-        ChatGraphState
-    )
+    graph: Any = StateGraph(ChatGraphState)
     graph.add_node("hydrate_session", timed_node("hydrate_session", hydrate))
     graph.add_node("maybe_query_rewrite", timed_node("maybe_query_rewrite", rewrite))
     graph.add_node("retrieve_hybrid", timed_node("retrieve_hybrid", retrieve))

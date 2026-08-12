@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
-import pytest
 
 from sift_api.main import app
 from sift_api.schemas import ChatAskRequest, ChatSessionCreate
@@ -20,6 +20,8 @@ def test_chat_openapi_paths_registered() -> None:
         "/v1/chat/sessions/{session_id}",
         "/v1/chat/resume",
         "/v1/chat/turns/{turn_id}/citations",
+        "/v1/invites",
+        "/v1/invites/accept",
     ]
     for path in expected:
         assert path in paths, f"missing OpenAPI path {path}"

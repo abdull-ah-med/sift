@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { FormEvent, Suspense, useEffect, useState } from "react";
+import { FormEvent, Suspense, useCallback, useEffect, useState } from "react";
 import { Button, Card, CardContent } from "@sift/ui";
 import { apiFetch } from "@/lib/api";
 import { EmptyState, ErrorBanner, LoadingState, PageHeader } from "@/components/shell/PageStates";
@@ -22,7 +22,7 @@ function CollectionDetail() {
   const [file, setFile] = useState<File | null>(null);
   const [err, setErr] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     if (!collectionId) {
       setDocs([]);
       return;
@@ -34,11 +34,11 @@ function CollectionDetail() {
       return;
     }
     setDocs(await r.json());
-  }
+  }, [collectionId]);
 
   useEffect(() => {
     void load();
-  }, [collectionId]);
+  }, [load]);
 
   async function onUpload(e: FormEvent) {
     e.preventDefault();

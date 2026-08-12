@@ -32,3 +32,17 @@ test("parseChatSse yields token citation usage done", async () => {
     assert.equal(events[4].done.session_id, "sess_1");
   }
 });
+
+test("parseChatSse yields trailing done without blank line", async () => {
+  const body = sseStream([
+    'event: token\ndata: {"delta":"Hello"}\n\n',
+    'event: done\ndata: {"turn_id":"turn_1","insufficient":false,"session_id":"sess_1"}',
+  ]);
+  const events = [];
+  for await (const ev of parseChatSse(body)) events.push(ev);
+  assert.equal(events.length, 2);
+  assert.equal(events[1]?.type, "done");
+  if (events[1]?.type === "done") {
+    assert.equal(events[1].done.session_id, "sess_1");
+  }
+});

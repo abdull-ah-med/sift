@@ -32,17 +32,13 @@ function PageWithOverlays({
   const pageNo = props.pageIndex + 1;
   const pageOverlays = overlays.filter((o) => o.page === pageNo && o.bbox);
   const selectedBlockId = useContext(SelectedBlockContext);
+  const { canvasLayerRendered, textLayerRendered, markRendered, pageIndex } = props;
 
   useEffect(() => {
-    if (props.canvasLayerRendered && props.textLayerRendered) {
-      props.markRendered(props.pageIndex);
+    if (canvasLayerRendered && textLayerRendered) {
+      markRendered(pageIndex);
     }
-  }, [
-    props.canvasLayerRendered,
-    props.textLayerRendered,
-    props.markRendered,
-    props.pageIndex,
-  ]);
+  }, [canvasLayerRendered, textLayerRendered, markRendered, pageIndex]);
 
   // Overlay layer last so hit-targets sit above text/annotation (Phase 2 §4.4).
   return (
@@ -94,12 +90,18 @@ export default function ReviewPdfViewer({
     [overlays],
   );
 
-  const renderPage = useMemo(
-    () => (props: RenderPageProps) => (
-      <PageWithOverlays props={props} overlays={geometry} onSelectBlock={onSelectBlock} />
-    ),
-    [geometry, onSelectBlock],
-  );
+  const renderPage = useMemo(() => {
+    function RenderPage(pageProps: RenderPageProps) {
+      return (
+        <PageWithOverlays
+          props={pageProps}
+          overlays={geometry}
+          onSelectBlock={onSelectBlock}
+        />
+      );
+    }
+    return RenderPage;
+  }, [geometry, onSelectBlock]);
 
   return (
     <SelectedBlockContext.Provider value={selectedBlockId}>

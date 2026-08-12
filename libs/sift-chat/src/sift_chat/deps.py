@@ -183,7 +183,7 @@ class HybridRetrieverAdapter:
         collection_id: str,
         top_k: int,
     ) -> list[RetrieveHit]:
-        return self.retriever.retrieve(
+        return self.retriever.retrieve(  # type: ignore[no-any-return]
             query=query,
             tenant_id=tenant_id,
             collection_id=collection_id,
@@ -247,7 +247,7 @@ class InstructorAnswerGenerator:
         # Import locally so importing sift_chat does not require a live provider.
         # allowed_chunk_ids reserved for prompt hardening / future constrained decoding.
         _ = allowed_chunk_ids
-        return self.client.chat.completions.create(
+        return self.client.chat.completions.create(  # type: ignore[no-any-return]
             model=self.model,
             max_tokens=self.max_tokens,
             messages=[

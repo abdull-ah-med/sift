@@ -48,7 +48,7 @@ def setup_logging(*, json_logs: bool = True) -> None:
     else:
         renderer = structlog.dev.ConsoleRenderer()
     structlog.configure(
-        processors=[*shared, renderer],
+        processors=[*shared, renderer],  # type: ignore[list-item]
         wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
         logger_factory=structlog.PrintLoggerFactory(),
         cache_logger_on_first_use=True,
@@ -56,4 +56,4 @@ def setup_logging(*, json_logs: bool = True) -> None:
 
 
 def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
-    return structlog.get_logger(name)
+    return structlog.get_logger(name)  # type: ignore[no-any-return]

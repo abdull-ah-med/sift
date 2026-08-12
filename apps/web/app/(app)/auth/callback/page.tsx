@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { setApiUrl } from "@/lib/api";
+import { consumeStoredInvite } from "@/lib/invite";
 
 function CallbackInner() {
   const params = useSearchParams();
@@ -48,6 +49,11 @@ function CallbackInner() {
       setApiUrl(process.env.NEXT_PUBLIC_SIFT_API_URL || "http://127.0.0.1:8000");
       sessionStorage.removeItem("sift_pkce_verifier");
       sessionStorage.removeItem("sift_oauth_state");
+      try {
+        await consumeStoredInvite();
+      } catch {
+        /* invite accept is best-effort after OIDC */
+      }
       router.replace("/collections");
     })();
   }, [params, router]);

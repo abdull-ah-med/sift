@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import os
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
@@ -210,11 +210,7 @@ class _PgTurnPersister:
         assistant_turn_id = _new_turn_id()
         self.last_turn_id = assistant_turn_id
         now = datetime.now(UTC)
-        docs = sorted(
-            {
-                # document ids are resolved at citation fetch time; keep empty here
-            }
-        )
+        docs: list[str] = []
         with self._engine.begin() as conn:
             _with_tenant(conn, tenant_id)
             conn.execute(
@@ -335,20 +331,6 @@ def _require_review_for_collection(conn: Connection, collection_id: str) -> bool
     if isinstance(policy, str):
         policy = json.loads(policy)
     return bool(policy.get("require_review") or policy.get("chat_require_review"))
-
-
-def _token_deltas(text: str) -> Iterator[str]:
-    """Yield whitespace-preserving token-ish chunks without artificial delay."""
-    if not text:
-        return
-    buf = ""
-    for ch in text:
-        buf += ch
-        if ch.isspace() and buf.strip():
-            yield buf
-            buf = ""
-    if buf:
-        yield buf
 
 
 def _actor_sub(ctx: AuthContext) -> str:
@@ -544,7 +526,7 @@ async def delete_chat_session(
         ),
         {"id": session_id, "user_sub": user_sub, "ts": datetime.now(UTC)},
     )
-    if result.rowcount == 0:
+    if int(getattr(result, "rowcount", 0) or 0) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="session not found")
     await session.commit()
     emit_audit(
@@ -644,14 +626,21 @@ async def chat_ask(  # noqa: PLR0915 — SSE orchestration
             if await request.is_disconnected():
                 cancelled = True
                 return
-            answer = LLMAnswer.model_validate(result.get("answer") or {})
-            for delta in _token_deltas(answer.text):
-                if await request.is_disconnected():
-                    cancelled = True
-                    break
-                yield _sse("token", {"delta": delta})
-            if cancelled:
+            if result.get("__interrupt__"):
+                yield _sse(
+                    "done",
+                    {
+                        "turn_id": None,
+                        "insufficient": False,
+                        "session_id": session_id,
+                        "status": "pending_review",
+                    },
+                )
                 return
+            answer = LLMAnswer.model_validate(result.get("answer") or {})
+            # One delta with the completed answer — the graph is not a token stream.
+            if answer.text:
+                yield _sse("token", {"delta": answer.text})
             start = 0
             for cid in answer.cited_chunk_ids:
                 end = start + len(cid)
@@ -694,9 +683,12 @@ async def chat_ask(  # noqa: PLR0915 — SSE orchestration
 @router.post("/chat/resume")
 async def chat_resume(
     body: ChatResumeRequest,
-    ctx: Annotated[AuthContext, Depends(require_scopes("chat"))],
+    ctx: Annotated[AuthContext, Depends(require_scopes("chat", "documents:write"))],
 ) -> dict[str, Any]:
-    """Resume a HITL-interrupted chat graph."""
+    """Resume a HITL-interrupted chat graph.
+
+    Reviewer must hold ``documents:write`` and must not be the session owner.
+    """
     from sift_api.checkpointer import open_postgres_checkpointer
 
     settings = get_settings()
@@ -704,18 +696,24 @@ async def chat_resume(
     try:
         with eng.begin() as conn:
             _with_tenant(conn, ctx.tenant_id)
-            owned = conn.execute(
+            row = conn.execute(
                 text(
                     """
-                    SELECT 1 FROM chat_sessions
-                    WHERE id = :id AND user_sub = :user_sub AND deleted_at IS NULL
+                    SELECT user_sub FROM chat_sessions
+                    WHERE id = :id AND deleted_at IS NULL
                     """
                 ),
-                {"id": body.session_id, "user_sub": _actor_sub(ctx)},
+                {"id": body.session_id},
             ).first()
-            if owned is None:
+            if row is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND, detail="session not found"
+                )
+            owner = str(row[0])
+            if owner == _actor_sub(ctx):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="reviewer must not be the session owner",
                 )
         persister = _PgTurnPersister(engine=eng)
         deps = ChatGraphDeps(

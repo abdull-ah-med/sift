@@ -74,9 +74,9 @@ def score_with_ragas(rows: list[dict[str, Any]]) -> dict[str, float]:
         return score_offline(rows)
     # Optional path — import lazily so default installs stay light.
     try:
-        from ragas import evaluate  # type: ignore[import-not-found]
-        from ragas.metrics import context_recall as ragas_context_recall  # type: ignore[import-not-found]
-        from ragas.metrics import faithfulness as ragas_faithfulness  # type: ignore[import-not-found]
+        from ragas import evaluate
+        from ragas.metrics import context_recall as ragas_context_recall
+        from ragas.metrics import faithfulness as ragas_faithfulness
     except Exception:
         return score_offline(rows)
 
@@ -88,7 +88,7 @@ def score_with_ragas(rows: list[dict[str, Any]]) -> dict[str, float]:
         "ground_truth": [str(r.get("ground_truth") or "") for r in rows],
     }
     try:
-        from datasets import Dataset  # type: ignore[import-not-found]
+        from datasets import Dataset
 
         ds = Dataset.from_dict(dataset)
         result = evaluate(

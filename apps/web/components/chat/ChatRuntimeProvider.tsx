@@ -59,6 +59,8 @@ export function ChatRuntimeProvider({
   sessionRef.current = sessionId;
 
   useEffect(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
     let cancelled = false;
     async function load() {
       if (!sessionId) {
@@ -66,6 +68,8 @@ export function ChatRuntimeProvider({
         onCitations([]);
         return;
       }
+      setMessages([]);
+      onCitations([]);
       try {
         const detail = await getChatSession(sessionId);
         if (cancelled) return;
@@ -94,6 +98,7 @@ export function ChatRuntimeProvider({
         throw new Error("Only text messages are supported");
       }
       const input = part.text;
+      const startedFor = sessionRef.current;
       const userMsg: StoreMessage = {
         id: newClientMessageId("user"),
         role: "user",
@@ -113,7 +118,7 @@ export function ChatRuntimeProvider({
         for await (const ev of streamChatAsk({
           collectionId,
           message: input,
-          sessionId: sessionRef.current,
+          sessionId: startedFor,
           signal: ac.signal,
         })) {
           if (ev.type === "token") {
@@ -125,8 +130,20 @@ export function ChatRuntimeProvider({
             chunkIds.push(ev.citation.chunk_id);
             onStreamingChunkIds([...chunkIds]);
           } else if (ev.type === "done") {
-            if (ev.done.session_id) onSessionId(ev.done.session_id);
-            if (ev.done.turn_id) {
+            const stillThisSession =
+              sessionRef.current === startedFor ||
+              (startedFor == null &&
+                (sessionRef.current == null || sessionRef.current === ev.done.session_id));
+            if (ev.done.session_id && stillThisSession) {
+              onSessionId(ev.done.session_id);
+            }
+            if (ev.done.status === "pending_review" && !text.trim()) {
+              text = "Answer held for review.";
+              setMessages((prev) =>
+                prev.map((m) => (m.id === assistantId ? { ...m, content: text } : m)),
+              );
+            }
+            if (ev.done.turn_id && stillThisSession) {
               const cites = await fetchTurnCitations(ev.done.turn_id);
               onCitations(cites);
               onStreamingChunkIds([]);
@@ -139,6 +156,12 @@ export function ChatRuntimeProvider({
             }
           }
         }
+      } catch (err) {
+        if (ac.signal.aborted) return;
+        const msg = err instanceof Error ? err.message : "Chat request failed.";
+        setMessages((prev) =>
+          prev.map((m) => (m.id === assistantId ? { ...m, content: msg } : m)),
+        );
       } finally {
         setIsRunning(false);
       }

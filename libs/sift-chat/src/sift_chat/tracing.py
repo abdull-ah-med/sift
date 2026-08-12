@@ -25,12 +25,12 @@ except ImportError:  # pragma: no cover - obs optional at import time in isolati
         return nullcontext(None)
 
     def langfuse_span(
-        trace_obj: Any,
+        trace: Any,
         *,
         name: str,
         metadata: dict[str, Any] | None = None,
     ) -> Any:
-        _ = trace_obj, name, metadata
+        _ = trace, name, metadata
         return None
 
 
@@ -54,11 +54,7 @@ def timed_node[T](node_name: str, fn: Callable[[T], T]) -> Callable[[T], T]:
             out = fn(state)
         elapsed_ms = (time.perf_counter() - started) * 1000.0
         record_phase_latency(phase=phase, latency_ms=elapsed_ms)
-        if (
-            node_name == "validate_citations"
-            and isinstance(out, dict)
-            and out.get("insufficient")
-        ):
+        if node_name == "validate_citations" and isinstance(out, dict) and out.get("insufficient"):
             record_insufficient(collection_id=str(out.get("collection_id") or "unknown"))
         return out
 

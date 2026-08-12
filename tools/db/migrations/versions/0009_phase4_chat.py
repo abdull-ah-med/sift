@@ -37,9 +37,7 @@ def upgrade() -> None:
         """
     )
     op.execute("CREATE INDEX chat_sessions_tenant_idx ON chat_sessions(tenant_id)")
-    op.execute(
-        "CREATE INDEX chat_sessions_collection_idx ON chat_sessions(collection_id)"
-    )
+    op.execute("CREATE INDEX chat_sessions_collection_idx ON chat_sessions(collection_id)")
     op.execute(
         """
         CREATE INDEX chat_sessions_user_idx
@@ -65,9 +63,7 @@ def upgrade() -> None:
         )
         """
     )
-    op.execute(
-        "CREATE INDEX chat_turns_session_idx ON chat_turns(session_id, created_at)"
-    )
+    op.execute("CREATE INDEX chat_turns_session_idx ON chat_turns(session_id, created_at)")
 
     op.execute("ALTER TABLE chat_sessions ENABLE ROW LEVEL SECURITY")
     op.execute("ALTER TABLE chat_sessions FORCE ROW LEVEL SECURITY")
@@ -93,12 +89,8 @@ def upgrade() -> None:
         """
     )
 
-    op.execute(
-        "GRANT SELECT, INSERT, UPDATE, DELETE ON chat_sessions TO sift_app, sift_admin"
-    )
-    op.execute(
-        "GRANT SELECT, INSERT, UPDATE, DELETE ON chat_turns TO sift_app, sift_admin"
-    )
+    op.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON chat_sessions TO sift_app, sift_admin")
+    op.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON chat_turns TO sift_app, sift_admin")
 
 
 def downgrade() -> None:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 from langgraph.checkpoint.memory import InMemorySaver
 
@@ -90,8 +91,8 @@ def test_graph_ainvoke_grounded_path() -> None:
     )
     graph = build_chat_graph(InMemorySaver(), deps=deps)
 
-    async def _run() -> dict:
-        return await graph.ainvoke(
+    async def _run() -> dict[str, Any]:
+        return await graph.ainvoke(  # type: ignore[no-any-return]
             {
                 "tenant_id": "ten_1",
                 "collection_id": "col_1",

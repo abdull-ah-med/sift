@@ -172,7 +172,7 @@ async def _auth_from_jwt(token: str, settings: Settings) -> AuthContext:
                         """
                     SELECT tenant_id, role FROM users_in_tenant
                     WHERE user_sub = :sub
-                    ORDER BY created_at ASC
+                    ORDER BY created_at DESC
                     LIMIT 1
                     """
                     ),

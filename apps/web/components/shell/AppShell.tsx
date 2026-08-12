@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getAccessToken } from "@/lib/api";
+import { consumeStoredInvite } from "@/lib/invite";
 import { AppSidebar } from "./AppSidebar";
 import { AppTopbar } from "./AppTopbar";
 import { CommandPalette } from "./CommandPalette";
@@ -8,6 +10,11 @@ import { CommandPalette } from "./CommandPalette";
 /** Authenticated product chrome — sidebar + topbar + ⌘K. */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [cmdOpen, setCmdOpen] = useState(false);
+
+  useEffect(() => {
+    if (!getAccessToken()) return;
+    void consumeStoredInvite();
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-[rgb(var(--sift-bg))] text-[rgb(var(--sift-text))]">
