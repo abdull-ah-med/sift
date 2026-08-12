@@ -5,6 +5,7 @@ import {
   MessagePrimitive,
   ThreadPrimitive,
 } from "@assistant-ui/react";
+import { ThinkingOrb } from "thinking-orbs";
 import { Button } from "@sift/ui";
 
 const SUGGESTIONS = [
@@ -19,20 +20,21 @@ export function ChatThread() {
     <ThreadPrimitive.Root className="flex h-full min-w-0 flex-1 flex-col">
       <ThreadPrimitive.Viewport className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
         <ThreadPrimitive.Empty>
-          <div className="mx-auto flex max-w-lg flex-col gap-4 py-12 text-center">
+          <div className="mx-auto flex max-w-lg flex-col gap-4 py-12">
             <h2 className="text-lg font-semibold tracking-tight">Ask this collection</h2>
             <p className="text-sm text-[rgb(var(--sift-text-muted))]">
-              Answers stream with citations. Suggested prompts are static for MVP.
+              Answers stream with citations. If the chunks are not enough, sift says so.
             </p>
             <div className="flex flex-col gap-2">
               {SUGGESTIONS.map((text) => (
                 <ThreadPrimitive.Suggestion key={text} prompt={text} method="replace" asChild>
-                  <button
+                  <Button
                     type="button"
-                    className="rounded-md border border-[rgb(var(--sift-border))] bg-[rgb(var(--sift-surface))] px-3 py-2 text-left text-sm hover:border-[rgb(var(--sift-border-strong))]"
+                    variant="ghost"
+                    className="h-auto justify-start whitespace-normal py-2 text-left"
                   >
                     {text}
-                  </button>
+                  </Button>
                 </ThreadPrimitive.Suggestion>
               ))}
             </div>
@@ -52,7 +54,7 @@ export function ChatThread() {
           <ComposerPrimitive.Input
             rows={1}
             placeholder="Ask a question…"
-            className="max-h-40 min-h-[2.5rem] flex-1 resize-none bg-transparent text-sm outline-none placeholder:text-[rgb(var(--sift-text-muted))]"
+            className="max-h-40 min-h-10 flex-1 resize-none bg-transparent text-sm outline-none placeholder:text-[rgb(var(--sift-text-muted))]"
             aria-label="Chat message"
           />
           <ComposerPrimitive.Send asChild>
@@ -76,11 +78,18 @@ function UserMessage() {
 
 function AssistantMessage() {
   return (
-    <MessagePrimitive.Root className="mr-auto max-w-[85%] rounded-lg border border-[rgb(var(--sift-border))] px-3 py-2 text-sm">
+    <MessagePrimitive.Root className="mr-auto max-w-[85%] text-sm">
       <div aria-live="polite" className="whitespace-pre-wrap">
         <MessagePrimitive.Content />
         <ThreadPrimitive.If running>
-          <span className="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-[rgb(var(--sift-accent))] align-middle" />
+          <MessagePrimitive.If hasContent={false}>
+            <span className="mt-2 inline-flex text-[rgb(var(--sift-accent))]">
+              <ThinkingOrb state="working" size={20} theme="dark" aria-label="Waiting for answer" />
+            </span>
+          </MessagePrimitive.If>
+          <MessagePrimitive.If hasContent>
+            <span className="ml-0.5 inline-block h-4 w-0.5 bg-[rgb(var(--sift-accent))] align-middle" />
+          </MessagePrimitive.If>
         </ThreadPrimitive.If>
       </div>
     </MessagePrimitive.Root>

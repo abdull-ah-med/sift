@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@sift/ui";
+import { Button, ScrollArea } from "@sift/ui";
 import type { ChatSession } from "@/lib/chat/types";
 import { EmptyState } from "@/components/shell/PageStates";
 
@@ -31,40 +31,44 @@ export function SessionList({
           New
         </Button>
       </div>
-      <div className="flex-1 overflow-auto p-2">
-        {sessions.length === 0 ? (
-          <EmptyState title="No sessions" body="Start a chat to create one." />
-        ) : (
-          <ul className="flex flex-col gap-1">
-            {sessions.map((s) => {
-              const active = s.id === activeId;
-              return (
-                <li key={s.id} className="group flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => onSelect(s.id)}
-                    className={`min-w-0 flex-1 rounded-md px-2 py-2 text-left text-sm ${
-                      active
-                        ? "bg-[rgb(var(--sift-surface))] text-[rgb(var(--sift-text))]"
-                        : "text-[rgb(var(--sift-text-muted))] hover:bg-[rgb(var(--sift-surface))]/60"
-                    }`}
-                  >
-                    <span className="block truncate">{s.title || "Untitled chat"}</span>
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Delete session"
-                    className="hidden rounded px-1 text-xs text-[rgb(var(--sift-text-muted))] group-hover:inline hover:text-red-300"
-                    onClick={() => onDelete(s.id)}
-                  >
-                    ×
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
+      <ScrollArea className="flex-1">
+        <div className="p-2">
+          {sessions.length === 0 ? (
+            <EmptyState title="No sessions" body="Start a chat to create one." />
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {sessions.map((s) => {
+                const active = s.id === activeId;
+                return (
+                  <li key={s.id} className="group flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => onSelect(s.id)}
+                      className={`min-w-0 flex-1 rounded-md px-2 py-2 text-left text-sm ${
+                        active
+                          ? "bg-[rgb(var(--sift-surface))] font-medium text-[rgb(var(--sift-text))]"
+                          : "text-[rgb(var(--sift-text-muted))] hover:bg-[rgb(var(--sift-surface))]/60"
+                      }`}
+                    >
+                      <span className="block truncate">{s.title || "Untitled chat"}</span>
+                    </button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      aria-label="Delete session"
+                      className="hidden h-8 px-2 group-hover:inline-flex"
+                      onClick={() => onDelete(s.id)}
+                    >
+                      Delete
+                    </Button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </ScrollArea>
     </aside>
   );
 }

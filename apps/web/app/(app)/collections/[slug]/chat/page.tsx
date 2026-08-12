@@ -86,7 +86,7 @@ function ChatPageInner() {
   );
 
   return (
-    <div className="flex h-[calc(100vh-3rem)] flex-col">
+    <div className="flex h-[calc(100svh-6rem)] flex-col">
       <PageHeader
         title={`Chat · ${slug}`}
         description={collectionId || "Pass ?id=collection-uuid"}

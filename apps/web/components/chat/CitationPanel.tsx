@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Badge, Card, ScrollArea } from "@sift/ui";
 import type { ChatCitation } from "@/lib/chat/types";
 import { EmptyState } from "@/components/shell/PageStates";
 
@@ -25,49 +26,53 @@ export function CitationPanel({
           Citations
         </span>
       </div>
-      <div className="flex-1 overflow-auto p-3">
-        {citations.length === 0 && pending.length === 0 ? (
-          <EmptyState title="No citations yet" body="Cited chunks appear after an answer streams." />
-        ) : null}
-        <ul className="flex flex-col gap-3">
-          {citations.map((c) => {
-            const page = c.page_numbers?.[0];
-            const href =
-              page != null
-                ? `/collections/${encodeURIComponent(collectionSlug)}/documents/${encodeURIComponent(c.document_id)}/review?page=${page}`
-                : `/collections/${encodeURIComponent(collectionSlug)}/documents/${encodeURIComponent(c.document_id)}/review`;
-            return (
+      <ScrollArea className="flex-1">
+        <div className="p-3">
+          {citations.length === 0 && pending.length === 0 ? (
+            <EmptyState title="No citations yet" body="Cited chunks appear after an answer streams." />
+          ) : null}
+          <ul className="flex flex-col gap-3">
+            {citations.map((c, i) => {
+              const page = c.page_numbers?.[0];
+              const href =
+                page != null
+                  ? `/collections/${encodeURIComponent(collectionSlug)}/documents/${encodeURIComponent(c.document_id)}/review?page=${page}`
+                  : `/collections/${encodeURIComponent(collectionSlug)}/documents/${encodeURIComponent(c.document_id)}/review`;
+              return (
+                <li key={c.chunk_id}>
+                  <Card className="p-3">
+                    <div className="flex items-center gap-2">
+                      <Badge>{i + 1}</Badge>
+                      <Link href={href} className="text-sm font-medium">
+                        Open source
+                      </Link>
+                    </div>
+                    <p className="mt-1 font-mono text-[10px] text-[rgb(var(--sift-text-muted))]">
+                      {c.chunk_id}
+                    </p>
+                    {c.section_path?.length ? (
+                      <p className="mt-1 text-xs text-[rgb(var(--sift-text-muted))]">
+                        {(c.section_path || []).join(" / ")}
+                      </p>
+                    ) : null}
+                    {c.text ? (
+                      <p className="mt-2 line-clamp-4 text-sm text-[rgb(var(--sift-text))]">{c.text}</p>
+                    ) : null}
+                  </Card>
+                </li>
+              );
+            })}
+            {pending.map((id) => (
               <li
-                key={c.chunk_id}
-                className="rounded-md border border-[rgb(var(--sift-border))] bg-[rgb(var(--sift-surface))] p-3"
+                key={id}
+                className="rounded-md border border-dashed border-[rgb(var(--sift-border))] p-3 text-xs text-[rgb(var(--sift-text-muted))]"
               >
-                <Link href={href} className="text-sm font-medium text-[rgb(var(--sift-accent))]">
-                  Open source
-                </Link>
-                <p className="mt-1 font-mono text-[10px] text-[rgb(var(--sift-text-muted))]">
-                  {c.chunk_id}
-                </p>
-                {c.section_path?.length ? (
-                  <p className="mt-1 text-xs text-[rgb(var(--sift-text-muted))]">
-                    {(c.section_path || []).join(" / ")}
-                  </p>
-                ) : null}
-                {c.text ? (
-                  <p className="mt-2 line-clamp-4 text-sm text-[rgb(var(--sift-text))]">{c.text}</p>
-                ) : null}
+                Citing {id}…
               </li>
-            );
-          })}
-          {pending.map((id) => (
-            <li
-              key={id}
-              className="rounded-md border border-dashed border-[rgb(var(--sift-border))] p-3 text-xs text-[rgb(var(--sift-text-muted))]"
-            >
-              Citing {id}…
-            </li>
-          ))}
-        </ul>
-      </div>
+            ))}
+          </ul>
+        </div>
+      </ScrollArea>
     </aside>
   );
 }
