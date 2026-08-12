@@ -28,6 +28,8 @@ type Block = {
 };
 
 const FILTERS = ["needs_review", "in_review", "all"] as const;
+/** Browser memory bound for review PDF blobs (code-security unbounded-read rule). */
+const MAX_REVIEW_PDF_BYTES = 100 * 1024 * 1024;
 
 export default function ReviewPage() {
   const params = useParams<{ slug: string; docId: string }>();
@@ -74,8 +76,19 @@ export default function ReviewPage() {
         if (!cancelled) setPdfErr(await r.text());
         return;
       }
+      const contentLength = r.headers.get("content-length");
+      if (contentLength != null && Number(contentLength) > MAX_REVIEW_PDF_BYTES) {
+        if (!cancelled) {
+          setPdfErr(`PDF exceeds ${MAX_REVIEW_PDF_BYTES} byte review limit`);
+        }
+        return;
+      }
       const blob = await r.blob();
       if (cancelled) return;
+      if (blob.size > MAX_REVIEW_PDF_BYTES) {
+        setPdfErr(`PDF exceeds ${MAX_REVIEW_PDF_BYTES} byte review limit`);
+        return;
+      }
       objectUrl = URL.createObjectURL(blob);
       setPdfUrl(objectUrl);
     }
@@ -224,9 +237,8 @@ export default function ReviewPage() {
         id: b.id,
         page: b.provenance.page_no ?? 1,
         bbox: b.provenance.bbox ?? null,
-        selected: b.id === selectedId,
       })),
-    [blocks, selectedId],
+    [blocks],
   );
 
   return (
@@ -264,6 +276,7 @@ export default function ReviewPage() {
             <ReviewPdfViewer
               fileUrl={pdfUrl}
               overlays={overlays}
+              selectedBlockId={selectedId}
               onSelectBlock={setSelectedId}
             />
           ) : (

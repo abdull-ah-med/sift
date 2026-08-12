@@ -776,7 +776,12 @@ async def document_content(
         os.close(fd)
         tmp_path = Path(tmp_name)
         try:
-            await asyncio.to_thread(download_object, source_uri=source_uri, dest=tmp_path)
+            await asyncio.to_thread(
+                download_object,
+                source_uri=source_uri,
+                dest=tmp_path,
+                tenant_id=ctx.tenant_id,
+            )
         except Exception as exc:
             tmp_path.unlink(missing_ok=True)
             raise HTTPException(

@@ -2,21 +2,23 @@
 
 import { Viewer, Worker, type RenderPageProps } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
-import { useEffect, useMemo } from "react";
+import { createContext, useContext, useEffect, useMemo } from "react";
 import { bboxToOverlayStyle, type BBox } from "@/lib/bbox";
 
 export type OverlayBlock = {
   id: string;
   page: number;
   bbox: BBox | null;
-  selected: boolean;
 };
 
 type Props = {
   fileUrl: string;
   overlays: OverlayBlock[];
+  selectedBlockId?: string | null;
   onSelectBlock?: (blockId: string) => void;
 };
+
+const SelectedBlockContext = createContext<string | null>(null);
 
 function PageWithOverlays({
   props,
@@ -29,6 +31,7 @@ function PageWithOverlays({
 }) {
   const pageNo = props.pageIndex + 1;
   const pageOverlays = overlays.filter((o) => o.page === pageNo && o.bbox);
+  const selectedBlockId = useContext(SelectedBlockContext);
 
   useEffect(() => {
     if (props.canvasLayerRendered && props.textLayerRendered) {
@@ -67,7 +70,7 @@ function PageWithOverlays({
             <button
               key={o.id}
               type="button"
-              className={o.selected ? "bbox-overlay selected" : "bbox-overlay"}
+              className={o.id === selectedBlockId ? "bbox-overlay selected" : "bbox-overlay"}
               style={{ ...style, pointerEvents: "auto" }}
               aria-label={`Block ${o.id}`}
               onClick={() => onSelectBlock?.(o.id)}
@@ -79,27 +82,40 @@ function PageWithOverlays({
   );
 }
 
-export default function ReviewPdfViewer({ fileUrl, overlays, onSelectBlock }: Props) {
+export default function ReviewPdfViewer({
+  fileUrl,
+  overlays,
+  selectedBlockId = null,
+  onSelectBlock,
+}: Props) {
+  // Geometry only — selection must not change renderPage identity (scroll/zoom).
+  const geometry = useMemo(
+    () => overlays.map(({ id, page, bbox }) => ({ id, page, bbox })),
+    [overlays],
+  );
+
   const renderPage = useMemo(
     () => (props: RenderPageProps) => (
-      <PageWithOverlays props={props} overlays={overlays} onSelectBlock={onSelectBlock} />
+      <PageWithOverlays props={props} overlays={geometry} onSelectBlock={onSelectBlock} />
     ),
-    [overlays, onSelectBlock],
+    [geometry, onSelectBlock],
   );
 
   return (
-    <div className="review-pdf" aria-label="PDF viewer">
-      <Worker workerUrl="/pdf.worker.min.js">
-        <Viewer
-          fileUrl={fileUrl}
-          renderPage={renderPage}
-          // Mitigate CVE-2024-4367 while pinned to pdfjs 3.x required by @react-pdf-viewer/core@3.12.
-          transformGetDocumentParams={(params) => ({
-            ...params,
-            isEvalSupported: false,
-          })}
-        />
-      </Worker>
-    </div>
+    <SelectedBlockContext.Provider value={selectedBlockId}>
+      <div className="review-pdf" aria-label="PDF viewer">
+        <Worker workerUrl="/pdf.worker.min.js">
+          <Viewer
+            fileUrl={fileUrl}
+            renderPage={renderPage}
+            // Mitigate CVE-2024-4367 while pinned to pdfjs 3.x required by @react-pdf-viewer/core@3.12.
+            transformGetDocumentParams={(params) => ({
+              ...params,
+              isEvalSupported: false,
+            })}
+          />
+        </Worker>
+      </div>
+    </SelectedBlockContext.Provider>
   );
 }
