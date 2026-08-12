@@ -17,6 +17,7 @@ from sift_api.schemas import (
     ReviewGraphOut,
     ReviewResumeIn,
 )
+from sift_api.tasks import embed_document
 from sift_core.ids import IdKind, new_id
 from sift_core.models import (
     Block,
@@ -488,6 +489,7 @@ async def finalize_document(
             "chunk_count": len(chunks),
         },
     )
+    await embed_document.kiq(document_id, ctx.tenant_id)
     return FinalizeOut(
         document_id=document_id,
         status="indexing",
