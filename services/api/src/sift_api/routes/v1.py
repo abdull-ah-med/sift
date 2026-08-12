@@ -17,7 +17,6 @@ from starlette.responses import FileResponse
 
 from sift_api.audit_emit import emit_audit
 from sift_api.auth import AuthContext, get_auth_context, require_scopes, tenant_db
-from sift_api.ingest import run_ingest_document
 from sift_api.schemas import (
     ApiKeyCreate,
     ApiKeyCreated,
@@ -42,6 +41,7 @@ from sift_api.settings import Settings, get_settings
 from sift_api.storage import create_presigned_put, download_object, parse_seaweed_uri, seaweed_uri
 from sift_api.tenant_session import begin_admin_session
 from sift_core.auth.api_keys import mint_api_key
+from sift_core.db import tenant_guc_statements
 from sift_core.ids import IdKind, new_id
 
 router = APIRouter(prefix="/v1", tags=["v1"])
@@ -574,7 +574,7 @@ async def register_document(
             "created_at": now,
         },
     )
-    # Commit so sync ingest (separate connection) can see rows.
+    # Commit so the worker (separate connection) can see queued rows.
     await session.commit()
     emit_audit(
         tenant_id=ctx.tenant_id,
@@ -584,29 +584,44 @@ async def register_document(
         target_id=doc_id,
         payload={"collection_id": collection_id, "job_id": job_id},
     )
-    doc_status = "queued"
-    try:
-        doc_status = run_ingest_document(
-            document_id=doc_id,
-            job_id=job_id,
-            tenant_id=ctx.tenant_id,
-            settings=settings,
-        )
-    except Exception:
-        doc_status = "failed"
-    try:
-        from sift_api.tasks import ingest_document
+    # Worker is the sole parse path — enqueue only; never run ingest inline.
+    from sift_api.tasks import ingest_document
 
+    try:
         await ingest_document.kiq(doc_id, job_id, ctx.tenant_id)
-    except Exception:
-        # Broker optional in tests / local without Valkey streams.
-        pass
+    except Exception as exc:
+        # Commit cleared SET LOCAL role/GUC — rebind before compensating deletes.
+        conn = await session.connection()
+        await conn.execute(text("SET LOCAL ROLE sift_app"))
+        for stmt in tenant_guc_statements(ctx.tenant_id):
+            await conn.execute(text(stmt))
+        await session.execute(
+            text("DELETE FROM jobs WHERE id = :id AND tenant_id = :tid"),
+            {"id": job_id, "tid": ctx.tenant_id},
+        )
+        await session.execute(
+            text("DELETE FROM documents WHERE id = :id AND tenant_id = :tid"),
+            {"id": doc_id, "tid": ctx.tenant_id},
+        )
+        await session.commit()
+        emit_audit(
+            tenant_id=ctx.tenant_id,
+            actor=ctx.actor,
+            action="document.register_enqueue_failed",
+            target_kind="document",
+            target_id=doc_id,
+            payload={"collection_id": collection_id, "job_id": job_id},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="ingest enqueue unavailable",
+        ) from exc
     return DocumentOut(
         id=doc_id,
         collection_id=collection_id,
         title=body.title,
         slug=body.slug,
-        status=doc_status if doc_status not in {"skipped", "missing"} else "queued",
+        status="queued",
         source_uri=source_uri,
         created_at=now,
     )

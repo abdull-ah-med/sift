@@ -202,19 +202,40 @@ def test_register_returns_503_when_enqueue_fails(
 
     monkeypatch.setattr(ingest_document, "kiq", _fail_kiq)
 
+    slug = f"n-{doc_id[-8:].lower()}"
+    payload = {
+        "object_key": object_key,
+        "title": "No Broker",
+        "slug": slug,
+        "source_mime": "application/pdf",
+        "source_bytes": 12,
+        "source_sha256": "b" * 64,
+    }
     response = api_client.post(
         f"/v1/collections/{collection_id}/documents",
         headers={"X-Api-Key": write_raw},
-        json={
-            "object_key": object_key,
-            "title": "No Broker",
-            "slug": f"n-{doc_id[-8:].lower()}",
-            "source_mime": "application/pdf",
-            "source_bytes": 12,
-            "source_sha256": "b" * 64,
-        },
+        json=payload,
     )
     assert response.status_code == HTTPStatus.SERVICE_UNAVAILABLE
+    with migrated_db.begin() as conn:
+        conn.execute(text("SET LOCAL ROLE sift_admin"))
+        remaining = conn.execute(
+            text("SELECT count(*) FROM documents WHERE id = :id"),
+            {"id": doc_id},
+        ).scalar_one()
+    assert int(remaining) == 0, "enqueue failure must not leave orphaned queued docs"
+
+    async def _ok_kiq(*_a: Any, **_k: Any) -> object:
+        return object()
+
+    monkeypatch.setattr(ingest_document, "kiq", _ok_kiq)
+    retry = api_client.post(
+        f"/v1/collections/{collection_id}/documents",
+        headers={"X-Api-Key": write_raw},
+        json=payload,
+    )
+    assert retry.status_code == HTTPStatus.OK, "retry must reuse slug after compensated 503"
+    assert retry.json()["status"] == "queued"
 
 
 @pytest.mark.integration
