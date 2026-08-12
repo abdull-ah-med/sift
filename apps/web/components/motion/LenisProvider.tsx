@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { ReactLenis, useLenis } from "lenis/react";
+import { ReactLenis } from "lenis/react";
 import "lenis/dist/lenis.css";
 
 const MARKETING_PATHS = new Set(["/", "/privacy", "/terms", "/login", "/signup", "/invite"]);
@@ -17,7 +17,7 @@ function isMarketingPath(pathname: string): boolean {
 }
 
 function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
+  const [reduced, setReduced] = useState(true);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -32,40 +32,22 @@ function usePrefersReducedMotion(): boolean {
   return reduced;
 }
 
-function LenisReducedMotionGate({ reduced }: { reduced: boolean }) {
-  const lenis = useLenis();
-
-  useEffect(() => {
-    if (!lenis) {
-      return;
-    }
-    if (reduced) {
-      lenis.stop();
-    } else {
-      lenis.start();
-    }
-  }, [lenis, reduced]);
-
-  return null;
-}
-
 /**
  * Smooth-scrolls public marketing/auth routes with Lenis.
- * The wrapper is pathname-stable (no remount). Reduced-motion users get
- * `lenis.stop()` once the instance exists.
+ * Reduced-motion users keep native scroll — Lenis is not mounted, because
+ * `lenis.stop()` applies `overflow: clip` and freezes the page.
  */
 export function LenisProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const reduced = usePrefersReducedMotion();
   const marketing = isMarketingPath(pathname);
 
-  if (!marketing) {
+  if (!marketing || reduced) {
     return children;
   }
 
   return (
-    <ReactLenis root options={{ autoRaf: true, lerp: 0.1 }}>
-      <LenisReducedMotionGate reduced={reduced} />
+    <ReactLenis root options={{ autoRaf: true, lerp: 0.1, respectReducedMotion: true }}>
       {children}
     </ReactLenis>
   );

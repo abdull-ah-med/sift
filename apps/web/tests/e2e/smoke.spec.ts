@@ -80,12 +80,11 @@ test("Lenis attaches on marketing and not on the app shell", async ({ page }) =>
   await expect(page.locator("html")).not.toHaveClass(/lenis/);
 });
 
-test("Lenis is stopped when the user prefers reduced motion", async ({ page }) => {
+test("Lenis does not attach when the user prefers reduced motion", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await expect
-    .poll(async () => page.locator("html").getAttribute("class") ?? "")
-    .toMatch(/lenis-stopped/);
+  await expect(page.getByRole("heading", { name: /Document intelligence you can trust/i })).toBeVisible();
+  await expect(page.locator("html")).not.toHaveClass(/lenis/);
 });
 
 test("login and signup chrome render", async ({ page }) => {
