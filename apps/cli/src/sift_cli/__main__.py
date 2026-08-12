@@ -1,4 +1,4 @@
-"""sift CLI — doctor, config, collections, keys, ingest, status."""
+"""sift CLI — doctor, config, collections, keys, ingest, status, search."""
 
 from __future__ import annotations
 
@@ -14,6 +14,12 @@ from rich.console import Console
 from rich.table import Table
 
 from sift_cli.device_login import cli_client_id_from_env, device_login, issuer_from_env
+from sift_cli.search import (
+    format_search_json,
+    format_search_rows,
+    looks_like_collection_id,
+    resolve_collection_id,
+)
 
 app = typer.Typer(name="sift", help="sift document intelligence CLI", no_args_is_help=True)
 console = Console()
@@ -239,6 +245,60 @@ def status(document_id: str = typer.Argument(...)) -> None:
         r = client.get(f"/v1/documents/{document_id}")
         r.raise_for_status()
         console.print_json(data=r.json())
+
+
+@app.command()
+def search(
+    query: str = typer.Argument(..., help="Natural-language search query"),
+    collection: str = typer.Option(..., "--collection", help="Collection slug or id"),
+    top: int = typer.Option(10, "--top", min=1, max=100),
+    as_json: bool = typer.Option(False, "--json", help="Emit raw JSON response"),
+    rerank: bool = typer.Option(True, "--rerank/--no-rerank"),
+    tag: list[str] | None = typer.Option(None, "--tag", help="Filter by document tag"),
+) -> None:
+    """Hybrid search a collection (dense + BM25 → RRF → optional rerank)."""
+    with _client() as client:
+        if looks_like_collection_id(collection):
+            collection_id = collection
+        else:
+            listed = client.get("/v1/collections")
+            listed.raise_for_status()
+            try:
+                collection_id = resolve_collection_id(listed.json(), collection)
+            except LookupError as exc:
+                console.print(str(exc), style="red")
+                raise typer.Exit(1) from exc
+        body: dict[str, Any] = {
+            "query": query,
+            "top_k": top,
+            "include_text": True,
+            "include_provenance": True,
+            "rerank": rerank,
+        }
+        if tag:
+            body["filter"] = {"tags": tag}
+        response = client.post(f"/v1/collections/{collection_id}/search", json=body)
+        response.raise_for_status()
+        payload = response.json()
+    if as_json:
+        console.print_json(data=format_search_json(payload))
+        return
+    table = Table(title=f"search · {collection}")
+    table.add_column("Document")
+    table.add_column("Score", justify="right")
+    table.add_column("Pages")
+    table.add_column("Section")
+    table.add_column("Snippet")
+    for row in format_search_rows(payload):
+        table.add_row(
+            row["document"],
+            row["score"],
+            row["pages"],
+            row["section"],
+            row["snippet"],
+        )
+    console.print(table)
+    console.print(f"[dim]trace_id={payload.get('trace_id', '')}[/dim]")
 
 
 def main() -> None:

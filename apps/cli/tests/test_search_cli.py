@@ -6,7 +6,17 @@ from typing import Any
 
 import pytest
 
-from sift_cli.search import format_search_json, format_search_rows, resolve_collection_id
+from sift_cli.search import (
+    format_search_json,
+    format_search_rows,
+    looks_like_collection_id,
+    resolve_collection_id,
+)
+
+
+def test_looks_like_collection_id() -> None:
+    assert looks_like_collection_id("col_abc")
+    assert not looks_like_collection_id("policies")
 
 
 def test_resolve_collection_id_matches_slug() -> None:

@@ -4,6 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
+_SNIPPET_LEN = 120
+
+
+def looks_like_collection_id(value: str) -> bool:
+    """True when ``value`` is already a collection id (skip list round-trip)."""
+    return value.startswith("col_")
+
 
 def resolve_collection_id(collections: list[dict[str, Any]], collection: str) -> str:
     """Resolve ``--collection`` slug or id against ``GET /v1/collections``."""
@@ -22,7 +29,7 @@ def format_search_rows(payload: dict[str, Any]) -> list[dict[str, str]]:
         if score is None:
             score = hit.get("score", 0.0)
         text = str(hit.get("text") or "")
-        snippet = text if len(text) <= 120 else text[:117] + "..."
+        snippet = text if len(text) <= _SNIPPET_LEN else text[: _SNIPPET_LEN - 3] + "..."
         path = hit.get("section_path") or []
         pages = hit.get("page_numbers") or []
         rows.append(
