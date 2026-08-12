@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import pytest
-from sqlalchemy import text
+from sqlalchemy import Connection, text
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import DBAPIError
 
 from sift_core.db import tenant_guc_statements
 from sift_core.ids import IdKind, new_id
@@ -12,7 +13,7 @@ from sift_core.ids import IdKind, new_id
 pytestmark = pytest.mark.integration
 
 
-def _apply_tenant_context(connection, tenant_id: str) -> None:
+def _apply_tenant_context(connection: Connection, tenant_id: str) -> None:
     for statement in tenant_guc_statements(tenant_id):
         connection.execute(text(statement))
 
@@ -52,6 +53,7 @@ def test_chunk_embeddings_table_shape_when_migrated(migrated_db: Engine) -> None
         }
         assert "chunk_embeddings_vec_idx" in indexes
         assert "chunk_embeddings_collection_idx" in indexes
+        assert "chunk_embeddings_tenant_idx" in indexes
 
         rls = conn.execute(
             text(
@@ -76,6 +78,7 @@ def test_chunk_embeddings_rls_hides_other_tenant(migrated_db: Engine) -> None:
     doc_b = new_id(IdKind.DOCUMENT)
     chunk_a = new_id(IdKind.CHUNK)
     chunk_b = new_id(IdKind.CHUNK)
+    chunk_b_extra = new_id(IdKind.CHUNK)
 
     with migrated_db.begin() as conn:
         conn.execute(text("SET LOCAL ROLE sift_admin"))
@@ -160,6 +163,24 @@ def test_chunk_embeddings_rls_hides_other_tenant(migrated_db: Engine) -> None:
                 ),
                 {"id": chunk_id, "tid": tenant_id, "cid": collection_id},
             )
+        conn.execute(
+            text(
+                """
+                INSERT INTO chunks (
+                  id, tenant_id, document_id, collection_id, ordinal,
+                  text_raw, text_contextualized, token_count, chunk_type
+                ) VALUES (
+                  :id, :tid, :did, :cid, 1, 'raw2', 'ctx2', 1, 'text'
+                )
+                """
+            ),
+            {
+                "id": chunk_b_extra,
+                "tid": tenant_b,
+                "did": doc_b,
+                "cid": col_b,
+            },
+        )
 
     with migrated_db.begin() as conn:
         conn.execute(text("SET LOCAL ROLE sift_app"))
@@ -169,5 +190,32 @@ def test_chunk_embeddings_rls_hides_other_tenant(migrated_db: Engine) -> None:
             .scalars()
             .all()
         )
+        assert visible == [chunk_a]
 
-    assert visible == [chunk_a]
+        updated = conn.execute(
+            text("UPDATE chunk_embeddings SET model = 'x' WHERE chunk_id = :id"),
+            {"id": chunk_b},
+        ).rowcount
+        assert updated == 0
+
+        deleted = conn.execute(
+            text("DELETE FROM chunk_embeddings WHERE chunk_id = :id"),
+            {"id": chunk_b},
+        ).rowcount
+        assert deleted == 0
+
+        with pytest.raises(DBAPIError):
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO chunk_embeddings (
+                      chunk_id, tenant_id, collection_id, model, dim, embedding, sparse
+                    ) VALUES (
+                      :id, :tid, :cid, 'bge-m3', 1024,
+                      (SELECT array_agg(0.0)::vector FROM generate_series(1, 1024)),
+                      '{}'::jsonb
+                    )
+                    """
+                ),
+                {"id": chunk_b_extra, "tid": tenant_b, "cid": col_b},
+            )
