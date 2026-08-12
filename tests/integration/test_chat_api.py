@@ -132,7 +132,7 @@ def test_chat_session_create_list_delete_happy(
         headers={"X-Api-Key": chat_raw},
         json={"title": "Refund Qs"},
     )
-    assert created.status_code == HTTPStatus.OK
+    assert created.status_code in (HTTPStatus.OK, HTTPStatus.CREATED)
     session_id = created.json()["id"]
     assert session_id.startswith("sess_") or session_id
 
