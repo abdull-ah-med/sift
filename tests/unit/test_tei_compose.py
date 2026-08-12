@@ -9,6 +9,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 COMPOSE = ROOT / "deploy" / "compose" / "dev.yml"
+MIN_HEALTHCHECK_RETRIES = 5
 
 
 @pytest.fixture(scope="module")
@@ -34,7 +35,7 @@ def test_compose_tei_services_have_healthchecks(compose_doc: dict) -> None:
         hc = services[name].get("healthcheck")
         assert hc is not None, f"{name} missing healthcheck"
         assert "test" in hc
-        assert hc.get("retries", 0) >= 5
+        assert hc.get("retries", 0) >= MIN_HEALTHCHECK_RETRIES
 
 
 def test_compose_sift_env_points_at_tei_service_dns(compose_doc: dict) -> None:

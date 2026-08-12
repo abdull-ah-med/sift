@@ -7,9 +7,11 @@ import pytest
 
 from sift_api.tei import TeiClient, TeiEmbedResult
 
+BGE_M3_DIM = 1024
+
 
 def test_tei_client_embed_returns_1024d_dense_vector() -> None:
-    dense = [0.01] * 1024
+    dense = [0.01] * BGE_M3_DIM
     transport = httpx.MockTransport(
         lambda request: httpx.Response(200, json={"embeddings": [dense]})
     )
@@ -17,7 +19,7 @@ def test_tei_client_embed_returns_1024d_dense_vector() -> None:
     result = client.embed(["refund policy"])
     assert isinstance(result, TeiEmbedResult)
     assert len(result.dense) == 1
-    assert len(result.dense[0]) == 1024
+    assert len(result.dense[0]) == BGE_M3_DIM
     assert result.dense[0] == dense
 
 

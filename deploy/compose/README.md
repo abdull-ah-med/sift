@@ -15,7 +15,7 @@ Optional profiles:
 
 | Profile | Services |
 |---|---|
-| `ml` | TEI embed + rerank (large model download) |
+| `ml` | TEI embed (`BAAI/bge-m3` :8080) + rerank (`BAAI/bge-reranker-v2-m3` :8081); healthchecks on `/health` (large first download) |
 | `auth` | Zitadel + dedicated Postgres 16 (`zitadel-db`) |
 | `obs` | Langfuse + Tempo (OTLP :4318) |
 

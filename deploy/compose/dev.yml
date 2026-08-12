@@ -126,6 +126,13 @@ services:
     command: ["--model-id", "BAAI/bge-m3"]
     ports:
       - "8080:80"
+    healthcheck:
+      # TEI answers GET /health once the model is loaded.
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:80/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
 
   tei-rerank:
     profiles: ["ml"]
@@ -133,6 +140,12 @@ services:
     command: ["--model-id", "BAAI/bge-reranker-v2-m3"]
     ports:
       - "8081:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:80/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
 
   zitadel-db:
     profiles: ["auth"]
