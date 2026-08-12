@@ -96,6 +96,59 @@ def test_hybrid_retrieve_skips_rerank_when_disabled() -> None:
     assert hits[0].rerank_score is None
 
 
+def test_hybrid_candidate_limit_grows_with_top_k() -> None:
+    dense = MagicMock()
+    dense.search.return_value = [
+        RetrieveHit(chunk_id=f"c{i}", document_id="d", score=1.0 - i * 0.001)
+        for i in range(60)
+    ]
+    bm25 = MagicMock()
+    bm25.search.return_value = []
+    tei = MagicMock()
+    tei.embed.return_value = [[0.0] * 1024]
+
+    HybridRetriever(dense=dense, bm25=bm25, tei=tei).retrieve(
+        query="q",
+        tenant_id="t",
+        collection_id="c",
+        top_k=60,
+        rerank=False,
+    )
+    assert dense.search.call_args.kwargs["limit"] >= 60
+    assert bm25.search.call_args.kwargs["limit"] >= 60
+
+
+def test_hybrid_skips_rerank_when_passage_texts_missing() -> None:
+    dense = MagicMock()
+    dense.search.return_value = [
+        RetrieveHit(chunk_id="a", document_id="d", score=0.5),
+    ]
+    bm25 = MagicMock()
+    bm25.search.return_value = [
+        RetrieveHit(chunk_id="a", document_id="d", score=1.0),
+    ]
+    tei = MagicMock()
+    tei.embed.return_value = [[0.0] * 1024]
+    reranker = MagicMock()
+
+    hits = HybridRetriever(
+        dense=dense,
+        bm25=bm25,
+        tei=tei,
+        reranker=reranker,
+        load_texts=lambda _ids: {},
+    ).retrieve(
+        query="q",
+        tenant_id="t",
+        collection_id="c",
+        top_k=5,
+        rerank=True,
+    )
+    reranker.rerank.assert_not_called()
+    assert hits[0].chunk_id == "a"
+    assert hits[0].rerank_score is None
+
+
 def test_hybrid_retrieve_never_logs_raw_query(capsys: Any) -> None:
     dense = MagicMock()
     dense.search.return_value = []
