@@ -4,7 +4,10 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button } from "@sift/ui";
 import { apiFetch } from "@/lib/api";
+import { formatApiError } from "@/lib/ui-error";
+import { ErrorBanner, PageHeader } from "@/components/shell/PageStates";
 import type { BBox } from "@/lib/bbox";
 
 const ReviewPdfViewer = dynamic(() => import("@/components/ReviewPdfViewer"), {
@@ -50,7 +53,7 @@ export default function ReviewPage() {
     const q = filter === "all" ? "" : `?state=${filter}`;
     const r = await apiFetch(`/v1/documents/${documentId}/blocks${q}`);
     if (!r.ok) {
-      setErr(await r.text());
+      setErr(formatApiError(r.status, "Review action failed"));
       return;
     }
     const data = (await r.json()) as Block[];
@@ -73,7 +76,7 @@ export default function ReviewPage() {
       setPdfUrl(null);
       const r = await apiFetch(`/v1/documents/${documentId}/content`);
       if (!r.ok) {
-        if (!cancelled) setPdfErr(await r.text());
+        if (!cancelled) setPdfErr("The PDF could not be loaded. Retry or open another document.");
         return;
       }
       const contentLength = r.headers.get("content-length");
@@ -130,7 +133,7 @@ export default function ReviewPage() {
     if (!selected) return;
     const r = await apiFetch(`/v1/blocks/${selected.id}/claim`, { method: "POST" });
     if (!r.ok) {
-      setErr(await r.text());
+      setErr(formatApiError(r.status, "Review action failed"));
       return;
     }
     await load();
@@ -141,13 +144,13 @@ export default function ReviewPage() {
     if (selected.review_state === "needs_review") {
       const c = await apiFetch(`/v1/blocks/${selected.id}/claim`, { method: "POST" });
       if (!c.ok) {
-        setErr(await c.text());
+        setErr(formatApiError(c.status, "Review action failed"));
         return;
       }
     }
     const r = await apiFetch(`/v1/blocks/${selected.id}/approve`, { method: "POST" });
     if (!r.ok) {
-      setErr(await r.text());
+      setErr(formatApiError(r.status, "Review action failed"));
       return;
     }
     await load();
@@ -159,13 +162,13 @@ export default function ReviewPage() {
     if (selected.review_state === "needs_review") {
       const c = await apiFetch(`/v1/blocks/${selected.id}/claim`, { method: "POST" });
       if (!c.ok) {
-        setErr(await c.text());
+        setErr(formatApiError(c.status, "Review action failed"));
         return;
       }
     }
     const r = await apiFetch(`/v1/blocks/${selected.id}/reject`, { method: "POST" });
     if (!r.ok) {
-      setErr(await r.text());
+      setErr(formatApiError(r.status, "Review action failed"));
       return;
     }
     await load();
@@ -177,7 +180,7 @@ export default function ReviewPage() {
     if (selected.review_state === "needs_review") {
       const c = await apiFetch(`/v1/blocks/${selected.id}/claim`, { method: "POST" });
       if (!c.ok) {
-        setErr(await c.text());
+        setErr(formatApiError(c.status, "Review action failed"));
         return;
       }
       const claimed = (await c.json()) as Block;
@@ -187,7 +190,7 @@ export default function ReviewPage() {
         body: JSON.stringify({ text: draft }),
       });
       if (!r.ok) {
-        setErr(await r.text());
+        setErr(formatApiError(r.status, "Review action failed"));
         return;
       }
     } else {
@@ -197,7 +200,7 @@ export default function ReviewPage() {
         body: JSON.stringify({ text: draft }),
       });
       if (!r.ok) {
-        setErr(await r.text());
+        setErr(formatApiError(r.status, "Review action failed"));
         return;
       }
     }
@@ -207,7 +210,7 @@ export default function ReviewPage() {
   async function finalize() {
     const r = await apiFetch(`/v1/documents/${documentId}/finalize`, { method: "POST" });
     if (!r.ok) {
-      setErr(await r.text());
+      setErr(formatApiError(r.status, "Review action failed"));
       return;
     }
     const body = await r.json();
@@ -243,33 +246,34 @@ export default function ReviewPage() {
 
   return (
     <div className="review">
-      <header className="review-header">
-        <div>
-          <p className="muted">
-            <Link href={`/collections/${slug}`}>← Collection</Link>
-          </p>
-          <h1>Review</h1>
-          <p className="muted">{documentId}</p>
-        </div>
-        <div className="review-actions">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              type="button"
-              className={filter === f ? "ghost active" : "ghost"}
-              onClick={() => setFilter(f)}
-            >
-              {f}
-            </button>
-          ))}
-          <button type="button" onClick={() => void finalize()}>
-            Finalize
-          </button>
-        </div>
-      </header>
-      {err ? <p className="err">{err}</p> : null}
-      {pdfErr ? <p className="err">{pdfErr}</p> : null}
-      {status ? <p className="muted">{status}</p> : null}
+      <PageHeader
+        title="Review"
+        description={documentId}
+        actions={
+          <>
+            <Button variant="secondary" size="sm" asChild>
+              <Link href={`/collections/${slug}`}>Collection</Link>
+            </Button>
+            {FILTERS.map((f) => (
+              <Button
+                key={f}
+                type="button"
+                size="sm"
+                variant={filter === f ? "default" : "secondary"}
+                onClick={() => setFilter(f)}
+              >
+                {f}
+              </Button>
+            ))}
+            <Button type="button" size="sm" onClick={() => void finalize()}>
+              Finalize
+            </Button>
+          </>
+        }
+      />
+      {err ? <ErrorBanner message={err} onRetry={() => void load()} /> : null}
+      {pdfErr ? <ErrorBanner message={pdfErr} /> : null}
+      {status ? <p className="mb-3 text-sm text-[rgb(var(--sift-text-muted))]">{status}</p> : null}
       <div className="review-split review-split-pdf">
         <section className="review-pdf-pane" aria-label="Document PDF">
           {pdfUrl ? (
@@ -319,18 +323,18 @@ export default function ReviewPage() {
                   onChange={(e) => setDraft(e.target.value)}
                 />
                 <div className="review-actions">
-                  <button type="button" className="ghost" onClick={() => void claim()}>
+                  <Button type="button" variant="secondary" size="sm" onClick={() => void claim()}>
                     Claim
-                  </button>
-                  <button type="button" onClick={() => void approve()}>
+                  </Button>
+                  <Button type="button" size="sm" onClick={() => void approve()}>
                     Approve (a)
-                  </button>
-                  <button type="button" className="danger" onClick={() => void reject()}>
+                  </Button>
+                  <Button type="button" variant="destructive" size="sm" onClick={() => void reject()}>
                     Reject (r)
-                  </button>
-                  <button type="button" className="ghost" onClick={() => void saveEdit()}>
+                  </Button>
+                  <Button type="button" variant="secondary" size="sm" onClick={() => void saveEdit()}>
                     Save edit (e)
-                  </button>
+                  </Button>
                 </div>
                 <p className="muted">Keys: j/k next/prev · a approve · r reject · e edit</p>
               </>

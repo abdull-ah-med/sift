@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { FormEvent, Suspense, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { Button, Input } from "@sift/ui";
+import { Button, Card, CardContent, Input, Label } from "@sift/ui";
 import { apiFetch } from "@/lib/api";
+import { formatApiError } from "@/lib/ui-error";
 import { EmptyState, ErrorBanner, LoadingState, PageHeader } from "@/components/shell/PageStates";
 
 type SearchHit = {
@@ -67,7 +68,7 @@ function SearchPageInner() {
         body: JSON.stringify(body),
       });
       if (!r.ok) {
-        setErr(await r.text());
+        setErr(formatApiError(r.status, "Search failed"));
         setHits([]);
         setSearched(true);
         return;
@@ -103,36 +104,42 @@ function SearchPageInner() {
 
       {err ? <ErrorBanner message={err} /> : null}
 
-      <form className="panel search-form" onSubmit={onSearch}>
-        <label className="flex flex-col gap-1 text-sm">
-          Query
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="refund policy for EU customers"
-            autoComplete="off"
-          />
-        </label>
-        <div className="search-filters">
-          <label className="flex flex-col gap-1 text-sm">
-            Tags (comma-separated)
-            <Input value={tag} onChange={(e) => setTag(e.target.value)} placeholder="policy" />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            Top K
-            <Input
-              type="number"
-              min={1}
-              max={100}
-              value={topK}
-              onChange={(e) => setTopK(Number(e.target.value) || 10)}
-            />
-          </label>
-        </div>
-        <Button type="submit" disabled={busy || !collectionId || !query.trim()}>
-          {busy ? "Searching…" : "Search"}
-        </Button>
-      </form>
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <form className="flex flex-col gap-4" onSubmit={onSearch}>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="search-query">Query</Label>
+              <Input
+                id="search-query"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="refund policy for EU customers"
+                autoComplete="off"
+              />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="search-tags">Tags (comma-separated)</Label>
+                <Input id="search-tags" value={tag} onChange={(e) => setTag(e.target.value)} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="search-topk">Top K</Label>
+                <Input
+                  id="search-topk"
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={topK}
+                  onChange={(e) => setTopK(Number(e.target.value) || 10)}
+                />
+              </div>
+            </div>
+            <Button type="submit" disabled={busy || !collectionId || !query.trim()}>
+              {busy ? "Searching…" : "Search"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       <div className="search-results" role="list">
         {hits.map((hit) => {
@@ -178,7 +185,10 @@ function SearchPageInner() {
           );
         })}
         {!busy && searched && hits.length === 0 && !err ? (
-          <EmptyState title="No matching chunks" body="Try a broader query or different tags." />
+          <EmptyState
+            title={`No results for ${query.trim() || "this query"}`}
+            body="Try a broader query, clear tags, or search without filters."
+          />
         ) : null}
       </div>
       {traceId ? <p className="muted text-xs">trace_id={traceId}</p> : null}

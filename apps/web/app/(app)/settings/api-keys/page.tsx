@@ -1,8 +1,27 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Button, Card, CardContent, Input } from "@sift/ui";
+import { toast } from "sonner";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  Input,
+  Label,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@sift/ui";
 import { apiFetch } from "@/lib/api";
+import { formatApiError } from "@/lib/ui-error";
 import { EmptyState, ErrorBanner, LoadingState, PageHeader } from "@/components/shell/PageStates";
 
 type KeyRow = {
@@ -18,15 +37,17 @@ export default function ApiKeysPage() {
   const [name, setName] = useState("");
   const [scopes, setScopes] = useState("documents:read,documents:write,search,chat");
   const [created, setCreated] = useState("");
+  const [open, setOpen] = useState(false);
   const [err, setErr] = useState("");
 
   async function load() {
     const r = await apiFetch("/v1/api-keys");
     if (!r.ok) {
-      setErr(await r.text());
+      setErr(formatApiError(r.status, "API keys could not be loaded"));
       setRows([]);
       return;
     }
+    setErr("");
     setRows(await r.json());
   }
 
@@ -36,7 +57,6 @@ export default function ApiKeysPage() {
 
   async function onCreate(e: FormEvent) {
     e.preventDefault();
-    setErr("");
     setCreated("");
     const r = await apiFetch("/v1/api-keys", {
       method: "POST",
@@ -46,64 +66,83 @@ export default function ApiKeysPage() {
       }),
     });
     if (!r.ok) {
-      setErr(await r.text());
+      setErr(formatApiError(r.status, "API key was not created"));
       return;
     }
     const body = await r.json();
     setCreated(body.raw_key);
     setName("");
+    setOpen(false);
+    toast.success("API key created. Copy it now; it is shown once.");
     await load();
   }
 
   return (
     <>
-      <PageHeader title="API keys" description="Machine credentials for CLI and local bootstrap." />
-      {err ? <ErrorBanner message={err} /> : null}
+      <PageHeader
+        title="API keys"
+        description="Machine credentials for CLI and local bootstrap."
+        actions={
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">Create key</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <form onSubmit={onCreate}>
+                <DialogHeader>
+                  <DialogTitle>Create API key</DialogTitle>
+                  <DialogDescription>The raw secret is shown once after create.</DialogDescription>
+                </DialogHeader>
+                <div className="mt-4 grid gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="key-name">Name</Label>
+                    <Input id="key-name" value={name} onChange={(e) => setName(e.target.value)} required />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="key-scopes">Scopes (comma-separated)</Label>
+                    <Input id="key-scopes" value={scopes} onChange={(e) => setScopes(e.target.value)} />
+                  </div>
+                </div>
+                <DialogFooter className="mt-6">
+                  <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Create key</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        }
+      />
+      {err ? <ErrorBanner message={err} onRetry={() => void load()} /> : null}
       {created ? (
         <p className="mb-4 rounded-md border border-[rgb(var(--sift-border))] bg-[rgb(var(--sift-surface))] px-3 py-2 text-sm">
-          Raw key (shown once): <code>{created}</code>
+          Raw key (shown once): <code className="font-mono">{created}</code>
         </p>
       ) : null}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <form className="grid gap-3 sm:grid-cols-2" onSubmit={onCreate}>
-            <label className="flex flex-col gap-1 text-sm">
-              Name
-              <Input value={name} onChange={(e) => setName(e.target.value)} required />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              Scopes (comma-separated)
-              <Input value={scopes} onChange={(e) => setScopes(e.target.value)} />
-            </label>
-            <div className="sm:col-span-2">
-              <Button type="submit">Create key</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
       {rows === null ? <LoadingState /> : null}
       {rows && rows.length === 0 ? (
         <EmptyState title="No API keys" body="Create a key for CLI access." />
       ) : null}
       {rows && rows.length > 0 ? (
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Prefix</th>
-              <th>Scopes</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Prefix</TableHead>
+              <TableHead>Scopes</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.map((k) => (
-              <tr key={k.id}>
-                <td>{k.name}</td>
-                <td>{k.prefix}</td>
-                <td className="muted">{k.scopes.join(", ")}</td>
-              </tr>
+              <TableRow key={k.id}>
+                <TableCell>{k.name}</TableCell>
+                <TableCell className="font-mono">{k.prefix}</TableCell>
+                <TableCell className="text-[rgb(var(--sift-text-muted))]">{k.scopes.join(", ")}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       ) : null}
     </>
   );

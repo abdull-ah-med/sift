@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Input } from "@sift/ui";
+import { Input, Label, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@sift/ui";
 import { apiFetch } from "@/lib/api";
+import { formatApiError } from "@/lib/ui-error";
 import { EmptyState, ErrorBanner, LoadingState, PageHeader } from "@/components/shell/PageStates";
 
 type Event = {
@@ -24,7 +25,7 @@ export default function AuditPage() {
     void (async () => {
       const r = await apiFetch("/v1/audit/events");
       if (!r.ok) {
-        setErr(await r.text());
+        setErr(formatApiError(r.status, "Audit events could not be loaded"));
         setRows([]);
         return;
       }
@@ -40,43 +41,47 @@ export default function AuditPage() {
     <>
       <PageHeader title="Audit" description="Tamper-evident event chain (hashes only in UI)." />
       {err ? <ErrorBanner message={err} /> : null}
-      <label className="mb-4 flex max-w-sm flex-col gap-1 text-sm">
-        Filter
+      <div className="mb-4 flex max-w-sm flex-col gap-1.5">
+        <Label htmlFor="audit-filter">Filter</Label>
         <Input
+          id="audit-filter"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="action or actor"
         />
-      </label>
+      </div>
       {rows === null ? <LoadingState /> : null}
       {rows && shown.length === 0 ? (
-        <EmptyState title="No events" body="Audit events appear as the product is used." />
+        <EmptyState
+          title={filter ? `No results for ${filter}` : "No events"}
+          body={filter ? "Clear the filter to see the full chain." : "Audit events appear as the product is used."}
+        />
       ) : null}
       {rows && shown.length > 0 ? (
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Action</th>
-              <th>Actor</th>
-              <th>Target</th>
-              <th>When</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>#</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead>Actor</TableHead>
+              <TableHead>Target</TableHead>
+              <TableHead>When</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {shown.map((e) => (
-              <tr key={e.event_id}>
-                <td>{e.chain_index}</td>
-                <td>{e.action}</td>
-                <td>{e.actor}</td>
-                <td className="muted">
+              <TableRow key={e.event_id}>
+                <TableCell className="font-mono tabular-nums">{e.chain_index}</TableCell>
+                <TableCell>{e.action}</TableCell>
+                <TableCell>{e.actor}</TableCell>
+                <TableCell className="font-mono text-[rgb(var(--sift-text-muted))]">
                   {e.target_kind}:{e.target_id}
-                </td>
-                <td className="muted">{e.occurred_at}</td>
-              </tr>
+                </TableCell>
+                <TableCell className="text-[rgb(var(--sift-text-muted))]">{e.occurred_at}</TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       ) : null}
     </>
   );
