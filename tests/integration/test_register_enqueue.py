@@ -178,6 +178,45 @@ def test_register_enqueues_taskiq_without_sync_ingest(
 
 
 @pytest.mark.integration
+def test_register_rejects_foreign_tenant_object_key(
+    api_client: TestClient,
+    migrated_db: Engine,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tenant_id, collection_id, write_raw = _seed_collection(migrated_db)
+    foreign_tenant = new_id(IdKind.TENANT)
+    doc_id = new_id(IdKind.DOCUMENT)
+    foreign_key = f"t/{foreign_tenant}/d/{doc_id}/original.pdf"
+
+    async def _fake_kiq(*_a: Any, **_k: Any) -> object:
+        raise AssertionError("kiq must not run for foreign object_key")
+
+    monkeypatch.setattr(ingest_document, "kiq", _fake_kiq)
+
+    response = api_client.post(
+        f"/v1/collections/{collection_id}/documents",
+        headers={"X-Api-Key": write_raw},
+        json={
+            "object_key": foreign_key,
+            "title": "Cross Tenant",
+            "slug": f"x-{doc_id[-8:].lower()}",
+            "source_mime": "application/pdf",
+            "source_bytes": 12,
+            "source_sha256": "c" * 64,
+        },
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert "tenant" in response.json()["detail"].lower()
+    with migrated_db.begin() as conn:
+        conn.execute(text("SET LOCAL ROLE sift_admin"))
+        remaining = conn.execute(
+            text("SELECT count(*) FROM documents WHERE tenant_id = :tid"),
+            {"tid": tenant_id},
+        ).scalar_one()
+    assert int(remaining) == 0
+
+
+@pytest.mark.integration
 def test_register_returns_503_when_enqueue_fails(
     api_client: TestClient,
     migrated_db: Engine,
@@ -307,8 +346,14 @@ async def test_worker_task_is_sole_parse_entrypoint(
             },
         )
 
-    def _fake_download(*, source_uri: str, dest: Path, settings: object) -> None:
-        del source_uri, settings
+    def _fake_download(
+        *,
+        source_uri: str,
+        dest: Path,
+        settings: object,
+        tenant_id: str | None = None,
+    ) -> None:
+        del source_uri, settings, tenant_id
         dest.write_bytes(DIGITAL_PDF.read_bytes())
 
     monkeypatch.setattr("sift_api.ingest.download_object", _fake_download)

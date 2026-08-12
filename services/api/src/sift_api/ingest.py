@@ -122,7 +122,12 @@ def run_ingest_document(
             try:
                 with tempfile.TemporaryDirectory(prefix="sift_ingest_") as tmp:
                     dest = Path(tmp) / f"original{suffix}"
-                    download_object(source_uri=source_uri, dest=dest, settings=cfg)
+                    download_object(
+                        source_uri=source_uri,
+                        dest=dest,
+                        settings=cfg,
+                        tenant_id=tenant_id,
+                    )
                     return run_ingest_parse(
                         document_id=document_id,
                         job_id=job_id,

@@ -38,10 +38,12 @@ export default function ReviewPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [err, setErr] = useState("");
+  const [pdfErr, setPdfErr] = useState("");
   const [status, setStatus] = useState("");
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    // Do not clear pdfErr — block reloads must not hide a PDF fetch failure.
     setErr("");
     const q = filter === "all" ? "" : `?state=${filter}`;
     const r = await apiFetch(`/v1/documents/${documentId}/blocks${q}`);
@@ -65,10 +67,11 @@ export default function ReviewPage() {
     let objectUrl: string | null = null;
     let cancelled = false;
     async function loadPdf() {
+      setPdfErr("");
       setPdfUrl(null);
       const r = await apiFetch(`/v1/documents/${documentId}/content`);
       if (!r.ok) {
-        if (!cancelled) setErr(await r.text());
+        if (!cancelled) setPdfErr(await r.text());
         return;
       }
       const blob = await r.blob();
@@ -79,8 +82,12 @@ export default function ReviewPage() {
     void loadPdf();
     return () => {
       cancelled = true;
+      const toRevoke = objectUrl;
       setPdfUrl(null);
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      // Defer revoke so Viewer can unmount before the blob URL is invalidated.
+      if (toRevoke) {
+        window.setTimeout(() => URL.revokeObjectURL(toRevoke), 0);
+      }
     };
   }, [documentId]);
 
@@ -249,6 +256,7 @@ export default function ReviewPage() {
         </div>
       </header>
       {err ? <p className="err">{err}</p> : null}
+      {pdfErr ? <p className="err">{pdfErr}</p> : null}
       {status ? <p className="muted">{status}</p> : null}
       <div className="review-split review-split-pdf">
         <section className="review-pdf-pane" aria-label="Document PDF">
@@ -259,7 +267,7 @@ export default function ReviewPage() {
               onSelectBlock={setSelectedId}
             />
           ) : (
-            <p className="muted">{err ? "PDF unavailable." : "Loading document…"}</p>
+            <p className="muted">{pdfErr ? "PDF unavailable." : "Loading document…"}</p>
           )}
         </section>
         <div className="review-right">

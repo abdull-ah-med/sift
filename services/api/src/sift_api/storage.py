@@ -41,6 +41,16 @@ def object_key_for(tenant_id: str, doc_id: str, filename: str) -> str:
     return f"t/{tenant_id}/d/{doc_id}/original.{ext}"
 
 
+def tenant_object_key_prefix(tenant_id: str) -> str:
+    """Return the Seaweed/S3 key prefix owned by ``tenant_id``."""
+    return f"t/{tenant_id}/"
+
+
+def object_key_belongs_to_tenant(object_key: str, tenant_id: str) -> bool:
+    """True when ``object_key`` is under the tenant's storage prefix."""
+    return object_key.startswith(tenant_object_key_prefix(tenant_id))
+
+
 def create_presigned_put(
     *,
     tenant_id: str,
@@ -97,10 +107,16 @@ def download_object(
     source_uri: str,
     dest: Path,
     settings: Settings | None = None,
+    tenant_id: str | None = None,
 ) -> Path:
-    """Download ``source_uri`` from SeaweedFS/S3 to ``dest``."""
+    """Download ``source_uri`` from SeaweedFS/S3 to ``dest``.
+
+    When ``tenant_id`` is set, refuse keys outside ``t/{tenant_id}/``.
+    """
     cfg = settings or get_settings()
     bucket, key = parse_seaweed_uri(source_uri)
+    if tenant_id is not None and not object_key_belongs_to_tenant(key, tenant_id):
+        raise PermissionError(f"object key outside tenant prefix: {key!r}")
     dest.parent.mkdir(parents=True, exist_ok=True)
     client = _s3_client(cfg)
     client.download_file(bucket, key, str(dest))

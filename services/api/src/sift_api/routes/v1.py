@@ -38,7 +38,13 @@ from sift_api.schemas import (
     WhoAmIResponse,
 )
 from sift_api.settings import Settings, get_settings
-from sift_api.storage import create_presigned_put, download_object, parse_seaweed_uri, seaweed_uri
+from sift_api.storage import (
+    create_presigned_put,
+    download_object,
+    object_key_belongs_to_tenant,
+    parse_seaweed_uri,
+    seaweed_uri,
+)
 from sift_api.tenant_session import begin_admin_session
 from sift_core.auth.api_keys import mint_api_key
 from sift_core.db import tenant_guc_statements
@@ -523,7 +529,12 @@ async def register_document(
     ).scalar_one_or_none()
     if exists is None:
         raise HTTPException(status_code=404, detail="collection not found")
-    # object key: t/{tenant}/d/{doc_id}/original.ext
+    # object key: t/{tenant}/d/{doc_id}/original.ext — never trust foreign prefixes.
+    if not object_key_belongs_to_tenant(body.object_key, ctx.tenant_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="object_key tenant mismatch",
+        )
     parts = body.object_key.split("/")
     _object_key_min_parts = 4
     doc_id = parts[3] if len(parts) >= _object_key_min_parts else new_id(IdKind.DOCUMENT)

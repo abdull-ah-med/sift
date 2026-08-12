@@ -41,10 +41,23 @@ function PageWithOverlays({
     props.pageIndex,
   ]);
 
+  // Overlay layer last so hit-targets sit above text/annotation (Phase 2 §4.4).
   return (
     <>
       {props.canvasLayer.children}
-      <div className="rpv-overlay-layer" style={{ width: "100%", height: "100%", position: "relative" }}>
+      {props.textLayer.children}
+      {props.annotationLayer.children}
+      <div
+        className="rpv-overlay-layer"
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          width: "100%",
+          height: "100%",
+          pointerEvents: "none",
+        }}
+      >
         {pageOverlays.map((o) => {
           if (!o.bbox) return null;
           const pageWidthPts = props.scale > 0 ? props.width / props.scale : props.width;
@@ -55,15 +68,13 @@ function PageWithOverlays({
               key={o.id}
               type="button"
               className={o.selected ? "bbox-overlay selected" : "bbox-overlay"}
-              style={style}
+              style={{ ...style, pointerEvents: "auto" }}
               aria-label={`Block ${o.id}`}
               onClick={() => onSelectBlock?.(o.id)}
             />
           );
         })}
       </div>
-      {props.textLayer.children}
-      {props.annotationLayer.children}
     </>
   );
 }
