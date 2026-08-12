@@ -31,6 +31,7 @@ members = [
     "libs/sift-ingest",
     "libs/sift-obs",
     "libs/sift-retrieve",
+    "libs/sift-eval",
     "services/api",
     "services/worker",
     "apps/cli",
@@ -47,6 +48,7 @@ package = false
 sift-core = { workspace = true }
 sift-parse = { workspace = true }
 sift-retrieve = { workspace = true }
+sift-eval = { workspace = true }
 
 [tool.ruff]
 line-length = 100
@@ -84,6 +86,7 @@ known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_ret
 "tools/models/prefetch.py" = ["B008"]
 "tools/db/backfill_reparse.py" = ["PLR0913"]
 "evals/**/*.py" = ["PLR2004"]
+"libs/sift-eval/tests/**/*.py" = ["PLR2004"]
 "tests/integration/test_review_api.py" = ["PLR2004"]
 "tests/integration/test_review_langgraph.py" = ["PLR2004"]
 "tests/integration/test_document_content.py" = ["PLR2004"]
@@ -133,6 +136,7 @@ module = [
     "sift_parse_models.*",
     "fast_langdetect.*",
     "sentence_transformers.*",
+    "yaml",
 ]
 ignore_missing_imports = true
 

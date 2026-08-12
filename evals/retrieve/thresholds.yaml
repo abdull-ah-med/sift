@@ -1,0 +1,3 @@
+# Offline thresholds for PR retrieve gate (Phase 3 §6).
+recall_at_10_min: 0.5
+mrr_at_10_min: 0.5
