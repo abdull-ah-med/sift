@@ -355,8 +355,7 @@ def run_embed_document(
                 .one_or_none()
             )
             use_qdrant = (
-                backend_row is not None
-                and str(backend_row["vector_backend"]) == "qdrant"
+                backend_row is not None and str(backend_row["vector_backend"]) == "qdrant"
             ) or cfg.sift_vector_backend == "qdrant"
 
         if use_qdrant:

@@ -19,7 +19,6 @@ def test_point_id_for_chunk_is_uuid() -> None:
     assert pid == point_id_for_chunk("chunk_01ABCDEF")
 
 
-
 def test_qdrant_search_maps_hits() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert "/points/search" in str(request.url)

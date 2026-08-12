@@ -174,16 +174,20 @@ def _store_search(
 
 
 def _collection_vector_backend(conn: Connection, *, collection_id: str) -> str:
-    row = conn.execute(
-        text(
-            """
+    row = (
+        conn.execute(
+            text(
+                """
             SELECT coalesce(vector_backend, 'pgvector') AS vector_backend
             FROM collections
             WHERE id = :id AND deleted_at IS NULL
             """
-        ),
-        {"id": collection_id},
-    ).mappings().one_or_none()
+            ),
+            {"id": collection_id},
+        )
+        .mappings()
+        .one_or_none()
+    )
     if row is None:
         return "pgvector"
     return str(row["vector_backend"] or "pgvector")
