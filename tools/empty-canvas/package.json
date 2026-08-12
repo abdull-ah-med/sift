@@ -1,0 +1,7 @@
+{
+  "name": "canvas",
+  "version": "2.11.2",
+  "private": true,
+  "description": "Empty stub — browser builds never use node-canvas (pdfjs optionalDependency).",
+  "main": "index.js"
+}
