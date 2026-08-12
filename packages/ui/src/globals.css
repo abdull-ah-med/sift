@@ -3,7 +3,7 @@
 
 /* sift design tokens — rules/design-philosophy.mdc §1 / §2 */
 :root {
-  --sift-bg: 34 40 49;
+  --sift-bg: 0 0 0;
   --sift-surface: 57 62 70;
   --sift-accent: 0 173 181;
   --sift-text: 238 238 238;
@@ -11,7 +11,7 @@
   --sift-text-disabled: 238 238 238 / 0.35;
   --sift-border: 238 238 238 / 0.08;
   --sift-border-strong: 238 238 238 / 0.16;
-  --sift-overlay: 34 40 49 / 0.72;
+  --sift-overlay: 0 0 0 / 0.72;
   --sift-danger: 244 63 94;
   --sift-warning: 234 179 8;
   --sift-success: 34 197 94;
@@ -27,7 +27,7 @@
   --popover: var(--sift-surface);
   --popover-foreground: var(--sift-text);
   --primary: var(--sift-accent);
-  --primary-foreground: var(--sift-bg);
+  --primary-foreground: 34 40 49;
   --secondary: var(--sift-surface);
   --secondary-foreground: var(--sift-text);
   --muted: var(--sift-surface);

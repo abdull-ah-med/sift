@@ -18,7 +18,8 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Unlayered so primary fill text wins over missing Tailwind utilities. Navy on teal is AA. */
+/* Unlayered so primary fill text wins over missing Tailwind utilities.
+   Canvas is #000 (ADR 0001); navy on teal stays AA. */
 [class*="bg-[rgb(var(--sift-accent))]"] {
   color: rgb(34 40 49);
 }
