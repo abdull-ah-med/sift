@@ -24,6 +24,8 @@ SCRATCHPAD.md
 .cursor/plans/
 .cursor/scratchpad/
 .cursor/history/
+.cursor/rules/
+.cursor/rules/**
 .claude/
 .aider*
 .continue/

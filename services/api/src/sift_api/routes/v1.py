@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
+import asyncio
+import os
+import tempfile
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.background import BackgroundTask
+from starlette.responses import FileResponse
 
 from sift_api.audit_emit import emit_audit
 from sift_api.auth import AuthContext, get_auth_context, require_scopes, tenant_db
-from sift_api.ingest import run_ingest_document
 from sift_api.schemas import (
     ApiKeyCreate,
     ApiKeyCreated,
@@ -33,12 +38,34 @@ from sift_api.schemas import (
     WhoAmIResponse,
 )
 from sift_api.settings import Settings, get_settings
-from sift_api.storage import create_presigned_put, seaweed_uri
+from sift_api.storage import (
+    create_presigned_put,
+    download_object,
+    object_key_belongs_to_tenant,
+    parse_seaweed_uri,
+    seaweed_uri,
+)
 from sift_api.tenant_session import begin_admin_session
 from sift_core.auth.api_keys import mint_api_key
+from sift_core.db import tenant_guc_statements
 from sift_core.ids import IdKind, new_id
 
 router = APIRouter(prefix="/v1", tags=["v1"])
+
+
+def _file_content_allowed(path: Path, settings: Settings) -> bool:
+    """Return True when ``path`` is under an allow-listed root (tests/dev)."""
+    if not settings.sift_allow_file_content:
+        return False
+    try:
+        resolved = path.resolve()
+    except OSError:
+        return False
+    env_root = os.environ.get("SIFT_FILE_CONTENT_ROOT")
+    if not env_root:
+        return False
+    root = Path(env_root).resolve()
+    return resolved == root or root in resolved.parents
 
 
 @router.get("/whoami", response_model=WhoAmIResponse)
@@ -502,7 +529,12 @@ async def register_document(
     ).scalar_one_or_none()
     if exists is None:
         raise HTTPException(status_code=404, detail="collection not found")
-    # object key: t/{tenant}/d/{doc_id}/original.ext
+    # object key: t/{tenant}/d/{doc_id}/original.ext — never trust foreign prefixes.
+    if not object_key_belongs_to_tenant(body.object_key, ctx.tenant_id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="object_key tenant mismatch",
+        )
     parts = body.object_key.split("/")
     _object_key_min_parts = 4
     doc_id = parts[3] if len(parts) >= _object_key_min_parts else new_id(IdKind.DOCUMENT)
@@ -553,7 +585,7 @@ async def register_document(
             "created_at": now,
         },
     )
-    # Commit so sync ingest (separate connection) can see rows.
+    # Commit so the worker (separate connection) can see queued rows.
     await session.commit()
     emit_audit(
         tenant_id=ctx.tenant_id,
@@ -563,29 +595,44 @@ async def register_document(
         target_id=doc_id,
         payload={"collection_id": collection_id, "job_id": job_id},
     )
-    doc_status = "queued"
-    try:
-        doc_status = run_ingest_document(
-            document_id=doc_id,
-            job_id=job_id,
-            tenant_id=ctx.tenant_id,
-            settings=settings,
-        )
-    except Exception:
-        doc_status = "failed"
-    try:
-        from sift_api.tasks import ingest_document
+    # Worker is the sole parse path — enqueue only; never run ingest inline.
+    from sift_api.tasks import ingest_document
 
+    try:
         await ingest_document.kiq(doc_id, job_id, ctx.tenant_id)
-    except Exception:
-        # Broker optional in tests / local without Valkey streams.
-        pass
+    except Exception as exc:
+        # Commit cleared SET LOCAL role/GUC — rebind before compensating deletes.
+        conn = await session.connection()
+        await conn.execute(text("SET LOCAL ROLE sift_app"))
+        for stmt in tenant_guc_statements(ctx.tenant_id):
+            await conn.execute(text(stmt))
+        await session.execute(
+            text("DELETE FROM jobs WHERE id = :id AND tenant_id = :tid"),
+            {"id": job_id, "tid": ctx.tenant_id},
+        )
+        await session.execute(
+            text("DELETE FROM documents WHERE id = :id AND tenant_id = :tid"),
+            {"id": doc_id, "tid": ctx.tenant_id},
+        )
+        await session.commit()
+        emit_audit(
+            tenant_id=ctx.tenant_id,
+            actor=ctx.actor,
+            action="document.register_enqueue_failed",
+            target_kind="document",
+            target_id=doc_id,
+            payload={"collection_id": collection_id, "job_id": job_id},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="ingest enqueue unavailable",
+        ) from exc
     return DocumentOut(
         id=doc_id,
         collection_id=collection_id,
         title=body.title,
         slug=body.slug,
-        status=doc_status if doc_status not in {"skipped", "missing"} else "queued",
+        status="queued",
         source_uri=source_uri,
         created_at=now,
     )
@@ -676,6 +723,88 @@ async def delete_document(
             """
         ),
         {"id": document_id, "now": datetime.now(UTC)},
+    )
+
+
+@router.get("/documents/{document_id}/content")
+async def document_content(
+    document_id: str,
+    ctx: Annotated[AuthContext, Depends(require_scopes("documents:read"))],
+    session: Annotated[AsyncSession, Depends(tenant_db)],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> Response:
+    """Stream the source PDF for the review viewer (Phase 2 §4.4)."""
+    row = (
+        (
+            await session.execute(
+                text(
+                    """
+                    SELECT source_uri, source_mime
+                    FROM documents
+                    WHERE id = :id AND deleted_at IS NULL
+                    """
+                ),
+                {"id": document_id},
+            )
+        )
+        .mappings()
+        .one_or_none()
+    )
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not found")
+
+    source_uri = str(row["source_uri"])
+    media_type = str(row["source_mime"] or "application/pdf")
+    cleanup: BackgroundTask | None = None
+
+    if source_uri.startswith("file://"):
+        path = Path(source_uri.removeprefix("file://"))
+        if not path.is_file() or not _file_content_allowed(path, settings):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="content missing")
+    elif source_uri.startswith("seaweed://"):
+        try:
+            _bucket, key = parse_seaweed_uri(source_uri)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="invalid source uri",
+            ) from exc
+        tenant_prefix = f"t/{ctx.tenant_id}/"
+        if not key.startswith(tenant_prefix):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="content missing")
+        fd, tmp_name = tempfile.mkstemp(suffix=".pdf")
+        os.close(fd)
+        tmp_path = Path(tmp_name)
+        try:
+            await asyncio.to_thread(
+                download_object,
+                source_uri=source_uri,
+                dest=tmp_path,
+                tenant_id=ctx.tenant_id,
+            )
+        except Exception as exc:
+            tmp_path.unlink(missing_ok=True)
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="failed to fetch document content",
+            ) from exc
+        path = tmp_path
+
+        def _cleanup(p: Path = tmp_path) -> None:
+            p.unlink(missing_ok=True)
+
+        cleanup = BackgroundTask(_cleanup)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="unsupported source uri",
+        )
+
+    return FileResponse(
+        path,
+        media_type=media_type,
+        filename=path.name,
+        background=cleanup,
     )
 
 

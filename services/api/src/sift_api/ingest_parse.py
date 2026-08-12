@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Protocol
@@ -10,15 +12,51 @@ from typing import Protocol
 from sqlalchemy import Connection, text
 from sqlalchemy.engine import Engine
 
-from sift.parse import DigitalPdfParser, ParseConfig, Parser, ParseResult
+from sift.parse import DigitalPdfParser, ParseConfig, Parser, ParseResult, StandardPdfParser
+from sift.parse._mapping import quality_score_from_confidences
 from sift_core.audit import write_audit_event
 from sift_core.models import ReviewState
+from sift_ingest.pii import annotate_blocks_with_pii
+
+_log = logging.getLogger(__name__)
 
 
 class ObjectFetcher(Protocol):
     """Fetch a stored object to a local path for parsing."""
 
     def fetch_to_path(self, *, source_uri: str, dest: Path) -> Path: ...
+
+
+def enrich_parse_result_with_pii(result: ParseResult) -> ParseResult:
+    """Attach Presidio ``pii_map`` to blocks; never fail the ingest on PII errors."""
+    try:
+        return result.model_copy(update={"blocks": annotate_blocks_with_pii(result.blocks)})
+    except Exception:
+        _log.exception(
+            "pii_scan_failed block_count=%d text_chars=%d",
+            len(result.blocks),
+            sum(len(b.text or "") for b in result.blocks),
+        )
+        return result
+
+
+def document_quality_score(result: ParseResult) -> float | None:
+    """Roll up per-block confidences into ``documents.quality_score`` (ADR-0016)."""
+    confidences = [b.confidence for b in result.blocks if b.confidence is not None]
+    return quality_score_from_confidences(confidences)
+
+
+def select_parser(*, mime: str | None = None) -> Parser:
+    """Choose the default parser. DigitalPdfParser is fallback only."""
+    if os.environ.get("SIFT_PARSE_ENGINE", "").lower() == "digital-only":
+        return DigitalPdfParser()
+    if mime is not None and mime != "application/pdf" and not mime.endswith("/pdf"):
+        return DigitalPdfParser()
+    try:
+        return StandardPdfParser()
+    except Exception as exc:  # import / construct failure
+        _log.warning("StandardPdfParser unavailable (%s); falling back to DigitalPdfParser", exc)
+        return DigitalPdfParser()
 
 
 def document_status_after_parse(
@@ -104,7 +142,7 @@ def run_ingest_parse(
 
     Returns the resulting document status.
     """
-    active_parser: Parser = parser or DigitalPdfParser()
+    active_parser: Parser = parser or select_parser(mime="application/pdf")
     config = parse_config or ParseConfig()
 
     with engine.begin() as conn:
@@ -153,6 +191,7 @@ def run_ingest_parse(
 
         try:
             result = active_parser.parse(source_path, config)
+            result = enrich_parse_result_with_pii(result)
             needs_review = insert_blocks(
                 conn,
                 tenant_id=tenant_id,
@@ -161,13 +200,15 @@ def run_ingest_parse(
             )
             status = document_status_after_parse(result, require_review=require_review)
             finished = datetime.now(UTC)
+            quality = document_quality_score(result)
             conn.execute(
                 text(
                     """
                     UPDATE documents
                     SET status = :status,
                         page_count = :page_count,
-                        needs_review_count = :needs_review
+                        needs_review_count = :needs_review,
+                        quality_score = :quality_score
                     WHERE id = :document_id AND tenant_id = :tenant_id
                     """
                 ),
@@ -175,6 +216,7 @@ def run_ingest_parse(
                     "status": status,
                     "page_count": result.metadata.page_count,
                     "needs_review": needs_review,
+                    "quality_score": quality,
                     "document_id": document_id,
                     "tenant_id": tenant_id,
                 },

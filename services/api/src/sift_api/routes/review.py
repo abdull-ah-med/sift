@@ -10,7 +10,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sift_api.audit_emit import emit_audit
 from sift_api.auth import AuthContext, require_scopes, tenant_db
-from sift_api.schemas import BlockOut, BlockPatch, FinalizeOut
+from sift_api.schemas import (
+    BlockOut,
+    BlockPatch,
+    FinalizeOut,
+    ReviewGraphOut,
+    ReviewResumeIn,
+)
 from sift_core.ids import IdKind, new_id
 from sift_core.models import (
     Block,
@@ -488,4 +494,176 @@ async def finalize_document(
         block_count=len(domain_blocks),
         chunk_count=len(chunks),
         needs_review_count=needs,
+    )
+
+
+@router.post("/documents/{document_id}/review/start", response_model=ReviewGraphOut)
+async def review_start(
+    document_id: str,
+    ctx: Annotated[AuthContext, Depends(require_scopes("documents:write"))],
+    session: Annotated[AsyncSession, Depends(tenant_db)],
+) -> ReviewGraphOut:
+    """Start LangGraph document review (interrupt when blocks need review)."""
+    from sift_api.checkpointer import open_postgres_checkpointer
+    from sift_api.review_graph import pending_block_ids, start_document_review
+
+    exists = (
+        await session.execute(
+            text("SELECT 1 FROM documents WHERE id = :id AND deleted_at IS NULL"),
+            {"id": document_id},
+        )
+    ).scalar_one_or_none()
+    if exists is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="document not found")
+
+    rows = (
+        (
+            await session.execute(
+                text(
+                    """
+                    SELECT id, ordinal, review_state
+                    FROM blocks WHERE document_id = :doc_id
+                    ORDER BY ordinal
+                    """
+                ),
+                {"doc_id": document_id},
+            )
+        )
+        .mappings()
+        .all()
+    )
+    block_ids = pending_block_ids([dict(r) for r in rows])
+    checkpointer = await open_postgres_checkpointer()
+    result = await start_document_review(
+        checkpointer=checkpointer,
+        tenant_id=ctx.tenant_id,
+        document_id=document_id,
+        block_ids=block_ids,
+    )
+    emit_audit(
+        tenant_id=ctx.tenant_id,
+        actor=ctx.actor,
+        action="document.review.start",
+        target_kind="document",
+        target_id=document_id,
+        payload={
+            "status": result["status"],
+            "pending_count": len(result.get("pending_block_ids") or []),
+        },
+    )
+    return ReviewGraphOut(
+        thread_id=str(result["thread_id"]),
+        document_id=document_id,
+        status=str(result["status"]),
+        pending_block_ids=[str(x) for x in result.get("pending_block_ids") or []],
+        block_batch=(
+            [{"block_id": str(x)} for x in result["block_batch"]]
+            if result.get("block_batch") is not None
+            else None
+        ),
+    )
+
+
+@router.post("/documents/{document_id}/review/resume", response_model=ReviewGraphOut)
+async def review_resume(
+    document_id: str,
+    body: ReviewResumeIn,
+    ctx: Annotated[AuthContext, Depends(require_scopes("documents:write"))],
+    session: Annotated[AsyncSession, Depends(tenant_db)],
+) -> ReviewGraphOut:
+    """Resume interrupted LangGraph review with a decision batch."""
+    from sift_api.checkpointer import open_postgres_checkpointer
+    from sift_api.review_graph import resume_document_review
+
+    exists = (
+        await session.execute(
+            text("SELECT 1 FROM documents WHERE id = :id AND deleted_at IS NULL"),
+            {"id": document_id},
+        )
+    ).scalar_one_or_none()
+    if exists is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="document not found")
+
+    decisions = [d.model_dump() for d in body.decisions]
+    for decision in decisions:
+        block_id = str(decision["block_id"])
+        action = str(decision["action"]).lower()
+        row = await _load_block(session, block_id)
+        if row["document_id"] != document_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="block does not belong to document",
+            )
+        if action == "approve":
+            if row["review_state"] == ReviewState.NEEDS_REVIEW.value:
+                await _apply_action(
+                    session=session, ctx=ctx, block_id=block_id, action=ReviewAction.CLAIM
+                )
+            await _apply_action(
+                session=session, ctx=ctx, block_id=block_id, action=ReviewAction.APPROVE
+            )
+        elif action == "reject":
+            if row["review_state"] == ReviewState.NEEDS_REVIEW.value:
+                await _apply_action(
+                    session=session, ctx=ctx, block_id=block_id, action=ReviewAction.CLAIM
+                )
+            await _apply_action(
+                session=session, ctx=ctx, block_id=block_id, action=ReviewAction.REJECT
+            )
+        elif action == "edit":
+            text_value = decision.get("text")
+            if not isinstance(text_value, str):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="edit action requires text",
+                )
+            if row["review_state"] == ReviewState.NEEDS_REVIEW.value:
+                claimed = await _apply_action(
+                    session=session, ctx=ctx, block_id=block_id, action=ReviewAction.CLAIM
+                )
+                version = claimed.version
+            else:
+                version = int(row["version"])
+            await _apply_action(
+                session=session,
+                ctx=ctx,
+                block_id=block_id,
+                action=ReviewAction.EDIT,
+                expected_version=version,
+                new_text=text_value,
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"unsupported review action: {action}",
+            )
+
+    checkpointer = await open_postgres_checkpointer()
+    result = await resume_document_review(
+        checkpointer=checkpointer,
+        document_id=document_id,
+        decisions=decisions,
+    )
+    emit_audit(
+        tenant_id=ctx.tenant_id,
+        actor=ctx.actor,
+        action="document.review.resume",
+        target_kind="document",
+        target_id=document_id,
+        payload={
+            "status": result["status"],
+            "decision_count": len(decisions),
+            "pending_count": len(result.get("pending_block_ids") or []),
+        },
+    )
+    return ReviewGraphOut(
+        thread_id=str(result["thread_id"]),
+        document_id=document_id,
+        status=str(result["status"]),
+        pending_block_ids=[str(x) for x in result.get("pending_block_ids") or []],
+        block_batch=(
+            [{"block_id": str(x)} for x in result["block_batch"]]
+            if result.get("block_batch") is not None
+            else None
+        ),
     )

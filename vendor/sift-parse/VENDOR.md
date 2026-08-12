@@ -46,17 +46,25 @@ PyPI / hatch `name` fields in each tree are renamed to `sift-parse*-engine` so t
 
 | File path | Platform triple | Upstream wheel URL | Wheel SHA256 | Extracted `.so` SHA256 |
 |---|---|---|---|---|
-| `sift-parse-pdf/sift_parse_pdf/pdf_parsers.cpython-313-darwin.so` | `aarch64-apple-darwin` | https://files.pythonhosted.org/packages/c6/84/614a3b6b4c0263fc8d06a24ae03fe75d438c431bc525b4b71ce7a011923a/docling_parse-7.11.0-cp313-cp313-macosx_14_0_arm64.whl | `4a339f8e6a15bf13359359d2ad236b4bb1c6bf51d606ba4ce03cbaeddc60d579` | `68ed665a8a52a653f2bcff7753668be305eeb440bc6f65212db3e12a752c2f8b` |
-| `sift-parse-pdf/sift_parse_pdf/pdf_parsers.cpython-313-x86_64-linux-gnu.so` | `x86_64-unknown-linux-gnu` | https://files.pythonhosted.org/packages/61/0e/0bc5b01967ad16c88766ffc72ac42e6deeeb160e734f1b7f383c746a082a/docling_parse-7.11.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl | `94faec9b76e8c65c7e5aeeb20004aa9703fb78c3cf52bac2ee8dd155569f22e7` | `a704c4cb9c7cf9e55293655f33a989249a5e6b5acd3ac6a73cc50336f9b4ffa5` |
+| `sift-parse-pdf/docling_parse/pdf_parsers.cpython-313-darwin.so` | `aarch64-apple-darwin` | https://files.pythonhosted.org/packages/c6/84/614a3b6b4c0263fc8d06a24ae03fe75d438c431bc525b4b71ce7a011923a/docling_parse-7.11.0-cp313-cp313-macosx_14_0_arm64.whl | `4a339f8e6a15bf13359359d2ad236b4bb1c6bf51d606ba4ce03cbaeddc60d579` | `68ed665a8a52a653f2bcff7753668be305eeb440bc6f65212db3e12a752c2f8b` |
+| `sift-parse-pdf/docling_parse/pdf_parsers.cpython-313-x86_64-linux-gnu.so` | `x86_64-unknown-linux-gnu` | https://files.pythonhosted.org/packages/61/0e/0bc5b01967ad16c88766ffc72ac42e6deeeb160e734f1b7f383c746a082a/docling_parse-7.11.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl | `94faec9b76e8c65c7e5aeeb20004aa9703fb78c3cf52bac2ee8dd155569f22e7` | `a704c4cb9c7cf9e55293655f33a989249a5e6b5acd3ac6a73cc50336f9b4ffa5` |
 
 Verify (from repo root):
 
 ```bash
-shasum -a 256 vendor/sift-parse/sift-parse-pdf/sift_parse_pdf/pdf_parsers.cpython-313-darwin.so
-shasum -a 256 vendor/sift-parse/sift-parse-pdf/sift_parse_pdf/pdf_parsers.cpython-313-x86_64-linux-gnu.so
+shasum -a 256 vendor/sift-parse/sift-parse-pdf/docling_parse/pdf_parsers.cpython-313-darwin.so
+shasum -a 256 vendor/sift-parse/sift-parse-pdf/docling_parse/pdf_parsers.cpython-313-x86_64-linux-gnu.so
 ```
 
-Refresh: re-download the two `docling-parse==7.11.0` cp313 wheels above, extract `docling_parse/pdf_parsers.cpython-313-*.so`, rename into `sift_parse_pdf/`, update this table’s SHA256 columns, then re-run the verify commands.
+Refresh: re-download the two `docling-parse==7.11.0` cp313 wheels above, extract
+`docling_parse/pdf_parsers.cpython-313-*.so` **and** `docling_parse/pdf_resources/`,
+keep the upstream package dir name `docling_parse/` (the `.so` hardcodes that resource
+path), leave the Python API under `sift_parse_pdf/`, update this table’s SHA256 columns,
+then re-run the verify commands.
+
+**Note:** The pybind11 extension must be imported as `docling_parse.pdf_parsers`. Loading
+the same `.so` as `sift_parse_pdf.pdf_parsers` segfaults on construct. `sift_parse_pdf`
+stays the product-facing import root and pulls the extension from `docling_parse`.
 
 ## Slimming
 
@@ -67,7 +75,7 @@ Verification (2026-08-10) against shallow clones of the pins above:
 | Upstream | Result |
 |---|---|
 | `docling-core` `v2.91.0` | **589 passed**, 6 skipped |
-| `LongParser` `v0.1.5` (`tests/unit`) | **58 passed** (see `../sift-ingest/VENDOR.md`) |
+| `LongParser` `v0.1.5` (absorbed) | Patterns live in `libs/sift-ingest/` / `libs/sift-parse/` |
 | `docling` / `docling-parse` / `docling-ibm-models` | Packages built at pin; full engine pytest deferred (optional extras / ML) — sift parse-smoke + core suite cover Phase 0 |
 
 ## Refresh procedure

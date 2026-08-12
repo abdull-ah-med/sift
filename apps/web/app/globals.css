@@ -42,6 +42,10 @@ main {
   padding: 2rem 1.25rem 4rem;
 }
 
+main:has(.review-split-pdf) {
+  max-width: 1280px;
+}
+
 nav {
   display: flex;
   gap: 1.25rem;
@@ -166,8 +170,47 @@ th {
   min-height: 60vh;
 }
 
+.review-split-pdf {
+  grid-template-columns: minmax(280px, 1.2fr) minmax(260px, 1fr);
+}
+
+.review-pdf-pane {
+  border: 1px solid rgb(var(--sift-border));
+  background: rgb(var(--sift-surface));
+  border-radius: 6px;
+  min-height: 70vh;
+  overflow: auto;
+}
+
+.review-pdf {
+  height: 70vh;
+}
+
+.review-right {
+  display: grid;
+  grid-template-rows: minmax(180px, 1fr) auto;
+  gap: 0.75rem;
+  min-height: 70vh;
+}
+
+.bbox-overlay {
+  position: absolute;
+  border: 1px solid rgb(var(--sift-accent) / 0.7);
+  background: rgb(var(--sift-accent) / 0.12);
+  padding: 0;
+  margin: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.bbox-overlay.selected {
+  border-color: rgb(250 204 21);
+  background: rgb(250 204 21 / 0.2);
+}
+
 @media (max-width: 800px) {
-  .review-split {
+  .review-split,
+  .review-split-pdf {
     grid-template-columns: 1fr;
   }
 }

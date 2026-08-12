@@ -1,4 +1,9 @@
-"""Guard: vendored trees must not keep upstream Docling import roots."""
+"""Guard: vendored trees must not keep upstream Docling import roots.
+
+Exception (VENDOR.md): the pybind11 ``pdf_parsers`` extension hardcodes the
+upstream package path ``docling_parse`` for ``pdf_resources``. Product code
+imports via ``sift_parse_pdf``; only that shim may import ``docling_parse``.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +15,6 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 VENDOR_ROOTS = [
     ROOT / "vendor" / "sift-parse",
-    ROOT / "vendor" / "sift-ingest",
 ]
 
 # Import forms that prove the tree still teaches engineers to use upstream names.
@@ -19,6 +23,12 @@ FORBIDDEN = re.compile(
     r"docling\b|docling_core\b|docling_parse\b|docling_ibm_models\b"
     r")"
 )
+
+# Allowed solely for the native extension resource path (see VENDOR.md).
+_ALLOWED_DOCLING_PARSE_IMPORT = (
+    ROOT / "vendor/sift-parse/sift-parse-pdf/sift_parse_pdf/pdf_parser.py"
+)
+_ALLOWED_DOCLING_PARSE_DIR = ROOT / "vendor/sift-parse/sift-parse-pdf/docling_parse"
 
 TEXT_SUFFIXES = {".py", ".pyi"}
 
@@ -37,8 +47,14 @@ def test_vendor_trees_have_no_upstream_docling_imports() -> None:
     for path in _iter_python_files():
         text = path.read_text(encoding="utf-8", errors="ignore")
         for match in FORBIDDEN.finditer(text):
+            root_name = match.group(1)
+            if (
+                root_name == "docling_parse"
+                and path.resolve() == _ALLOWED_DOCLING_PARSE_IMPORT.resolve()
+            ):
+                continue
             rel = path.relative_to(ROOT)
-            offenders.append(f"{rel}: import root `{match.group(1)}`")
+            offenders.append(f"{rel}: import root `{root_name}`")
     assert not offenders, "upstream import roots remain:\n" + "\n".join(offenders[:50])
 
 
@@ -53,6 +69,13 @@ def test_vendor_trees_have_no_upstream_docling_imports() -> None:
 )
 def test_vendor_package_directories_use_sift_names(old_name: str, new_dir: str) -> None:
     parse_root = ROOT / "vendor" / "sift-parse"
-    assert not any(parse_root.rglob(old_name)), f"old directory name still present: {old_name}"
+    leftover = [
+        p
+        for p in parse_root.rglob(old_name)
+        if p.is_dir() and p.name == old_name and p.resolve() != _ALLOWED_DOCLING_PARSE_DIR.resolve()
+    ]
+    assert not leftover, f"old directory name still present: {old_name} → {leftover[:5]}"
+    if old_name == "docling_parse":
+        assert _ALLOWED_DOCLING_PARSE_DIR.is_dir(), "expected native docling_parse shim dir"
     matches = [p for p in parse_root.rglob(new_dir) if p.is_dir() and p.name == new_dir]
     assert matches, f"expected vendored package directory {new_dir}"

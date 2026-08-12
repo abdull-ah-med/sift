@@ -1,9 +1,16 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "@/lib/api";
+import type { BBox } from "@/lib/bbox";
+
+const ReviewPdfViewer = dynamic(() => import("@/components/ReviewPdfViewer"), {
+  ssr: false,
+  loading: () => <p className="muted">Loading PDF…</p>,
+});
 
 type Block = {
   id: string;
@@ -14,10 +21,15 @@ type Block = {
   confidence: number | null;
   review_state: string;
   version: number;
-  provenance: { page_no?: number };
+  provenance: {
+    page_no?: number;
+    bbox?: BBox;
+  };
 };
 
 const FILTERS = ["needs_review", "in_review", "all"] as const;
+/** Browser memory bound for review PDF blobs (code-security unbounded-read rule). */
+const MAX_REVIEW_PDF_BYTES = 100 * 1024 * 1024;
 
 export default function ReviewPage() {
   const params = useParams<{ slug: string; docId: string }>();
@@ -28,9 +40,12 @@ export default function ReviewPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [err, setErr] = useState("");
+  const [pdfErr, setPdfErr] = useState("");
   const [status, setStatus] = useState("");
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    // Do not clear pdfErr — block reloads must not hide a PDF fetch failure.
     setErr("");
     const q = filter === "all" ? "" : `?state=${filter}`;
     const r = await apiFetch(`/v1/documents/${documentId}/blocks${q}`);
@@ -49,6 +64,45 @@ export default function ReviewPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    async function loadPdf() {
+      setPdfErr("");
+      setPdfUrl(null);
+      const r = await apiFetch(`/v1/documents/${documentId}/content`);
+      if (!r.ok) {
+        if (!cancelled) setPdfErr(await r.text());
+        return;
+      }
+      const contentLength = r.headers.get("content-length");
+      if (contentLength != null && Number(contentLength) > MAX_REVIEW_PDF_BYTES) {
+        if (!cancelled) {
+          setPdfErr(`PDF exceeds ${MAX_REVIEW_PDF_BYTES} byte review limit`);
+        }
+        return;
+      }
+      const blob = await r.blob();
+      if (cancelled) return;
+      if (blob.size > MAX_REVIEW_PDF_BYTES) {
+        setPdfErr(`PDF exceeds ${MAX_REVIEW_PDF_BYTES} byte review limit`);
+        return;
+      }
+      objectUrl = URL.createObjectURL(blob);
+      setPdfUrl(objectUrl);
+    }
+    void loadPdf();
+    return () => {
+      cancelled = true;
+      const toRevoke = objectUrl;
+      setPdfUrl(null);
+      // Defer revoke so Viewer can unmount before the blob URL is invalidated.
+      if (toRevoke) {
+        window.setTimeout(() => URL.revokeObjectURL(toRevoke), 0);
+      }
+    };
+  }, [documentId]);
 
   const selected = useMemo(
     () => blocks.find((b) => b.id === selectedId) ?? null,
@@ -72,7 +126,7 @@ export default function ReviewPage() {
     [blocks, selectedId],
   );
 
-  async function claim() {
+  const claim = useCallback(async () => {
     if (!selected) return;
     const r = await apiFetch(`/v1/blocks/${selected.id}/claim`, { method: "POST" });
     if (!r.ok) {
@@ -80,9 +134,9 @@ export default function ReviewPage() {
       return;
     }
     await load();
-  }
+  }, [load, selected]);
 
-  async function approve() {
+  const approve = useCallback(async () => {
     if (!selected) return;
     if (selected.review_state === "needs_review") {
       const c = await apiFetch(`/v1/blocks/${selected.id}/claim`, { method: "POST" });
@@ -98,9 +152,9 @@ export default function ReviewPage() {
     }
     await load();
     selectOffset(1);
-  }
+  }, [load, selectOffset, selected]);
 
-  async function reject() {
+  const reject = useCallback(async () => {
     if (!selected) return;
     if (selected.review_state === "needs_review") {
       const c = await apiFetch(`/v1/blocks/${selected.id}/claim`, { method: "POST" });
@@ -116,7 +170,7 @@ export default function ReviewPage() {
     }
     await load();
     selectOffset(1);
-  }
+  }, [load, selectOffset, selected]);
 
   async function saveEdit() {
     if (!selected) return;
@@ -167,13 +221,25 @@ export default function ReviewPage() {
       if (tag === "TEXTAREA" || tag === "INPUT") return;
       if (e.key === "j") selectOffset(1);
       if (e.key === "k") selectOffset(-1);
+      if (e.key === "a") void approve();
+      if (e.key === "r") void reject();
       if (e.key === "e") {
         document.getElementById("block-edit")?.focus();
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selectOffset]);
+  }, [approve, reject, selectOffset]);
+
+  const overlays = useMemo(
+    () =>
+      blocks.map((b) => ({
+        id: b.id,
+        page: b.provenance.page_no ?? 1,
+        bbox: b.provenance.bbox ?? null,
+      })),
+    [blocks],
+  );
 
   return (
     <div className="review">
@@ -202,62 +268,77 @@ export default function ReviewPage() {
         </div>
       </header>
       {err ? <p className="err">{err}</p> : null}
+      {pdfErr ? <p className="err">{pdfErr}</p> : null}
       {status ? <p className="muted">{status}</p> : null}
-      <div className="review-split">
-        <aside className="review-list" aria-label="Blocks">
-          {blocks.length === 0 ? (
-            <p className="muted">No blocks for this filter.</p>
+      <div className="review-split review-split-pdf">
+        <section className="review-pdf-pane" aria-label="Document PDF">
+          {pdfUrl ? (
+            <ReviewPdfViewer
+              fileUrl={pdfUrl}
+              overlays={overlays}
+              selectedBlockId={selectedId}
+              onSelectBlock={setSelectedId}
+            />
           ) : (
-            blocks.map((b) => (
-              <button
-                key={b.id}
-                type="button"
-                className={b.id === selectedId ? "block-row selected" : "block-row"}
-                onClick={() => setSelectedId(b.id)}
-              >
-                <span className="muted">#{b.ordinal}</span>
-                <span className="state">{b.review_state}</span>
-                <span className="preview">{(b.text || "").slice(0, 80)}</span>
-              </button>
-            ))
-          )}
-        </aside>
-        <section className="review-detail" aria-label="Selected block">
-          {selected ? (
-            <>
-              <p className="muted">
-                page {selected.provenance.page_no ?? "?"} · {selected.block_type} · v
-                {selected.version}
-                {selected.confidence != null
-                  ? ` · conf ${selected.confidence.toFixed(2)}`
-                  : ""}
-              </p>
-              <textarea
-                id="block-edit"
-                rows={12}
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-              />
-              <div className="review-actions">
-                <button type="button" className="ghost" onClick={() => void claim()}>
-                  Claim
-                </button>
-                <button type="button" onClick={() => void approve()}>
-                  Approve (a)
-                </button>
-                <button type="button" className="danger" onClick={() => void reject()}>
-                  Reject (r)
-                </button>
-                <button type="button" className="ghost" onClick={() => void saveEdit()}>
-                  Save edit (e)
-                </button>
-              </div>
-              <p className="muted">Keys: j/k next/prev · a approve · r reject · e edit</p>
-            </>
-          ) : (
-            <p className="muted">Select a block.</p>
+            <p className="muted">{pdfErr ? "PDF unavailable." : "Loading document…"}</p>
           )}
         </section>
+        <div className="review-right">
+          <aside className="review-list" aria-label="Blocks">
+            {blocks.length === 0 ? (
+              <p className="muted">No blocks for this filter.</p>
+            ) : (
+              blocks.map((b) => (
+                <button
+                  key={b.id}
+                  type="button"
+                  className={b.id === selectedId ? "block-row selected" : "block-row"}
+                  onClick={() => setSelectedId(b.id)}
+                >
+                  <span className="muted">#{b.ordinal}</span>
+                  <span className="state">{b.review_state}</span>
+                  <span className="preview">{(b.text || "").slice(0, 80)}</span>
+                </button>
+              ))
+            )}
+          </aside>
+          <section className="review-detail" aria-label="Selected block">
+            {selected ? (
+              <>
+                <p className="muted">
+                  page {selected.provenance.page_no ?? "?"} · {selected.block_type} · v
+                  {selected.version}
+                  {selected.confidence != null
+                    ? ` · conf ${selected.confidence.toFixed(2)}`
+                    : ""}
+                </p>
+                <textarea
+                  id="block-edit"
+                  rows={10}
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                />
+                <div className="review-actions">
+                  <button type="button" className="ghost" onClick={() => void claim()}>
+                    Claim
+                  </button>
+                  <button type="button" onClick={() => void approve()}>
+                    Approve (a)
+                  </button>
+                  <button type="button" className="danger" onClick={() => void reject()}>
+                    Reject (r)
+                  </button>
+                  <button type="button" className="ghost" onClick={() => void saveEdit()}>
+                    Save edit (e)
+                  </button>
+                </div>
+                <p className="muted">Keys: j/k next/prev · a approve · r reject · e edit</p>
+              </>
+            ) : (
+              <p className="muted">Select a block.</p>
+            )}
+          </section>
+        </div>
       </div>
     </div>
   );

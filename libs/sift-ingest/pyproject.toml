@@ -7,6 +7,8 @@ license = { text = "Apache-2.0" }
 dependencies = [
     "sift-core",
     "pydantic>=2.10",
+    "sift-parse-core-engine[chunking]",
+    "presidio-analyzer>=2.2,<3",
 ]
 
 [build-system]
@@ -21,6 +23,7 @@ packages = ["src/sift_ingest"]
 
 [tool.uv.sources]
 sift-core = { workspace = true }
+sift-parse-core-engine = { workspace = true }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
