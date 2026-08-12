@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/marketing/SiteHeader";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-/** Split auth chrome — watermelon auth-07 layout, no CDN photo, no Google. */
+/** Watermelon auth-07 split chrome. No Google, no CDN photo. */
 export function AuthShell({
   title,
   description,
@@ -17,14 +17,14 @@ export function AuthShell({
   children: React.ReactNode;
 }) {
   const reduce = useReducedMotion();
-  const hidden = reduce ? { opacity: 1, y: 0 } : { opacity: 1, y: 16 };
+  const hidden = { opacity: 1, y: reduce ? 0 : 16 };
   const visible = { opacity: 1, y: 0 };
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[rgb(var(--sift-bg))]">
       <SiteHeader />
       <main id="main" className="sift-app-main grid flex-1 lg:grid-cols-2">
-        <div className="flex flex-col justify-center px-6 py-16 lg:px-16">
+        <div className="flex flex-1 items-center justify-center p-6 md:p-10">
           <motion.div
             initial="hidden"
             animate="visible"
@@ -34,14 +34,15 @@ export function AuthShell({
                 transition: reduce ? undefined : { staggerChildren: 0.1, delayChildren: 0.08 },
               },
             }}
-            className="mx-auto flex w-full max-w-[420px] flex-col gap-6"
+            className="w-full max-w-[420px]"
           >
             <motion.div
               variants={{ hidden, visible }}
               transition={{ duration: reduce ? 0 : 0.45, ease: EASE }}
+              className="mb-6 text-center"
             >
-              <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-              <p className="mt-2 text-sm text-[rgb(var(--sift-text-muted))]">{description}</p>
+              <h1 className="mb-1 text-3xl font-semibold tracking-tight md:text-4xl">{title}</h1>
+              <p className="text-sm text-[rgb(var(--sift-text-muted))]">{description}</p>
             </motion.div>
             <motion.div
               variants={{ hidden, visible }}
@@ -52,14 +53,16 @@ export function AuthShell({
             </motion.div>
           </motion.div>
         </div>
-        <aside className="relative hidden border-l border-[rgb(var(--sift-border))] bg-[rgb(var(--sift-surface))] lg:flex lg:flex-col lg:justify-end lg:p-12">
-          <p className="max-w-md text-3xl font-semibold tracking-tight text-[rgb(var(--sift-text))]">
-            Document intelligence you can trust with a sealed contract.
-          </p>
-          <p className="mt-4 max-w-md text-sm text-[rgb(var(--sift-text-muted))]">
-            Zitadel for people. API keys for machines. Citations for every answer.
-          </p>
-        </aside>
+        <div className="hidden p-4 lg:block">
+          <aside className="relative flex h-full min-h-[32rem] flex-col justify-end overflow-hidden rounded-[2rem] border border-[rgb(var(--sift-border))] bg-[rgb(var(--sift-surface))] p-12">
+            <p className="max-w-md text-3xl font-semibold tracking-tight text-[rgb(var(--sift-text))]">
+              Document intelligence you can trust with a sealed contract.
+            </p>
+            <p className="mt-4 max-w-md text-sm text-[rgb(var(--sift-text-muted))]">
+              Zitadel for people. API keys for machines. Citations for every answer.
+            </p>
+          </aside>
+        </div>
       </main>
       <SiteFooter />
     </div>
