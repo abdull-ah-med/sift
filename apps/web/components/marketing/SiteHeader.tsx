@@ -45,7 +45,7 @@ export function SiteHeader() {
           delay={0}
           duration={0.4}
           threshold={0}
-          className="w-full max-w-4xl md:max-w-5xl"
+          className="w-full max-w-4xl md:max-w-6xl lg:max-w-7xl"
         >
         <div className="flex h-16 w-full items-center justify-between gap-2 rounded-full border border-[rgb(var(--sift-border-strong))] bg-[rgb(var(--sift-text)_/_0.04)] pr-3 shadow-[inset_0_1px_0_0_rgb(238_238_238_/_0.06)] backdrop-blur-sm">
           <Link href="/" className="flex items-center gap-2 pr-6 pl-6">

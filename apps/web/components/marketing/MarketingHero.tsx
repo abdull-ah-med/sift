@@ -38,7 +38,7 @@ export function MarketingHero() {
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgb(var(--sift-bg))]" />
       </div>
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-between px-6 py-28 md:px-12 md:py-32">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col justify-between px-6 py-28 md:px-12 md:py-32">
         <div className="flex max-w-[850px] flex-col gap-8 md:gap-10">
           <FadeContent delay={0} duration={0.4} threshold={0}>
             <p className="text-sm font-medium text-[rgb(var(--sift-text-muted))]">

@@ -18,38 +18,57 @@ export function LegalDoc({
   return (
     <div className="flex min-h-[100dvh] flex-col bg-[rgb(var(--sift-bg))]">
       <SiteHeader />
-      <main id="main" className="sift-app-main mx-auto w-full max-w-[72ch] flex-1 px-6 pt-32 pb-24">
-        <p className="text-xs font-medium tracking-wider text-[rgb(var(--sift-text-muted))] uppercase">
-          sift
-        </p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">{title}</h1>
-        <p className="mt-4 text-base leading-relaxed text-[rgb(var(--sift-text-muted))]">
-          {description}
-        </p>
-        <p className="mt-3 text-xs text-[rgb(var(--sift-text-muted))]">
-          Effective {EFFECTIVE}. Contact:{" "}
-          <a
-            href={`mailto:${CONTACT}`}
-            className="text-[rgb(var(--sift-text))] underline-offset-4 hover:underline"
+      <main id="main" className="sift-app-main mx-auto w-full max-w-7xl flex-1 px-6 pt-32 pb-24 md:px-12">
+        <div className="lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-16 xl:grid-cols-[18rem_minmax(0,1fr)] xl:gap-24">
+          <nav
+            aria-label="Policies"
+            className="hidden lg:sticky lg:top-28 lg:block lg:self-start"
           >
-            {CONTACT}
-          </a>
-          . These pages are product terms for this release. They are not a substitute for advice
-          from your own counsel.
-        </p>
-        <div className="mt-12 space-y-10 text-sm leading-[1.7] text-[rgb(var(--sift-text-muted))]">
-          {children}
+            <p className="mb-4 text-xs font-medium tracking-wider text-[rgb(var(--sift-text-muted))] uppercase">
+              Policies
+            </p>
+            <ul className="flex flex-col gap-3">
+              {LEGAL_LINKS.map((link) => (
+                <li key={link.href}>
+                  <HashLink href={link.href}>{link.label}</HashLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <article className="max-w-[72ch]">
+            <p className="text-xs font-medium tracking-wider text-[rgb(var(--sift-text-muted))] uppercase">
+              sift
+            </p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">{title}</h1>
+            <p className="mt-4 text-base leading-relaxed text-[rgb(var(--sift-text-muted))]">
+              {description}
+            </p>
+            <p className="mt-3 text-xs text-[rgb(var(--sift-text-muted))]">
+              Effective {EFFECTIVE}. Contact:{" "}
+              <a
+                href={`mailto:${CONTACT}`}
+                className="text-[rgb(var(--sift-text))] underline-offset-4 hover:underline"
+              >
+                {CONTACT}
+              </a>
+              . These pages are product terms for this release. They are not a substitute for advice
+              from your own counsel.
+            </p>
+            <div className="mt-12 space-y-10 text-sm leading-[1.7] text-[rgb(var(--sift-text-muted))]">
+              {children}
+            </div>
+            <nav
+              aria-label="Other policies"
+              className="mt-16 flex flex-wrap gap-x-6 gap-y-3 border-t border-[rgb(var(--sift-border-strong))] pt-8 lg:hidden"
+            >
+              {LEGAL_LINKS.map((link) => (
+                <HashLink key={link.href} href={link.href} className="text-xs">
+                  {link.label}
+                </HashLink>
+              ))}
+            </nav>
+          </article>
         </div>
-        <nav
-          aria-label="Other policies"
-          className="mt-16 flex flex-wrap gap-x-6 gap-y-3 border-t border-[rgb(var(--sift-border-strong))] pt-8"
-        >
-          {LEGAL_LINKS.map((link) => (
-            <HashLink key={link.href} href={link.href} className="text-xs">
-              {link.label}
-            </HashLink>
-          ))}
-        </nav>
       </main>
       <SiteFooter />
     </div>

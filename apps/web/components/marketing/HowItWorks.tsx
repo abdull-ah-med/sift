@@ -29,7 +29,7 @@ const STEPS = [
 /** Sequential journey — numbered because the product path is ordered. */
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="mx-auto max-w-6xl scroll-mt-32 px-6 py-24">
+    <section id="how-it-works" className="mx-auto max-w-7xl scroll-mt-32 px-6 py-24 md:px-12">
       <FadeContent duration={0.4}>
         <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">How it works</h2>
       </FadeContent>

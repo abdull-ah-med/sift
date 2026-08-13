@@ -19,7 +19,7 @@ const STAT =
 /** Watermelon feature-1 bento, lucide, sift copy. No fake uptime. */
 export function FeatureBento() {
   return (
-    <section id="product" className="flex w-full scroll-mt-32 flex-col items-center px-6 py-16">
+    <section id="product" className="flex w-full scroll-mt-32 flex-col items-center px-6 py-16 md:px-12">
       <div className="mb-12 flex w-full max-w-3xl justify-center">
         <SplitText
           tag="h2"
@@ -34,7 +34,7 @@ export function FeatureBento() {
           to={{ opacity: 1, y: 0 }}
         />
       </div>
-      <div className="grid w-full max-w-6xl grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid w-full max-w-7xl grid-cols-1 gap-4 md:grid-cols-3">
         <AnimatedContent delay={0} duration={0.4} distance={12}>
           <Card className={CARD}>
             <CardContent className="p-6">
