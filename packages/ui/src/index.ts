@@ -90,6 +90,16 @@ export {
 } from "./components/breadcrumb";
 export { Toaster } from "./components/sonner";
 export {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  NavigationMenuViewport,
+} from "./components/navigation-menu";
+export { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./components/accordion";
+export {
   Sidebar,
   SidebarContent,
   SidebarFooter,

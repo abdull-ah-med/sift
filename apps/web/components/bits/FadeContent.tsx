@@ -1,0 +1,69 @@
+"use client";
+
+import * as React from "react";
+import { useEffect, useRef } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
+
+interface FadeContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+  duration?: number;
+  ease?: string;
+  delay?: number;
+  threshold?: number;
+  initialOpacity?: number;
+}
+
+/** React Bits FadeContent. GSAP + ScrollTrigger, once. */
+export default function FadeContent({
+  children,
+  duration = 0.4,
+  ease = "power2.out",
+  delay = 0,
+  threshold = 0.1,
+  initialOpacity = 0,
+  className = "",
+  ...props
+}: FadeContentProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      gsap.set(el, { autoAlpha: 1 });
+      return;
+    }
+
+    const seconds = duration > 10 ? duration / 1000 : duration;
+    const delayS = delay > 10 ? delay / 1000 : delay;
+    const startPct = (1 - threshold) * 100;
+
+    gsap.set(el, { autoAlpha: initialOpacity });
+
+    const tl = gsap.timeline({ paused: true, delay: delayS });
+    tl.to(el, { autoAlpha: 1, duration: seconds, ease });
+
+    const st = ScrollTrigger.create({
+      trigger: el,
+      start: `top ${startPct}%`,
+      once: true,
+      onEnter: () => tl.play(),
+    });
+
+    return () => {
+      st.kill();
+      tl.kill();
+      gsap.killTweensOf(el);
+    };
+  }, [duration, ease, delay, threshold, initialOpacity]);
+
+  return (
+    <div ref={ref} className={`opacity-0 motion-reduce:opacity-100 ${className}`} {...props}>
+      {children}
+    </div>
+  );
+}

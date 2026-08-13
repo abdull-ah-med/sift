@@ -1,3 +1,8 @@
+"use client";
+
+import AnimatedContent from "@/components/bits/AnimatedContent";
+import FadeContent from "@/components/bits/FadeContent";
+
 const STEPS = [
   {
     n: "01",
@@ -24,18 +29,22 @@ const STEPS = [
 /** Sequential journey — numbered because the product path is ordered. */
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="mx-auto max-w-6xl px-6 py-24">
-      <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">How it works</h2>
+    <section id="how-it-works" className="mx-auto max-w-6xl scroll-mt-32 px-6 py-24">
+      <FadeContent duration={0.4}>
+        <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">How it works</h2>
+      </FadeContent>
       <ol className="mt-12 grid gap-8 md:grid-cols-2">
-        {STEPS.map((step) => (
-          <li key={step.n} className="flex gap-4">
-            <span className="font-mono text-sm text-[rgb(var(--sift-text-muted))] tabular-nums">
-              {step.n}
-            </span>
-            <div>
-              <h3 className="text-sm font-medium">{step.title}</h3>
-              <p className="mt-2 text-sm text-[rgb(var(--sift-text-muted))]">{step.body}</p>
-            </div>
+        {STEPS.map((step, i) => (
+          <li key={step.n}>
+            <AnimatedContent delay={i * 0.05} duration={0.4} distance={12} className="flex gap-4">
+              <span className="font-mono text-sm text-[rgb(var(--sift-text-muted))] tabular-nums">
+                {step.n}
+              </span>
+              <div>
+                <h3 className="text-sm font-medium">{step.title}</h3>
+                <p className="mt-2 text-sm text-[rgb(var(--sift-text-muted))]">{step.body}</p>
+              </div>
+            </AnimatedContent>
           </li>
         ))}
       </ol>
