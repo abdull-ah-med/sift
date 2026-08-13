@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button, Input, Label } from "@sift/ui";
+import { Button, Field, FieldError, FieldGroup, FieldLabel, Input } from "@sift/ui";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { INVITE_STORAGE_KEY } from "@/lib/invite";
 
@@ -27,18 +27,21 @@ export default function InvitePage() {
 
   return (
     <AuthShell title="Accept invite" description="Paste the invite token from your administrator.">
-      <form className="flex flex-col gap-3" onSubmit={onSubmit}>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="invite-token">Invite token</Label>
-          <Input
-            id="invite-token"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="inv_…"
-            autoComplete="off"
-          />
-        </div>
-        {err ? <p className="text-sm text-[rgb(var(--sift-danger))]">{err}</p> : null}
+      <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+        <FieldGroup>
+          <Field data-invalid={err ? true : undefined}>
+            <FieldLabel htmlFor="invite-token">Invite token</FieldLabel>
+            <Input
+              id="invite-token"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="inv_…"
+              autoComplete="off"
+              aria-invalid={Boolean(err)}
+            />
+            {err ? <FieldError>{err}</FieldError> : null}
+          </Field>
+        </FieldGroup>
         <Button type="submit" className="w-full">
           Continue
         </Button>

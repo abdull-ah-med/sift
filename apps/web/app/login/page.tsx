@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button, Input, Label } from "@sift/ui";
+import { Button, Field, FieldError, FieldGroup, FieldLabel, FieldSeparator, Input } from "@sift/ui";
 import { apiUrl, setApiKey, setApiUrl } from "@/lib/api";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { HashLink } from "@/components/marketing/HashLink";
@@ -82,35 +82,31 @@ export default function LoginPage() {
           Set NEXT_PUBLIC_SIFT_ZITADEL_WEB_CLIENT_ID to enable OIDC.
         </p>
       )}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center" aria-hidden>
-          <span className="w-full border-t border-[rgb(var(--sift-border))]" />
-        </div>
-        <div className="relative flex justify-center text-xs">
-          <span className="bg-[rgb(var(--sift-bg))] px-3 text-[rgb(var(--sift-text-muted))]">or</span>
-        </div>
-      </div>
-      <form className="flex flex-col gap-3" onSubmit={onApiKey}>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="api-url">API URL</Label>
-          <Input
-            id="api-url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            autoComplete="off"
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="api-key">API key</Label>
-          <Input
-            id="api-key"
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder="sift_live_…"
-            autoComplete="off"
-          />
-        </div>
-        {err ? <p className="text-sm text-[rgb(var(--sift-danger))]">{err}</p> : null}
+      <FieldSeparator>or</FieldSeparator>
+      <form className="flex flex-col gap-4" onSubmit={onApiKey}>
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="api-url">API URL</FieldLabel>
+            <Input
+              id="api-url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              autoComplete="off"
+            />
+          </Field>
+          <Field data-invalid={err ? true : undefined}>
+            <FieldLabel htmlFor="api-key">API key</FieldLabel>
+            <Input
+              id="api-key"
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder="sift_live_…"
+              autoComplete="off"
+              aria-invalid={Boolean(err)}
+            />
+            {err ? <FieldError>{err}</FieldError> : null}
+          </Field>
+        </FieldGroup>
         <Button type="submit" variant="secondary" className="w-full">
           Save API key
         </Button>
