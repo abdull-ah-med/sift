@@ -1,12 +1,12 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button, Input, Label } from "@sift/ui";
 import { apiUrl, setApiKey, setApiUrl } from "@/lib/api";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { HashLink } from "@/components/marketing/HashLink";
 
 function randomString(n = 48): string {
   const arr = new Uint8Array(n);
@@ -117,9 +117,7 @@ export default function LoginPage() {
       </form>
       <p className="text-sm text-[rgb(var(--sift-text-muted))]">
         New here?{" "}
-        <Link href="/signup" className="underline underline-offset-4">
-          Create an account
-        </Link>
+        <HashLink href="/signup">Create an account</HashLink>
       </p>
     </AuthShell>
   );
