@@ -1,5 +1,16 @@
 import { cn } from "@sift/ui";
-import { Button, Skeleton } from "@sift/ui";
+import {
+  Alert,
+  AlertAction,
+  AlertTitle,
+  Button,
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+  Skeleton,
+} from "@sift/ui";
 
 export function PageHeader({
   title,
@@ -33,11 +44,13 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg border border-dashed border-[rgb(var(--sift-border))] px-6 py-10 text-center">
-      <p className="text-sm font-medium">{title}</p>
-      <p className="mt-1 text-sm text-[rgb(var(--sift-text-muted))]">{body}</p>
-      {action ? <div className="mt-4 flex justify-center">{action}</div> : null}
-    </div>
+    <Empty className="border border-dashed border-border">
+      <EmptyHeader>
+        <EmptyTitle>{title}</EmptyTitle>
+        <EmptyDescription>{body}</EmptyDescription>
+      </EmptyHeader>
+      {action ? <EmptyContent>{action}</EmptyContent> : null}
+    </Empty>
   );
 }
 
@@ -49,14 +62,16 @@ export function ErrorBanner({
   onRetry?: () => void;
 }) {
   return (
-    <div className="mb-4 flex flex-wrap items-start justify-between gap-3 rounded-md border border-[rgb(var(--sift-danger))]/40 bg-[rgb(var(--sift-danger))]/10 px-3 py-2 text-sm text-[rgb(var(--sift-danger))]">
-      <p>{message}</p>
+    <Alert variant="destructive" className="mb-4">
+      <AlertTitle>{message}</AlertTitle>
       {onRetry ? (
-        <Button type="button" variant="destructive" size="sm" onClick={onRetry}>
-          Retry
-        </Button>
+        <AlertAction>
+          <Button type="button" variant="destructive" size="sm" onClick={onRetry}>
+            Retry
+          </Button>
+        </AlertAction>
       ) : null}
-    </div>
+    </Alert>
   );
 }
 
