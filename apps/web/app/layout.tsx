@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: "Privacy-first document intelligence",
 };
 
-/** Root chrome — skip link, toaster, dark canvas. */
+/** Root chrome — skip link, toaster, dark canvas. SF Pro via --font-sans. */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">

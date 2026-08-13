@@ -1,28 +1,38 @@
-"use client";
+"use client"
 
-import { Toaster as Sonner, type ToasterProps } from "sonner";
+import type { CSSProperties } from "react"
+import { Toaster as Sonner, type ToasterProps } from "sonner"
+import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
-/** Single app toaster — mount once in the root layout. */
-export function Toaster({ theme = "dark", position = "bottom-right", ...props }: ToasterProps) {
+/** Dark-only toaster. sift does not ship a light theme. */
+const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
-      theme={theme}
-      position={position}
-      visibleToasts={3}
-      duration={4000}
+      theme="dark"
+      className="toaster group"
+      icons={{
+        success: <CircleCheckIcon className="size-4" />,
+        info: <InfoIcon className="size-4" />,
+        warning: <TriangleAlertIcon className="size-4" />,
+        error: <OctagonXIcon className="size-4" />,
+        loading: <Loader2Icon className="size-4 animate-spin" />,
+      }}
+      style={
+        {
+          "--normal-bg": "var(--popover)",
+          "--normal-text": "var(--popover-foreground)",
+          "--normal-border": "var(--border)",
+          "--border-radius": "var(--radius)",
+        } as CSSProperties
+      }
       toastOptions={{
         classNames: {
-          toast:
-            "!bg-[rgb(var(--sift-surface))] !text-[rgb(var(--sift-text))] !border !border-[rgb(var(--sift-border-strong))] !rounded-lg",
-          title: "!text-[rgb(var(--sift-text))]",
-          description: "!text-[rgb(var(--sift-text-muted))]",
-          actionButton:
-            "!bg-[rgb(var(--sift-accent))] !text-[rgb(var(--sift-text))]",
-          cancelButton:
-            "!bg-[rgb(var(--sift-bg))] !text-[rgb(var(--sift-text))]",
+          toast: "cn-toast",
         },
       }}
       {...props}
     />
-  );
+  )
 }
+
+export { Toaster }

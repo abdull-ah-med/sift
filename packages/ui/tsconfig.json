@@ -9,7 +9,10 @@
     "skipLibCheck": true,
     "noEmit": true,
     "declaration": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "paths": {
+      "@sift/ui/*": ["./src/*"]
+    }
   },
   "include": ["src"]
 }
