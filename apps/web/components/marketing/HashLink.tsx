@@ -4,13 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLenis } from "lenis/react";
 import { cn } from "@sift/ui";
-import type { ComponentProps, MouseEvent } from "react";
+import { useEffect, useState, type ComponentProps, type MouseEvent } from "react";
 
 /** Clears the fixed pill nav (`pt-4` + `h-16`) plus a little air. */
 export const HEADER_SCROLL_OFFSET = -128;
 
 const NAV =
-  "rounded-full bg-transparent px-4 py-2 text-sm font-medium text-[rgb(var(--sift-text-muted))] transition-[color,background-color] duration-150 ease-[var(--ease-out)] [@media(hover:hover)_and_(pointer:fine)]:hover:bg-[rgb(var(--sift-text)_/_0.06)] [@media(hover:hover)_and_(pointer:fine)]:hover:text-[rgb(var(--sift-text))]";
+  "px-3 py-2 text-sm font-medium text-[rgb(var(--sift-text-muted))] underline-offset-4 decoration-[rgb(var(--sift-text))] transition-colors duration-150 ease-[var(--ease-out)] [@media(hover:hover)_and_(pointer:fine)]:hover:text-[rgb(var(--sift-text))] [@media(hover:hover)_and_(pointer:fine)]:hover:underline data-[active=true]:text-[rgb(var(--sift-text))] data-[active=true]:underline";
 
 const TEXT =
   "relative inline-flex text-sm text-[rgb(var(--sift-text-muted))] transition-colors duration-150 ease-[var(--ease-out)] after:pointer-events-none after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-150 after:ease-[var(--ease-out)] motion-reduce:after:transition-none [@media(hover:hover)_and_(pointer:fine)]:hover:text-[rgb(var(--sift-text))] [@media(hover:hover)_and_(pointer:fine)]:hover:after:scale-x-100";
@@ -61,25 +61,48 @@ export function HashLink({
   const pathname = usePathname();
   const lenis = useLenis();
   const hrefStr = typeof href === "string" ? href : "";
-  const hash = hrefStr ? hashFromHref(hrefStr) : null;
+  const targetHash = hrefStr ? hashFromHref(hrefStr) : null;
+  const [hash, setHash] = useState("");
+
+  useEffect(() => {
+    const sync = () => setHash(window.location.hash.replace(/^#/, ""));
+    sync();
+    window.addEventListener("hashchange", sync);
+    window.addEventListener("popstate", sync);
+    return () => {
+      window.removeEventListener("hashchange", sync);
+      window.removeEventListener("popstate", sync);
+    };
+  }, []);
+
+  const active =
+    variant === "nav" &&
+    (targetHash
+      ? pathname === "/" && hash === targetHash
+      : hrefStr !== "" &&
+        hrefStr !== "/" &&
+        (pathname === hrefStr || pathname.startsWith(`${hrefStr}/`)));
 
   function handleClick(e: MouseEvent<HTMLAnchorElement>) {
     onClick?.(e);
-    if (e.defaultPrevented || !hash) {
+    if (e.defaultPrevented || !targetHash) {
       return;
     }
     if (pathname !== "/") {
       return;
     }
     e.preventDefault();
-    scrollToHash(hash, lenis);
-    window.history.replaceState(null, "", `/#${hash}`);
+    scrollToHash(targetHash, lenis);
+    window.history.replaceState(null, "", `/#${targetHash}`);
+    setHash(targetHash);
   }
 
   return (
     <Link
       href={href}
       onClick={handleClick}
+      data-active={active || undefined}
+      aria-current={active ? "page" : undefined}
       className={cn(variant === "nav" ? NAV : TEXT, className)}
       {...rest}
     >

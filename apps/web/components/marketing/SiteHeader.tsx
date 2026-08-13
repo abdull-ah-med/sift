@@ -82,7 +82,7 @@ export function SiteHeader() {
                 </NavigationMenuItem>
 
                 <NavigationMenuItem>
-                    <NavigationMenuTrigger className="h-auto rounded-full bg-transparent px-4 py-2 text-sm font-medium text-[rgb(var(--sift-text-muted))] transition-[background-color,color] duration-150 ease-[var(--ease-out)] hover:bg-[rgb(var(--sift-text)_/_0.06)] hover:text-[rgb(var(--sift-text))] focus:bg-transparent data-[state=open]:bg-[rgb(var(--sift-text)_/_0.06)]">
+                    <NavigationMenuTrigger className="h-auto rounded-none bg-transparent px-3 py-2 text-sm font-medium text-[rgb(var(--sift-text-muted))] underline-offset-4 decoration-[rgb(var(--sift-text))] transition-colors duration-150 ease-[var(--ease-out)] hover:bg-transparent hover:text-[rgb(var(--sift-text))] hover:underline focus:bg-transparent data-[state=open]:bg-transparent data-[state=open]:text-[rgb(var(--sift-text))] data-[state=open]:underline">
                     Surfaces
                   </NavigationMenuTrigger>
                   <NavigationMenuContent className="p-0 md:w-[min(64rem,calc(100vw-2rem))]">
