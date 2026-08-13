@@ -12,14 +12,17 @@ const CHIP_FRAME = "inline-flex rounded-lg p-0.5";
 const CHIP =
   "inline-flex items-center rounded-md border border-[rgb(var(--sift-border-strong))] bg-[rgb(var(--sift-text)_/_0.04)] px-2 py-1 text-[10px] font-medium text-[rgb(var(--sift-text-muted))]";
 const CARD =
-  "rounded-xl border border-[rgb(var(--sift-border-strong))] bg-[rgb(var(--sift-text)_/_0.04)] shadow-[inset_0_1px_0_0_rgb(238_238_238_/_0.06)] ring-0 transition-[border-color] duration-150 ease-[var(--ease-out)] hover:border-[rgb(238_238_238_/_0.22)]";
+  "rounded-xl border border-[rgb(var(--sift-border-strong))] bg-[rgb(var(--sift-surface)/0.42)] shadow-[inset_0_1px_0_0_rgb(238_238_238_/_0.06)] ring-0 transition-[border-color] duration-150 ease-[var(--ease-out)] hover:border-[rgb(238_238_238_/_0.22)]";
 const STAT =
   "flex items-center justify-between rounded-md border border-[rgb(var(--sift-border-strong))] bg-[rgb(var(--sift-text)_/_0.04)] px-3 py-2 text-xs";
 
 /** Watermelon feature-1 bento, lucide, sift copy. No fake uptime. */
 export function FeatureBento() {
   return (
-    <section id="product" className="flex w-full scroll-mt-32 flex-col items-center px-6 py-16 md:px-12">
+    <section
+      id="product"
+      className="flex w-full scroll-mt-32 flex-col items-center bg-[rgb(var(--sift-surface)/0.22)] px-6 py-16 md:px-12"
+    >
       <div className="mb-12 flex w-full max-w-3xl justify-center">
         <SplitText
           tag="h2"
