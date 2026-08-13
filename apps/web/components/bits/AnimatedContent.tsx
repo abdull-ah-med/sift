@@ -36,19 +36,17 @@ export default function AnimatedContent({
     const el = ref.current;
     if (!el) return;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      gsap.set(el, { x: 0, y: 0, opacity: 1, visibility: "visible" });
-      return;
-    }
-
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const axis = direction === "horizontal" ? "x" : "y";
-    const offset = reverse ? -distance : distance;
+    const travel = reduced ? Math.min(4, Math.abs(distance)) : distance;
+    const offset = reverse ? -travel : travel;
     const startPct = (1 - threshold) * 100;
+    const seconds = reduced ? 0.2 : duration;
 
     gsap.set(el, { [axis]: offset, opacity: 0, visibility: "visible" });
 
-    const tl = gsap.timeline({ paused: true, delay });
-    tl.to(el, { [axis]: 0, opacity: 1, duration, ease });
+    const tl = gsap.timeline({ paused: true, delay: reduced ? 0 : delay });
+    tl.to(el, { [axis]: 0, opacity: 1, duration: seconds, ease });
 
     const st = ScrollTrigger.create({
       trigger: el,
@@ -64,7 +62,7 @@ export default function AnimatedContent({
   }, [distance, direction, reverse, duration, ease, delay, threshold]);
 
   return (
-    <div ref={ref} className={`opacity-0 motion-reduce:opacity-100 ${className}`} {...props}>
+    <div ref={ref} className={`opacity-0 ${className}`} {...props}>
       {children}
     </div>
   );

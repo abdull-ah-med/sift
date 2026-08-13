@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
 import { ReactLenis, useLenis } from "lenis/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -16,29 +15,8 @@ function LenisScrollTriggerBridge() {
   return null;
 }
 
-const MARKETING_PATHS = new Set([
-  "/",
-  "/privacy",
-  "/terms",
-  "/ai",
-  "/data",
-  "/mission",
-  "/login",
-  "/signup",
-  "/invite",
-]);
-
-function isMarketingPath(pathname: string): boolean {
-  if (MARKETING_PATHS.has(pathname)) {
-    return true;
-  }
-  return ["/login", "/signup", "/invite", "/privacy", "/terms", "/ai", "/data", "/mission"].some(
-    (prefix) => pathname.startsWith(`${prefix}/`),
-  );
-}
-
 function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(true);
+  const [reduced, setReduced] = useState(false);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -54,21 +32,23 @@ function usePrefersReducedMotion(): boolean {
 }
 
 /**
- * Smooth-scrolls public marketing/auth routes with Lenis.
- * Reduced-motion users keep native scroll — Lenis is not mounted, because
- * `lenis.stop()` applies `overflow: clip` and freezes the page.
+ * Smooth-scrolls every route with Lenis.
+ * Reduced-motion keeps Lenis mounted with a calmer lerp — never `stop()`
+ * (that clips overflow) and never unmount.
  */
 export function LenisProvider({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
   const reduced = usePrefersReducedMotion();
-  const marketing = isMarketingPath(pathname);
-
-  if (!marketing || reduced) {
-    return children;
-  }
 
   return (
-    <ReactLenis root options={{ autoRaf: true, lerp: 0.1, respectReducedMotion: true }}>
+    <ReactLenis
+      root
+      options={{
+        autoRaf: true,
+        lerp: reduced ? 0.22 : 0.1,
+        // We tone down via lerp; do not let Lenis no-op the page.
+        respectReducedMotion: false,
+      }}
+    >
       <LenisScrollTriggerBridge />
       {children}
     </ReactLenis>

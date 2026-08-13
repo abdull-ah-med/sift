@@ -33,16 +33,13 @@ export default function FadeContent({
     const el = ref.current;
     if (!el) return;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      gsap.set(el, { autoAlpha: 1 });
-      return;
-    }
-
-    const seconds = duration > 10 ? duration / 1000 : duration;
-    const delayS = delay > 10 ? delay / 1000 : delay;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const seconds = reduced ? 0.2 : duration > 10 ? duration / 1000 : duration;
+    const delayS = reduced ? 0 : delay > 10 ? delay / 1000 : delay;
     const startPct = (1 - threshold) * 100;
+    const fromOpacity = reduced ? 0.35 : initialOpacity;
 
-    gsap.set(el, { autoAlpha: initialOpacity });
+    gsap.set(el, { autoAlpha: fromOpacity });
 
     const tl = gsap.timeline({ paused: true, delay: delayS });
     tl.to(el, { autoAlpha: 1, duration: seconds, ease });
@@ -62,7 +59,7 @@ export default function FadeContent({
   }, [duration, ease, delay, threshold, initialOpacity]);
 
   return (
-    <div ref={ref} className={`opacity-0 motion-reduce:opacity-100 ${className}`} {...props}>
+    <div ref={ref} className={`opacity-0 ${className}`} {...props}>
       {children}
     </div>
   );

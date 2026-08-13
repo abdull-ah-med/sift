@@ -15,27 +15,23 @@ export function MarketingHero() {
   return (
     <section className="relative flex min-h-[100dvh] flex-col justify-between overflow-hidden">
       <div className="absolute inset-0" aria-hidden>
-        {reduce ? (
-          <div className="h-full w-full bg-[radial-gradient(ellipse_at_top,rgb(27_105_134_/_0.35),transparent_60%)]" />
-        ) : (
-          <ColorBends
-            className="pointer-events-none"
-            rotation={140}
-            speed={0.15}
-            colors={["#1b6986"]}
-            transparent
-            autoRotate={0}
-            scale={1}
-            frequency={1}
-            warpStrength={1}
-            mouseInfluence={0.1}
-            parallax={0}
-            noise={0}
-            iterations={1}
-            intensity={2}
-            bandWidth={3}
-          />
-        )}
+        <ColorBends
+          className="pointer-events-none"
+          rotation={140}
+          speed={reduce ? 0.06 : 0.15}
+          colors={["#1b6986"]}
+          transparent
+          autoRotate={0}
+          scale={1}
+          frequency={1}
+          warpStrength={reduce ? 0.35 : 1}
+          mouseInfluence={reduce ? 0 : 0.1}
+          parallax={0}
+          noise={0}
+          iterations={1}
+          intensity={reduce ? 1.2 : 2}
+          bandWidth={3}
+        />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgb(var(--sift-bg))]" />
       </div>
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col justify-between px-6 py-28 md:px-12 md:py-32">

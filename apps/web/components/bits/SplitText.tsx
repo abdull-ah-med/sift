@@ -53,8 +53,7 @@ export default function SplitText({
   useGSAP(
     () => {
       if (!ref.current || !text || !fontsLoaded || done.current) return;
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const el = ref.current as HTMLElement & { _rbsplitInstance?: GSAPSplitText };
       if (el._rbsplitInstance) {
         try {
@@ -67,6 +66,10 @@ export default function SplitText({
 
       const startPct = (1 - threshold) * 100;
       const start = `top ${startPct}%`;
+      const runFrom = reduced ? { opacity: 0, y: 4 } : from;
+      const runTo = reduced ? { opacity: 1, y: 0 } : to;
+      const runDuration = reduced ? 0.2 : duration;
+      const runStagger = reduced ? 0.02 : delay / 1000;
 
       const splitInstance = new GSAPSplitText(el, {
         type: splitType,
@@ -84,12 +87,12 @@ export default function SplitText({
           if (!targets.length) targets = self.chars || self.words || self.lines;
           return gsap.fromTo(
             targets,
-            { ...from },
+            { ...runFrom },
             {
-              ...to,
-              duration,
+              ...runTo,
+              duration: runDuration,
               ease,
-              stagger: delay / 1000,
+              stagger: runStagger,
               scrollTrigger: {
                 trigger: el,
                 start,
