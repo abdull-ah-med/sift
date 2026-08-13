@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Badge, Button, Separator } from "@sift/ui";
+import { Button, Separator } from "@sift/ui";
 import FadeContent from "@/components/bits/FadeContent";
 import { HashLink } from "@/components/marketing/HashLink";
 import { LEGAL_LINKS } from "@/components/marketing/legal";
@@ -19,7 +19,6 @@ const COLUMNS = [
     title: "App",
     links: [
       { href: "/login", label: "Sign in" },
-      { href: "/signup", label: "Get started" },
       { href: "/invite", label: "Invite" },
     ],
   },
@@ -41,12 +40,6 @@ export function SiteFooter() {
                 sift
               </p>
               <div className="flex flex-col gap-5">
-                <Badge
-                  variant="secondary"
-                  className="w-fit rounded-full px-3 py-1 text-xs font-medium"
-                >
-                  Sealed by default
-                </Badge>
                 <h2 className="text-3xl leading-tight font-semibold tracking-tight sm:text-4xl lg:text-5xl">
                   Document intelligence you can trust with a sealed contract.
                 </h2>
@@ -94,15 +87,8 @@ export function SiteFooter() {
 
       <div className="mx-auto max-w-7xl px-6 md:px-12">
         <Separator className="mt-12 bg-[rgb(var(--sift-border-strong))] opacity-60" />
-        <div className="flex flex-col items-center justify-between gap-4 py-6 sm:flex-row">
+        <div className="flex items-center py-6">
           <p className="text-xs text-[rgb(var(--sift-text-muted))]">sift</p>
-          <div className="flex flex-wrap items-center gap-5">
-            {LEGAL_LINKS.map((link) => (
-              <HashLink key={link.href} href={link.href} className="text-xs">
-                {link.label}
-              </HashLink>
-            ))}
-          </div>
         </div>
       </div>
     </footer>
