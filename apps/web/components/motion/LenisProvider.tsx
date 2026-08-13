@@ -2,17 +2,38 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { ReactLenis } from "lenis/react";
+import { ReactLenis, useLenis } from "lenis/react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import "lenis/dist/lenis.css";
 
-const MARKETING_PATHS = new Set(["/", "/privacy", "/terms", "/login", "/signup", "/invite"]);
+gsap.registerPlugin(ScrollTrigger);
+
+function LenisScrollTriggerBridge() {
+  useLenis(() => {
+    ScrollTrigger.update();
+  });
+  return null;
+}
+
+const MARKETING_PATHS = new Set([
+  "/",
+  "/privacy",
+  "/terms",
+  "/ai",
+  "/data",
+  "/mission",
+  "/login",
+  "/signup",
+  "/invite",
+]);
 
 function isMarketingPath(pathname: string): boolean {
   if (MARKETING_PATHS.has(pathname)) {
     return true;
   }
-  return ["/login", "/signup", "/invite", "/privacy", "/terms"].some((prefix) =>
-    pathname.startsWith(`${prefix}/`),
+  return ["/login", "/signup", "/invite", "/privacy", "/terms", "/ai", "/data", "/mission"].some(
+    (prefix) => pathname.startsWith(`${prefix}/`),
   );
 }
 
@@ -48,6 +69,7 @@ export function LenisProvider({ children }: { children: ReactNode }) {
 
   return (
     <ReactLenis root options={{ autoRaf: true, lerp: 0.1, respectReducedMotion: true }}>
+      <LenisScrollTriggerBridge />
       {children}
     </ReactLenis>
   );

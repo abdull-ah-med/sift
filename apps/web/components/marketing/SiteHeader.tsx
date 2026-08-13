@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import FadeContent from "@/components/bits/FadeContent";
 import { HashLink } from "@/components/marketing/HashLink";
+import { LEGAL_LINKS } from "@/components/marketing/legal";
 
 const CHIP =
   "h-7 gap-1.5 rounded-full px-3 text-xs text-[rgb(var(--sift-text-muted))]";
@@ -141,12 +142,15 @@ export function SiteHeader() {
                         <h4 className="mb-1 text-xs text-[rgb(var(--sift-text-muted))] uppercase">
                           Resources
                         </h4>
-                        <HashLink href="/privacy" className="text-sm font-medium tracking-tight">
-                          Privacy
-                        </HashLink>
-                        <HashLink href="/terms" className="text-sm font-medium tracking-tight">
-                          Terms
-                        </HashLink>
+                        {LEGAL_LINKS.map((link) => (
+                          <HashLink
+                            key={link.href}
+                            href={link.href}
+                            className="text-sm font-medium tracking-tight"
+                          >
+                            {link.label}
+                          </HashLink>
+                        ))}
                         <HashLink href="/collections" className="text-sm font-medium tracking-tight">
                           Collections
                         </HashLink>
@@ -257,12 +261,15 @@ export function SiteHeader() {
                             <span className="text-xs text-[rgb(var(--sift-text-muted))] uppercase">
                               Resources
                             </span>
-                            <HashLink href="/privacy" className="text-sm font-medium tracking-tight">
-                              Privacy
-                            </HashLink>
-                            <HashLink href="/terms" className="text-sm font-medium tracking-tight">
-                              Terms
-                            </HashLink>
+                            {LEGAL_LINKS.map((link) => (
+                              <HashLink
+                                key={link.href}
+                                href={link.href}
+                                className="text-sm font-medium tracking-tight"
+                              >
+                                {link.label}
+                              </HashLink>
+                            ))}
                             <HashLink href="/collections" className="text-sm font-medium tracking-tight">
                               Collections
                             </HashLink>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Badge, Button, Separator } from "@sift/ui";
 import FadeContent from "@/components/bits/FadeContent";
 import { HashLink } from "@/components/marketing/HashLink";
+import { LEGAL_LINKS } from "@/components/marketing/legal";
 
 const COLUMNS = [
   {
@@ -24,10 +25,7 @@ const COLUMNS = [
   },
   {
     title: "Legal",
-    links: [
-      { href: "/privacy", label: "Privacy" },
-      { href: "/terms", label: "Terms" },
-    ],
+    links: LEGAL_LINKS,
   },
 ] as const;
 
@@ -99,12 +97,11 @@ export function SiteFooter() {
         <div className="flex flex-col items-center justify-between gap-4 py-6 sm:flex-row">
           <p className="text-xs text-[rgb(var(--sift-text-muted))]">sift</p>
           <div className="flex flex-wrap items-center gap-5">
-            <HashLink href="/privacy" className="text-xs">
-              Privacy
-            </HashLink>
-            <HashLink href="/terms" className="text-xs">
-              Terms
-            </HashLink>
+            {LEGAL_LINKS.map((link) => (
+              <HashLink key={link.href} href={link.href} className="text-xs">
+                {link.label}
+              </HashLink>
+            ))}
           </div>
         </div>
       </div>
