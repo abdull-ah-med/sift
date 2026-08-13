@@ -3,6 +3,9 @@ import { SiteHeader } from "@/components/marketing/SiteHeader";
 import { HashLink } from "@/components/marketing/HashLink";
 import { LEGAL_LINKS } from "@/components/marketing/legal";
 
+const CONTACT = "contactabdullahahmed@gmail.com";
+const EFFECTIVE = "13 August 2026";
+
 export function LegalDoc({
   title,
   description,
@@ -22,6 +25,17 @@ export function LegalDoc({
         <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">{title}</h1>
         <p className="mt-4 text-base leading-relaxed text-[rgb(var(--sift-text-muted))]">
           {description}
+        </p>
+        <p className="mt-3 text-xs text-[rgb(var(--sift-text-muted))]">
+          Effective {EFFECTIVE}. Contact:{" "}
+          <a
+            href={`mailto:${CONTACT}`}
+            className="text-[rgb(var(--sift-text))] underline-offset-4 hover:underline"
+          >
+            {CONTACT}
+          </a>
+          . These pages are product terms for this release. They are not a substitute for advice
+          from your own counsel.
         </p>
         <div className="mt-12 space-y-10 text-sm leading-[1.7] text-[rgb(var(--sift-text-muted))]">
           {children}
@@ -50,5 +64,31 @@ export function LegalSection({ title, children }: { title: string; children: Rea
       </h2>
       <div className="space-y-3">{children}</div>
     </section>
+  );
+}
+
+export function LegalCallout({ children }: { children: React.ReactNode }) {
+  return (
+    <aside className="rounded-xl border border-[rgb(var(--sift-border-strong))] bg-[rgb(var(--sift-text)_/_0.04)] p-4 text-sm leading-relaxed text-[rgb(var(--sift-text))]">
+      {children}
+    </aside>
+  );
+}
+
+export function LegalList({ items }: { items: React.ReactNode[] }) {
+  return (
+    <ul className="list-disc space-y-2 pl-5">
+      {items.map((item, i) => (
+        <li key={i}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+
+export function LegalDisclaimer({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="rounded-xl border border-[rgb(var(--sift-border-strong))] p-4 text-xs leading-relaxed font-medium tracking-wide text-[rgb(var(--sift-text))] uppercase">
+      {children}
+    </p>
   );
 }
