@@ -50,6 +50,12 @@ export default function FadeContent({
       once: true,
       onEnter: () => tl.play(),
     });
+    const rect = el.getBoundingClientRect();
+    const vh = window.innerHeight || 0;
+    const alreadyInView = rect.top < vh * (startPct / 100) && rect.bottom > 0;
+    if (threshold === 0 || alreadyInView) {
+      tl.play();
+    }
 
     return () => {
       st.kill();
