@@ -37,7 +37,7 @@ async function expectNoSeriousAxe(page: Page) {
   await expect
     .poll(async () =>
       h1.evaluate((el) => {
-        let n: HTMLElement | null = el;
+        let n: Element | null = el;
         let acc = 1;
         while (n && n !== document.documentElement) {
           acc *= Number.parseFloat(getComputedStyle(n).opacity);
