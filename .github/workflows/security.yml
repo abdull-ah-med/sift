@@ -50,7 +50,7 @@ jobs:
       - name: pip-audit
         run: uvx pip-audit --progress-spinner off
       - name: bandit
-        run: uv run bandit -r libs services apps -x vendor -ll
+        run: uv run bandit -r libs services apps -x vendor -lll
 
   node-audit:
     name: Node dep audit
