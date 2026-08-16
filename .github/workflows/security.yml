@@ -3,7 +3,7 @@ name: Security
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, dev]
 
 permissions:
   contents: read
@@ -49,6 +49,8 @@ jobs:
         run: uv sync --all-packages --group dev
       - name: pip-audit
         run: uvx pip-audit --progress-spinner off
+      - name: bandit
+        run: uv run bandit -r libs services apps -x vendor -lll
 
   node-audit:
     name: Node dep audit

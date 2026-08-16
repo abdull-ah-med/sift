@@ -8,6 +8,9 @@ on:
       - "libs/sift-ingest/src/sift_ingest/chunker.py"
       - "evals/goldens/**"
       - "evals/retrieve/**"
+      - "evals/chat/**"
+      - "evals/parse/**"
+      - "evals/goldens/chat-offline.yaml"
       - ".github/workflows/evals.yml"
   schedule:
     - cron: "0 6 * * *"
