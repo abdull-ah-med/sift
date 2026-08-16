@@ -10,4 +10,5 @@ CI/CD workflows. Required on every pull request and on pushes to `dev` and `main
 
 **Not in CI yet** (local `PHASE_HARDEN` / BACKLOG): Compose integration job, mutation testing, contract fuzz (schemathesis), k6/load, Chromatic/Storybook, trivy/syft/osv-scanner, coverage fail-under on changed files (`diff-cover`).
 
-Chat eval runner is not wired: `evals/chat/` has no tests on `dev`. Path filters are in place so a later chat golden will trigger this workflow.
+Chat eval runner is not wired: `evals/chat/` has no tests on `dev`. Parse golden `evals/parse/test_golden_prompt_injection.py` is `@pytest.mark.integration` and skip-gated on `SIFT_HAVE_PARSE_WEIGHTS` — it is not a CI job (a skip-green job was rejected at review). Path filters remain so those trees still wake the retrieve workflow.
+

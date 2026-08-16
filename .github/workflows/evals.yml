@@ -38,16 +38,3 @@ jobs:
         run: uv run pytest -q libs/sift-eval/tests evals/retrieve/test_run_offline.py
       - name: Offline golden score
         run: uv run python evals/retrieve/run_offline.py --json
-
-  parse-pr:
-    name: Parse evals
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
-        with:
-          enable-cache: true
-      - name: Sync
-        run: uv sync --all-packages --group dev
-      - name: Parse golden tests
-        run: uv run pytest -q evals/parse
