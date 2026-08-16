@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
@@ -23,7 +24,12 @@ def _apply_tenant(conn: object, tenant_id: str) -> None:
 
 def test_ingest_parse_persists_blocks_and_sets_indexing(
     migrated_db: Engine,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr(
+        "sift_api.ingest_parse.enqueue_embed_document",
+        lambda **_kwargs: None,
+    )
     org_id = new_id(IdKind.ORGANIZATION)
     tenant_id = new_id(IdKind.TENANT)
     collection_id = new_id(IdKind.COLLECTION)
@@ -131,6 +137,14 @@ def test_ingest_parse_persists_blocks_and_sets_indexing(
     assert doc["status"] == "indexing"
     assert doc["needs_review_count"] == 0
     assert doc["page_count"] >= 1
+    with migrated_db.begin() as conn:
+        conn.execute(text("SET LOCAL ROLE sift_app"))
+        _apply_tenant(conn, tenant_id)
+        chunk_n = conn.execute(
+            text("SELECT count(*) FROM chunks WHERE document_id = :id"),
+            {"id": document_id},
+        ).scalar_one()
+    assert int(chunk_n) > 0
 
 
 def test_blocks_rls_hides_other_tenant(migrated_db: Engine) -> None:

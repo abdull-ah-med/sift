@@ -1,0 +1,8 @@
+# Loopback chat / auto-index surface — fails on origin/dev, passes on phase-4 tip.
+# No live Ollama. No paid APIs.
+surface: loopback_openai_compat
+require_mode: instructor.Mode.JSON
+loopback_hosts:
+  - 127.0.0.1
+  - localhost
+  - "::1"
