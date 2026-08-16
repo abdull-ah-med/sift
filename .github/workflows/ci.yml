@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, dev]
 
 permissions:
   contents: read
@@ -62,7 +62,11 @@ jobs:
           echo "SIFT_HAVE_PARSE_WEIGHTS=1" >> "$GITHUB_ENV"
           echo "HF_HOME=$HF_HOME" >> "$GITHUB_ENV"
       - name: Pytest
-        run: uv run pytest -q --ignore=vendor
+        run: >
+          uv run pytest -q --ignore=vendor
+          -m "not integration and not slow"
+          --cov=libs --cov=services --cov=apps
+          --cov-report=term-missing
 
   node:
     name: Node
@@ -78,10 +82,34 @@ jobs:
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm --filter @sift/web lint
       - name: Test
         run: pnpm -r test
       - name: Typecheck
         run: pnpm -r typecheck
+
+  e2e-web:
+    name: Playwright
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        run: pnpm --filter @sift/web exec playwright install --with-deps chromium
+      - name: E2E
+        env:
+          CI: "true"
+        run: pnpm --filter @sift/web test:e2e
 
   preflight:
     name: Agent preflight
