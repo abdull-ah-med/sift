@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 from typing import Annotated, Any
+from urllib.parse import urlsplit, urlunsplit
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
@@ -34,6 +36,7 @@ from sift_api.tasks import extract_facts, summarize_session
 from sift_chat import (
     ChatGraphDeps,
     IdentityRewriter,
+    InstructorAnswerGenerator,
     LLMAnswer,
     build_chat_graph,
     chat_thread_id,
@@ -43,6 +46,20 @@ from sift_core.ids import IdKind, new_id
 from sift_retrieve.hybrid import RetrieveHit
 
 router = APIRouter(prefix="/v1", tags=["chat"])
+
+_log = logging.getLogger(__name__)
+_LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
+_CHAT_LLM_TIMEOUT_S = 60.0
+_NO_LLM_TEXT = (
+    "No chat LLM is configured because neither OPENAI_API_KEY, ANTHROPIC_API_KEY, "
+    "nor a loopback SIFT_CHAT_BASE_URL is set. Run ollama serve, then ollama pull "
+    "llama3.1, and set SIFT_CHAT_BASE_URL=http://127.0.0.1:11434/v1. (err_chat_no_llm)"
+)
+_BAD_URL_TEXT = (
+    "Chat LLM base URL was rejected because it is not an http loopback address "
+    "(127.0.0.1, localhost, or ::1). Set SIFT_CHAT_BASE_URL=http://127.0.0.1:11434/v1. "
+    "(err_chat_llm_url)"
+)
 
 
 def _new_turn_id() -> str:
@@ -267,8 +284,38 @@ class _PgTurnPersister:
         return assistant_turn_id
 
 
+def _loopback_openai_url(url: str) -> str:
+    """Normalize an OpenAI-compatible base URL; reject anything that is not loopback http.
+
+    Hostname must be an exact match for ``127.0.0.1``, ``localhost``, or ``::1``.
+    Path gets ``/v1`` appended when missing. Query, fragment, and userinfo are dropped.
+    """
+    parts = urlsplit(url.strip())
+    host = (parts.hostname or "").rstrip(".").lower()
+    if parts.scheme != "http" or host not in _LOOPBACK_HOSTS:
+        msg = "chat LLM base URL must be http loopback"
+        raise ValueError(msg)
+    path = (parts.path or "").rstrip("/")
+    if not path.endswith("/v1"):
+        path = f"{path}/v1" if path else "/v1"
+    netloc = f"[{host}]" if ":" in host else host
+    if parts.port is not None:
+        netloc = f"{netloc}:{parts.port}"
+    return urlunsplit(("http", netloc, path, "", ""))
+
+
+def _resolved_loopback_url(settings: Settings) -> str | None:
+    """Return a validated loopback base URL, or None when local compat is not requested."""
+    configured = settings.sift_chat_base_url.strip()
+    if configured:
+        return _loopback_openai_url(configured)
+    if settings.sift_llm_provider.strip().lower() == "ollama":
+        return _loopback_openai_url("http://127.0.0.1:11434/v1")
+    return None
+
+
 class _EnvAnswerGenerator:
-    """Instructor generator when OPENAI_API_KEY/ANTHROPIC_API_KEY is set; else refuse."""
+    """Instructor generator: OpenAI, then Anthropic, then loopback OpenAI-compat."""
 
     def generate(
         self,
@@ -277,15 +324,19 @@ class _EnvAnswerGenerator:
         user: str,
         allowed_chunk_ids: list[str],
     ) -> LLMAnswer:
+        settings = get_settings()
         openai_key = os.environ.get("OPENAI_API_KEY", "").strip()
+        if not openai_key and settings.sift_llm_provider.strip().lower() == "openai":
+            openai_key = os.environ.get("SIFT_LLM_API_KEY", "").strip()
         anthropic_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
         if openai_key:
             import instructor
             from openai import OpenAI
 
+            cloud_model = os.environ.get("SIFT_CHAT_MODEL", "").strip() or "gpt-4o-mini"
             client = instructor.from_openai(OpenAI(api_key=openai_key))
             return client.chat.completions.create(
-                model=os.environ.get("SIFT_CHAT_MODEL", "gpt-4o-mini"),
+                model=cloud_model,
                 messages=[
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},
@@ -304,12 +355,37 @@ class _EnvAnswerGenerator:
                 messages=[{"role": "user", "content": user}],
                 response_model=LLMAnswer,
             )
+        try:
+            base_url = _resolved_loopback_url(settings)
+        except ValueError:
+            _log.warning("chat_llm_url_rejected")
+            return LLMAnswer(
+                text=_BAD_URL_TEXT,
+                cited_chunk_ids=[],
+                confidence=0.0,
+                insufficient=True,
+            )
+        if base_url:
+            import instructor
+            from openai import OpenAI
+
+            api_key = settings.sift_chat_api_key.strip() or "ollama"
+            client = instructor.from_openai(
+                OpenAI(base_url=base_url, api_key=api_key, timeout=_CHAT_LLM_TIMEOUT_S),
+                mode=instructor.Mode.JSON,
+                max_retries=2,
+            )
+            return InstructorAnswerGenerator(
+                client=client,
+                model=settings.sift_chat_model,
+            ).generate(
+                system=system,
+                user=user,
+                allowed_chunk_ids=allowed_chunk_ids,
+            )
         _ = allowed_chunk_ids
         return LLMAnswer(
-            text=(
-                "Insufficient information: no chat LLM is configured "
-                "(set OPENAI_API_KEY or ANTHROPIC_API_KEY)."
-            ),
+            text=_NO_LLM_TEXT,
             cited_chunk_ids=[],
             confidence=0.0,
             insufficient=True,
