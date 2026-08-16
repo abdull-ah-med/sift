@@ -57,7 +57,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           placeholder="Jump to…"
           className="w-full border-b border-[rgb(var(--sift-border))] bg-transparent px-4 py-3 text-sm text-[rgb(var(--sift-text))] outline-none placeholder:text-[rgb(var(--sift-text-muted))]"
         />
-        <Command.List className="max-h-72 overflow-auto p-2">
+        <Command.List data-lenis-prevent className="max-h-72 overflow-auto p-2">
           <Command.Empty className="px-3 py-6 text-center text-sm text-[rgb(var(--sift-text-muted))]">
             No matches. Try Home, Collections, or Settings.
           </Command.Empty>

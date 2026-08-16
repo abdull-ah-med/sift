@@ -150,8 +150,12 @@ export function ChatRuntimeProvider({
               );
             }
             if (ev.done.turn_id && stillThisSession) {
-              const cites = await fetchTurnCitations(ev.done.turn_id);
-              onCitations(cites);
+              try {
+                const cites = await fetchTurnCitations(ev.done.turn_id);
+                onCitations(cites);
+              } catch {
+                /* Streamed tokens stay; citation rail may be empty. */
+              }
               onStreamingChunkIds([]);
             }
             if (ev.done.insufficient && !text.trim()) {

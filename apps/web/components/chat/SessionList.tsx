@@ -22,7 +22,10 @@ export function SessionList({
   onDelete,
 }: SessionListProps) {
   return (
-    <aside className="flex h-full w-56 shrink-0 flex-col border-r border-[rgb(var(--sift-border))]">
+    <aside
+      data-lenis-prevent
+      className="flex h-full w-56 shrink-0 flex-col border-r border-[rgb(var(--sift-border))]"
+    >
       <div className="flex items-center justify-between gap-2 border-b border-[rgb(var(--sift-border))] px-3 py-2">
         <span className="text-xs font-medium uppercase tracking-wide text-[rgb(var(--sift-text-muted))]">
           Sessions

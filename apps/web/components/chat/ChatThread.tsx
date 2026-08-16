@@ -18,7 +18,10 @@ const SUGGESTIONS = [
 export function ChatThread() {
   return (
     <ThreadPrimitive.Root className="flex h-full min-w-0 flex-1 flex-col">
-      <ThreadPrimitive.Viewport className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
+      <ThreadPrimitive.Viewport
+        data-lenis-prevent
+        className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-4"
+      >
         <ThreadPrimitive.Empty>
           <div className="mx-auto flex max-w-lg flex-col gap-4 py-12">
             <h2 className="text-lg font-semibold tracking-tight">Ask this collection</h2>

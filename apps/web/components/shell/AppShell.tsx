@@ -160,7 +160,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Button>
           </div>
         </header>
-        <div id="main" className="sift-app-main flex-1 overflow-auto px-6 py-6">
+        <div
+          id="main"
+          data-lenis-prevent
+          className="sift-app-main flex-1 overflow-auto px-6 py-6"
+        >
           {children}
         </div>
       </SidebarInset>
