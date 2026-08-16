@@ -73,6 +73,30 @@ class Settings(BaseSettings):
         default="",
         alias="SIFT_QDRANT_API_KEY",
     )
+    sift_chat_memory_enabled: bool = Field(
+        default=True,
+        alias="SIFT_CHAT_MEMORY_ENABLED",
+    )
+    sift_chat_turn_limit: int = Field(
+        default=12,
+        alias="SIFT_CHAT_TURN_LIMIT",
+    )
+    sift_chat_base_url: str = Field(
+        default="",
+        alias="SIFT_CHAT_BASE_URL",
+    )
+    sift_chat_model: str = Field(
+        default="llama3.1",
+        alias="SIFT_CHAT_MODEL",
+    )
+    sift_chat_api_key: str = Field(
+        default="ollama",
+        alias="SIFT_CHAT_API_KEY",
+    )
+    sift_llm_provider: str = Field(
+        default="",
+        alias="SIFT_LLM_PROVIDER",
+    )
 
 
 @lru_cache

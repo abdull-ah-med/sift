@@ -10,6 +10,7 @@ dependencies = [
     "sift-ingest",
     "sift-obs",
     "sift-retrieve",
+    "sift-chat",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.34",
     "python-multipart>=0.0.20",
@@ -23,7 +24,7 @@ dependencies = [
     "boto3>=1.35",
     "taskiq>=0.11",
     "taskiq-redis>=1.0",
-    "langgraph>=0.2",
+    "langgraph>=1.2,<2",
     "langgraph-checkpoint-postgres>=2.0",
 ]
 
@@ -46,6 +47,7 @@ sift-parse = { workspace = true }
 sift-ingest = { workspace = true }
 sift-obs = { workspace = true }
 sift-retrieve = { workspace = true }
+sift-chat = { workspace = true }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

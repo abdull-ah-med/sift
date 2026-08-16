@@ -19,8 +19,9 @@ CORPUS_TABLES = frozenset({"api_keys", "collections", "documents", "jobs"})
 AUDIT_TABLES = frozenset({"audit_events"})
 PHASE2_TABLES = frozenset({"blocks", "block_revisions", "chunks"})
 PHASE3_TABLES = frozenset({"chunk_embeddings"})
+PHASE4_TABLES = frozenset({"chat_sessions", "chat_turns"})
 PHASE1_TABLES = TENANCY_TABLES | CORPUS_TABLES | AUDIT_TABLES
-SCHEMA_TABLES = PHASE1_TABLES | PHASE2_TABLES | PHASE3_TABLES
+SCHEMA_TABLES = PHASE1_TABLES | PHASE2_TABLES | PHASE3_TABLES | PHASE4_TABLES
 
 
 def _apply_tenant_context(connection: Connection, tenant_id: str) -> None:

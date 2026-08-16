@@ -1,0 +1,30 @@
+[project]
+name = "sift-chat"
+version = "0.0.0"
+description = "LangGraph collection-scoped RAG chat, citation validation, and session memory helpers."
+requires-python = ">=3.13,<3.14"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "sift-core",
+    "sift-retrieve",
+    "langgraph>=1.2,<2",
+    "instructor>=1.15,<2",
+    "pydantic>=2.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sift_chat"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src/sift_chat" = "sift_chat"
+
+[tool.uv.sources]
+sift-core = { workspace = true }
+sift-retrieve = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

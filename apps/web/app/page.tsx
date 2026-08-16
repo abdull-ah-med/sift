@@ -1,10 +1,23 @@
+import { CtaBand } from "@/components/marketing/CtaBand";
+import { FeatureBento } from "@/components/marketing/FeatureBento";
+import { HashScrollOnLoad } from "@/components/marketing/HashScrollOnLoad";
+import { HowItWorks } from "@/components/marketing/HowItWorks";
+import { MarketingHero } from "@/components/marketing/MarketingHero";
+import { SiteFooter } from "@/components/marketing/SiteFooter";
+import { SiteHeader } from "@/components/marketing/SiteHeader";
+
 export default function HomePage() {
   return (
-    <>
-      <h1>sift</h1>
-      <p className="muted">
-        Phase 1 spine UI — authenticate with an API key, manage collections, and upload documents.
-      </p>
-    </>
+    <div className="flex min-h-[100dvh] flex-col bg-[rgb(var(--sift-bg))]">
+      <HashScrollOnLoad />
+      <SiteHeader />
+      <main id="main" className="sift-app-main flex-1">
+        <MarketingHero />
+        <FeatureBento />
+        <HowItWorks />
+        <CtaBand />
+      </main>
+      <SiteFooter />
+    </div>
   );
 }

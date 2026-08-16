@@ -1,7 +1,12 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Button, Field, FieldError, FieldGroup, FieldLabel, FieldSeparator, Input } from "@sift/ui";
 import { apiUrl, setApiKey, setApiUrl } from "@/lib/api";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { HashLink } from "@/components/marketing/HashLink";
 
 function randomString(n = 48): string {
   const arr = new Uint8Array(n);
@@ -23,12 +28,13 @@ function b64url(buf: ArrayBuffer): string {
 }
 
 export default function LoginPage() {
+  const router = useRouter();
   const issuer = process.env.NEXT_PUBLIC_SIFT_ZITADEL_ISSUER || "http://localhost:8085";
   const clientId = process.env.NEXT_PUBLIC_SIFT_ZITADEL_WEB_CLIENT_ID || "";
   const canOidc = useMemo(() => Boolean(issuer && clientId), [issuer, clientId]);
   const [key, setKey] = useState("");
   const [url, setUrl] = useState(apiUrl());
-  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
 
   async function startOidc() {
     const verifier = randomString(64);
@@ -50,48 +56,65 @@ export default function LoginPage() {
 
   function onApiKey(e: FormEvent) {
     e.preventDefault();
+    setErr("");
+    if (!key.trim()) {
+      setErr("Enter an API key. Keys are created under Settings → API keys.");
+      return;
+    }
     setApiUrl(url);
     setApiKey(key.trim());
     localStorage.removeItem("sift_access_token");
-    setMsg("Saved API key to this browser.");
+    toast.success("API key saved for this browser");
+    router.push("/home");
   }
 
   return (
-    <>
-      <h1>Login</h1>
-      <p className="muted">
-        Prefer Zitadel OIDC for humans. API keys remain for CLI/agents and local bootstrap.
-      </p>
+    <AuthShell
+      title="Sign in"
+      description="Prefer Zitadel for people. API keys remain for CLI and local bootstrap."
+    >
       {canOidc ? (
-        <div className="panel">
-          <button type="button" onClick={() => void startOidc()}>
-            Continue with Zitadel
-          </button>
-        </div>
+        <Button type="button" className="w-full" onClick={() => void startOidc()}>
+          Continue with Zitadel
+        </Button>
       ) : (
-        <p className="muted">
-          Set <code>NEXT_PUBLIC_SIFT_ZITADEL_WEB_CLIENT_ID</code> from{" "}
-          <code>deploy/compose/zitadel-dev.env</code> to enable OIDC.
+        <p className="text-sm text-[rgb(var(--sift-text-muted))]">
+          Set NEXT_PUBLIC_SIFT_ZITADEL_WEB_CLIENT_ID to enable OIDC.
         </p>
       )}
-      <form className="panel" onSubmit={onApiKey}>
-        <h2 style={{ fontSize: "1.1rem", marginTop: 0 }}>API key (dev)</h2>
-        <label>
-          API URL
-          <input value={url} onChange={(e) => setUrl(e.target.value)} />
-        </label>
-        <label>
-          API key
-          <input
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder="sift_live_…"
-            autoComplete="off"
-          />
-        </label>
-        <button type="submit">Save API key</button>
-        {msg ? <p>{msg}</p> : null}
+      <FieldSeparator>or</FieldSeparator>
+      <form className="flex flex-col gap-4" onSubmit={onApiKey}>
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="api-url">API URL</FieldLabel>
+            <Input
+              id="api-url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              autoComplete="off"
+            />
+          </Field>
+          <Field data-invalid={err ? true : undefined}>
+            <FieldLabel htmlFor="api-key">API key</FieldLabel>
+            <Input
+              id="api-key"
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder="sift_live_…"
+              autoComplete="off"
+              aria-invalid={Boolean(err)}
+            />
+            {err ? <FieldError>{err}</FieldError> : null}
+          </Field>
+        </FieldGroup>
+        <Button type="submit" variant="secondary" className="w-full">
+          Save API key
+        </Button>
       </form>
-    </>
+      <p className="text-sm text-[rgb(var(--sift-text-muted))]">
+        New here?{" "}
+        <HashLink href="/signup">Create an account</HashLink>
+      </p>
+    </AuthShell>
   );
 }

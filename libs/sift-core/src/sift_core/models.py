@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -31,6 +33,15 @@ class ReviewState(StrEnum):
     EDITED = "edited"
     REJECTED = "rejected"
     CONFLICT = "conflict"
+
+
+class ChatRole(StrEnum):
+    """Roles persisted in ``chat_turns.role`` (``02-data-model.md`` §4.16)."""
+
+    USER = "user"
+    ASSISTANT = "assistant"
+    TOOL = "tool"
+    SYSTEM = "system"
 
 
 class BoundingBox(BaseModel):
@@ -75,6 +86,50 @@ class Block(BaseModel):
     pii_map: dict[str, object] | None = None
     review_state: ReviewState = ReviewState.PENDING
     version: int = Field(default=1, ge=1)
+
+
+class LongTermFact(BaseModel):
+    """Durable fact extracted from chat answers (``chat_sessions.long_term_facts``)."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    text: str
+    source_chunk_id: str | None = None
+    confidence: float = Field(ge=0.0, le=1.0)
+
+
+class ChatSession(BaseModel):
+    """Collection-scoped chat session row (``02-data-model.md`` §4.16)."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    id: str
+    tenant_id: str
+    collection_id: str
+    user_sub: str
+    title: str | None = None
+    rolling_summary: str | None = None
+    long_term_facts: list[LongTermFact] = Field(default_factory=list)
+    created_at: datetime | None = None
+    last_message_at: datetime | None = None
+    deleted_at: datetime | None = None
+
+
+class ChatTurn(BaseModel):
+    """Single turn within a chat session (``02-data-model.md`` §4.16)."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    id: str
+    session_id: str
+    role: ChatRole
+    content: str
+    cited_chunk_ids: list[str] = Field(default_factory=list)
+    cited_documents: list[str] = Field(default_factory=list)
+    usage: dict[str, Any] | None = None
+    latency_ms: int | None = None
+    langfuse_trace_id: str | None = None
+    created_at: datetime | None = None
 
 
 def review_state_for_confidence(

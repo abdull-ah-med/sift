@@ -1,4 +1,4 @@
-.PHONY: setup up seed web api worker mcp-proxy test integration eval lint typecheck migrate migrate-down
+.PHONY: setup up seed demo web api worker mcp-proxy test integration eval lint typecheck migrate migrate-down
 
 setup:
 	./tools/dev/setup.sh
@@ -7,7 +7,10 @@ up:
 	docker compose -f deploy/compose/dev.yml up -d --build
 
 seed:
-	@echo "seed lands in Phase 1"
+	uv run python tools/db/seed/dev_bootstrap.py
+
+demo:
+	uv run python tools/demo/seed.py
 
 migrate:
 	uv run alembic -c tools/db/alembic.ini upgrade head

@@ -45,3 +45,16 @@ TEI smoke (after `--profile ml` is healthy):
 curl -s http://localhost:8080/health
 uv run pytest -q -m integration tests/integration/test_tei_smoke.py
 ```
+
+## Local demo
+
+Record a laptop demo after Compose and TEI are up. Ollama runs on the host, not in Compose.
+
+1. Start core services (`make up` or `docker compose -f deploy/compose/dev.yml up -d`), then the `ml` profile for TEI. On Apple Silicon, set `SIFT_TEI_IMAGE` to the arm64 digest in the TEI section above. Do not unpin to `latest`.
+2. Install [Ollama](https://ollama.com), then `ollama pull llama3.1`.
+3. Export `SIFT_PARSE_ENGINE=digital-only` for the worker, and `SIFT_CHAT_BASE_URL=http://127.0.0.1:11434/v1` for chat.
+4. Run `make migrate`, then `make demo`. The seed script does not start Compose.
+5. Open the printed login URL, paste the API key, ask the printed questions.
+
+Playwright `next build` and `next dev` must not share the same `apps/web/.next`. Record against `next dev` on :3000 after `rm -rf apps/web/.next`, or the Compose-mapped :3001 host port — never both on one `.next` tree.
+

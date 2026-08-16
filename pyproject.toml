@@ -22,6 +22,8 @@ dev = [
     "sqlalchemy[asyncio]>=2.0",
     "asyncpg>=0.30",
     "psycopg[binary]>=3.2",
+    "bandit>=1.8",
+    "pip-audit>=2.9",
 ]
 
 [tool.uv.workspace]
@@ -31,6 +33,7 @@ members = [
     "libs/sift-ingest",
     "libs/sift-obs",
     "libs/sift-retrieve",
+    "libs/sift-chat",
     "libs/sift-eval",
     "services/api",
     "services/worker",
@@ -48,6 +51,7 @@ package = false
 sift-core = { workspace = true }
 sift-parse = { workspace = true }
 sift-retrieve = { workspace = true }
+sift-chat = { workspace = true }
 sift-eval = { workspace = true }
 
 [tool.ruff]
@@ -59,7 +63,7 @@ extend-exclude = ["vendor"]
 select = ["E", "F", "I", "UP", "B", "SIM", "PL", "C4", "PT", "RUF"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_retrieve", "sift_api", "sift_worker", "sift_cli"]
+known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_retrieve", "sift_chat", "sift_api", "sift_worker", "sift_cli"]
 
 [tool.ruff.lint.per-file-ignores]
 "services/api/src/sift_api/routes/*.py" = ["B008", "PLC0415"]
@@ -81,13 +85,15 @@ known-first-party = ["sift", "sift_core", "sift_parse", "sift_ingest", "sift_ret
 "libs/sift-parse/tests/**/*.py" = ["PLC0415", "PLR2004", "E741"]
 "tests/integration/**/*.py" = ["PLR2004"]
 "libs/sift-retrieve/tests/**/*.py" = ["PLR2004"]
+"libs/sift-chat/tests/**/*.py" = ["PLR2004"]
 "services/api/tests/**/*.py" = ["PLR2004"]
 "tools/db/seed/**/*.py" = ["E402"]
 "tools/auth/**/*.py" = ["PLR2004"]
 "tools/e2e/**/*.py" = ["PLR2004", "F401"]
 "tools/models/prefetch.py" = ["B008"]
 "tools/db/backfill_reparse.py" = ["PLR0913"]
-"evals/**/*.py" = ["PLR2004"]
+"evals/**/*.py" = ["PLR2004", "RUF001", "RUF002", "PLR0915", "PLC0415", "PLR0913", "I001"]
+"libs/sift-eval/src/sift_eval/ragas_stub.py" = ["PLC0415", "I001"]
 "libs/sift-eval/tests/**/*.py" = ["PLR2004"]
 "tests/integration/test_review_api.py" = ["PLR2004"]
 "tests/integration/test_review_langgraph.py" = ["PLR2004"]
@@ -139,6 +145,11 @@ module = [
     "fast_langdetect.*",
     "sentence_transformers.*",
     "yaml",
+    "langfuse",
+    "anthropic",
+    "ragas",
+    "ragas.*",
+    "datasets",
 ]
 ignore_missing_imports = true
 

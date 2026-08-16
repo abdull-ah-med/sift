@@ -1,32 +1,51 @@
 # sift
 
-Privacy-first document intelligence, RAG, and agent knowledge base — self-hostable, air-gap capable, minimally opinionated about your models.
+Privacy-first document intelligence that runs on your machine. Ingest PDFs, review low-confidence extracts, search with citations, and ask questions against your own documents.
 
-Point sift at a folder of documents. Get back a searchable, chattable, agent-ready knowledge base with citations, review workflows, and a first-class MCP interface for LLM agents.
-
-Status: **pre-alpha, in active development.** This repository is intentionally near-empty at the top level while the product is being built. Public artifacts will land here as they stabilize.
+Status: **pre-alpha.** Phase 4 is in progress on `dev`. MCP, vault, and hosted SaaS are not in this tree yet.
 
 ---
 
 ## What sift does
 
-- **Ingest** — PDF, DOCX, PPTX, XLSX, CSV, HTML, images. Layout-aware extraction with confidence scores and human-in-the-loop review.
-- **Retrieve** — hybrid dense + BM25 retrieval with reranking, grounded in your documents.
-- **Chat** — streamed answers with source citations, session memory, and verification.
-- **Serve agents** — a first-class MCP endpoint (`/mcp`) plus a REST mirror. Give any agent scoped, auditable access to your knowledge.
-- **Vault** — a markdown vault with wikilinks, backlinks, tags, and a graph view.
-- **Everywhere** — CLI, web app, and Docker Compose. Kubernetes and air-gap installers on the roadmap.
+- **Ingest** — PDFs go through layout-aware extraction with confidence scores. Clean digital files skip review and become searchable; flagged blocks wait in a review queue.
+- **Retrieve** — hybrid search over your chunks, with optional rerank.
+- **Chat** — streamed answers with source citations. Local OpenAI-compatible models (Ollama on loopback) or a cloud key you supply.
+- **Review** — human-in-the-loop edits before a document is indexed.
 
 ---
 
-## Getting started
+## Local demo
+
+You need Docker, a local Ollama install, and enough RAM for Postgres plus embeddings plus a small instruct model.
+
+```bash
+# Core services, then embeddings (ml profile). Apple Silicon: set SIFT_TEI_IMAGE
+# to the arm64 digest in deploy/compose/README.md.
+docker compose -f deploy/compose/dev.yml --profile ml up -d
+
+ollama pull llama3.1
+export SIFT_PARSE_ENGINE=digital-only
+export SIFT_CHAT_BASE_URL=http://127.0.0.1:11434/v1
+export SIFT_API_KEY_PEPPER=dev-pepper-change-me   # match .env; do not commit .env
+
+make migrate
+make demo
+make web
+```
+
+Open the printed login URL (`http://127.0.0.1:3000/login`), paste the printed API key, open the `demo` collection, and ask the two printed questions. Details and the Playwright vs `next dev` warning: `deploy/compose/README.md`.
+
+`make demo` does not start Compose. First run prints a bootstrap key once; later runs need `SIFT_DEMO_API_KEY` set to that key.
+
+---
+
+## Getting started (dev)
 
 ```bash
 ./tools/dev/setup.sh   # or: make setup
 make test
 ```
-
-Docker Compose, API, and workers land in later Phase 0 PRs.
 
 ---
 
@@ -40,13 +59,13 @@ Docker Compose, API, and workers land in later Phase 0 PRs.
 - `deploy/` — Compose profiles, Helm, Ansible
 - `evals/` — corpora, goldens, spikes, eval reports
 - `tests/` — integration, e2e, fixtures
-- `tools/` — setup, migrations, model prefetch
+- `tools/` — setup, migrations, model prefetch, demo seed
 
 ---
 
 ## Contributing
 
-Not accepting external contributions yet. Watch this space.
+Not accepting external contributions yet.
 
 ---
 

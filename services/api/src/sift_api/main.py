@@ -9,7 +9,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from sift_api.db import dispose_engine, get_engine
+from sift_api.routes.chat import router as chat_router
 from sift_api.routes.health import router as health_router
+from sift_api.routes.invites import router as invites_router
 from sift_api.routes.parse_smoke import router as parse_smoke_router
 from sift_api.routes.review import router as review_router
 from sift_api.routes.v1 import router as v1_router
@@ -56,3 +58,5 @@ app.include_router(health_router)
 app.include_router(parse_smoke_router)
 app.include_router(v1_router)
 app.include_router(review_router)
+app.include_router(chat_router)
+app.include_router(invites_router)

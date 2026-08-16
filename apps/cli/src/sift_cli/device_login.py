@@ -47,7 +47,7 @@ def device_login(
                 },
             )
             if tok.status_code == httpx.codes.OK:
-                return tok.json()
+                return tok.json()  # type: ignore[no-any-return]
             content_type = tok.headers.get("content-type", "")
             err = tok.json() if content_type.startswith("application/json") else {}
             code = err.get("error")

@@ -7,9 +7,11 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from sift_api.audit_emit import emit_audit
 from sift_api.auth import AuthContext, require_scopes, tenant_db
+from sift_api.ingest_finalize import persist_chunks_and_enqueue_embed
 from sift_api.schemas import (
     BlockOut,
     BlockPatch,
@@ -32,7 +34,6 @@ from sift_core.review import (
     document_ready_to_finalize,
     next_review_state,
 )
-from sift_ingest.chunker import chunk_blocks
 
 router = APIRouter(prefix="/v1", tags=["review"])
 
@@ -429,42 +430,18 @@ async def finalize_document(
             detail="document still has blocks awaiting review",
         )
 
-    chunks = chunk_blocks(domain_blocks, document_title=doc["title"])
-    await session.execute(
-        text("DELETE FROM chunks WHERE document_id = :id"),
-        {"id": document_id},
-    )
-    for chunk in chunks:
-        await session.execute(
-            text(
-                """
-                INSERT INTO chunks (
-                  id, tenant_id, document_id, collection_id, ordinal,
-                  text_raw, text_contextualized, token_count, chunk_type,
-                  section_path, page_numbers, block_ids, quality_score, review_state
-                ) VALUES (
-                  :id, :tenant_id, :document_id, :collection_id, :ordinal,
-                  :text_raw, :text_contextualized, :token_count, :chunk_type,
-                  :section_path, :page_numbers, :block_ids, :quality_score, 'approved'
-                )
-                """
-            ),
-            {
-                "id": chunk.id,
-                "tenant_id": ctx.tenant_id,
-                "document_id": document_id,
-                "collection_id": doc["collection_id"],
-                "ordinal": chunk.ordinal,
-                "text_raw": chunk.text_raw,
-                "text_contextualized": chunk.text_contextualized,
-                "token_count": chunk.token_count,
-                "chunk_type": chunk.chunk_type.value,
-                "section_path": chunk.section_path,
-                "page_numbers": chunk.page_numbers,
-                "block_ids": chunk.block_ids,
-                "quality_score": chunk.quality_score,
-            },
+    def _persist(sync_session: Session) -> int:
+        return persist_chunks_and_enqueue_embed(
+            sync_session,
+            tenant_id=ctx.tenant_id,
+            document_id=document_id,
+            collection_id=doc["collection_id"],
+            document_title=doc["title"] or "",
+            blocks=domain_blocks,
+            actor=ctx.actor,
         )
+
+    chunk_count = await session.run_sync(_persist)
 
     needs = await _refresh_needs_review(session, document_id)
     await session.execute(
@@ -486,15 +463,16 @@ async def finalize_document(
         payload={
             "status": "indexing",
             "block_count": len(domain_blocks),
-            "chunk_count": len(chunks),
+            "chunk_count": chunk_count,
         },
     )
-    await embed_document.kiq(document_id, ctx.tenant_id)
+    if chunk_count > 0:
+        await embed_document.kiq(document_id, ctx.tenant_id)
     return FinalizeOut(
         document_id=document_id,
         status="indexing",
         block_count=len(domain_blocks),
-        chunk_count=len(chunks),
+        chunk_count=chunk_count,
         needs_review_count=needs,
     )
 
