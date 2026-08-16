@@ -1,14 +1,8 @@
 import { apiFetch } from "@/lib/api";
+import { shouldClearInviteToken } from "./invite-policy";
 
 export const INVITE_STORAGE_KEY = "sift_invite_token";
-
-/** Drop spent/invalid tokens; keep tokens that still need an OIDC user session. */
-export function shouldClearInviteToken(status: number, detail: string): boolean {
-  if (status >= 200 && status < 300) return true;
-  if (status === 401 || status >= 500) return false;
-  if (status === 400 && detail.includes("requires a user session")) return false;
-  return status >= 400 && status < 500;
-}
+export { shouldClearInviteToken } from "./invite-policy";
 
 function detailFromBody(body: unknown): string {
   if (!body || typeof body !== "object" || !("detail" in body)) return "";
