@@ -32,7 +32,21 @@ async function mockWorkspace(page: Page) {
 }
 
 async function expectNoSeriousAxe(page: Page) {
-  await page.locator("h1").first().waitFor();
+  const h1 = page.locator("h1").first();
+  await h1.waitFor();
+  await expect
+    .poll(async () =>
+      h1.evaluate((el) => {
+        let n: HTMLElement | null = el;
+        let acc = 1;
+        while (n && n !== document.documentElement) {
+          acc *= Number.parseFloat(getComputedStyle(n).opacity);
+          n = n.parentElement;
+        }
+        return acc;
+      }),
+    )
+    .toBeGreaterThan(0.99);
   const results = await new AxeBuilder({ page }).analyze();
   const serious = results.violations.filter(
     (v) => v.impact === "serious" || v.impact === "critical",

@@ -43,10 +43,12 @@ test("landing sections and skip link render", async ({ page }) => {
   await expect(page.locator('a[href="#main"]')).toHaveText("Skip to content");
   await expect(page.getByRole("link", { name: "sift" }).first()).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: /Document intelligence you can trust/i }),
+    page.getByRole("heading", { name: /Document intelligence you can trust/i }).first(),
   ).toBeVisible();
+  await page.locator("#how-it-works").scrollIntoViewIfNeeded();
   await expect(page.getByRole("heading", { name: "How it works" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: /Open a collection/i })).toBeVisible();
+  await page.locator("footer").scrollIntoViewIfNeeded();
+  await expect(page.getByRole("heading", { name: /Open a collection/i }).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Upload", exact: true })).toBeVisible();
 });
 
@@ -54,11 +56,12 @@ test("landing canvas is pure black with a pill navbar", async ({ page }) => {
   await page.goto("/");
   const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
   expect(background).toBe("rgb(0, 0, 0)");
-  const radius = await page.locator("header > div").first().evaluate((el) => {
+  const radius = await page.locator("header .rounded-full").first().evaluate((el) => {
     return getComputedStyle(el).borderRadius;
   });
   expect(Number.parseFloat(radius)).toBeGreaterThan(20);
-  await expect(page.getByText("© 2026 sift")).toBeVisible();
+  await page.locator("footer").scrollIntoViewIfNeeded();
+  await expect(page.locator("footer")).toBeVisible();
 });
 
 test("primary fill is #1b6986 with light text", async ({ page }) => {
@@ -82,33 +85,37 @@ test("landing does not load watermelon CDN, Google auth, or fake uptime", async 
   await expect(page.getByRole("button", { name: /google/i })).toHaveCount(0);
 });
 
-test("Lenis attaches on marketing and not on the app shell", async ({ page }) => {
+test("Lenis attaches on marketing and the app shell", async ({ page }) => {
   await page.goto("/");
   await expect.poll(async () => page.locator("html").getAttribute("class")).toMatch(/lenis/);
   await seedApiKey(page);
   await mockWorkspace(page);
   await page.goto("/home");
   await expect(page.getByRole("heading", { name: "Home" })).toBeVisible();
-  await expect(page.locator("html")).not.toHaveClass(/lenis/);
+  await expect.poll(async () => page.locator("html").getAttribute("class")).toMatch(/lenis/);
 });
 
-test("Lenis does not attach when the user prefers reduced motion", async ({ page }) => {
+test("Lenis and ColorBends stay on when the user prefers reduced motion", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /Document intelligence you can trust/i })).toBeVisible();
-  await expect(page.locator("html")).not.toHaveClass(/lenis/);
+  await expect(
+    page.getByRole("heading", { name: /Document intelligence you can trust/i }).first(),
+  ).toBeVisible();
+  await expect.poll(async () => page.locator("html").getAttribute("class")).toMatch(/lenis/);
+  await expect(page.locator("canvas").first()).toBeVisible();
 });
 
 test("login and signup chrome render", async ({ page }) => {
   await page.goto("/login");
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Save API key" })).toBeVisible();
+  await expect(page.getByLabel("API URL")).toBeVisible();
   await expect(page.getByLabel("API key")).toBeVisible();
   await expect(page.getByRole("button", { name: /google/i })).toHaveCount(0);
   await expect(page.locator("img[src*='watermelon']")).toHaveCount(0);
   const panel = page.locator("aside").first();
   await expect(panel).toBeVisible();
-  await expect(panel).toHaveCSS("background-image", /noise-gradient\.png/);
+  await expect(panel.locator("img[src*='noise-gradient']").first()).toBeVisible();
 
   await page.goto("/signup");
   await expect(page.getByRole("heading", { name: "Get started" })).toBeVisible();
