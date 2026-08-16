@@ -14,6 +14,7 @@ from sqlalchemy.engine import Engine
 
 from sift.parse import DigitalPdfParser, ParseConfig, Parser, ParseResult, StandardPdfParser
 from sift.parse._mapping import quality_score_from_confidences
+from sift_api.ingest_finalize import enqueue_embed_document, persist_chunks_and_enqueue_embed
 from sift_core.audit import write_audit_event
 from sift_core.models import ReviewState
 from sift_ingest.pii import annotate_blocks_with_pii
@@ -144,6 +145,8 @@ def run_ingest_parse(
     """
     active_parser: Parser = parser or select_parser(mime="application/pdf")
     config = parse_config or ParseConfig()
+    final_status = "skipped"
+    chunk_count = 0
 
     with engine.begin() as conn:
         conn.execute(text("SET LOCAL ROLE sift_admin"))
@@ -232,6 +235,37 @@ def run_ingest_parse(
                 ),
                 {"job_status": job_status, "now": finished, "job_id": job_id},
             )
+            if status == "indexing":
+                doc_row = (
+                    conn.execute(
+                        text(
+                            """
+                            SELECT title, collection_id FROM documents
+                            WHERE id = :document_id AND tenant_id = :tenant_id
+                            """
+                        ),
+                        {"document_id": document_id, "tenant_id": tenant_id},
+                    )
+                    .mappings()
+                    .one()
+                )
+                chunk_count = persist_chunks_and_enqueue_embed(
+                    conn,
+                    tenant_id=tenant_id,
+                    document_id=document_id,
+                    collection_id=doc_row["collection_id"],
+                    document_title=doc_row["title"] or "",
+                    blocks=list(result.blocks),
+                    actor="system",
+                )
+            audit_payload: dict[str, object] = {
+                "job_id": job_id,
+                "status": status,
+                "block_count": len(result.blocks),
+                "needs_review_count": needs_review,
+            }
+            if status == "indexing":
+                audit_payload["chunk_count"] = chunk_count
             write_audit_event(
                 conn,
                 tenant_id=tenant_id,
@@ -239,14 +273,9 @@ def run_ingest_parse(
                 action="document.ingest_parse",
                 target_kind="document",
                 target_id=document_id,
-                payload={
-                    "job_id": job_id,
-                    "status": status,
-                    "block_count": len(result.blocks),
-                    "needs_review_count": needs_review,
-                },
+                payload=audit_payload,
             )
-            return status
+            final_status = status
         except Exception as exc:
             failed = datetime.now(UTC)
             conn.execute(
@@ -286,3 +315,11 @@ def run_ingest_parse(
                 payload={"job_id": job_id, "error_type": type(exc).__name__},
             )
             raise
+
+    if final_status == "indexing":
+        enqueue_embed_document(
+            document_id=document_id,
+            tenant_id=tenant_id,
+            chunk_count=chunk_count,
+        )
+    return final_status
